@@ -10,6 +10,7 @@ import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as L from './api/logica.mjs';
 import * as A from './api/acceso.mjs';
+import { arrancarSiembra } from './api/siembra.mjs';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
 const RAIZ = join(AQUI, '..');
@@ -26,20 +27,26 @@ const HOST = process.env.HOST ?? '0.0.0.0';
 const TOKEN = process.env.API_TOKEN ?? '';
 
 if (!existsSync(DB_PATH)) {
-  console.error(`No existe la base en ${DB_PATH}.`);
+  // Sin base no se puede servir el panel, pero tampoco hay que rendirse:
+  // en un servidor el volumen nace vacio y subir el archivo por SSH exige
+  // una contrasena que muchas veces no esta a la mano. Se levanta el modo
+  // siembra, que deja ponerla desde el navegador con el API_TOKEN.
+  //
+  // En la maquina de uno eso no aplica: ahi la base se crea con migrar.mjs.
   if (process.env.DB_PATH) {
-    // Con DB_PATH puesto estamos en un servidor, no en la maquina de
-    // nadie. Aqui NO se dice 'corre migrar.mjs': es destructivo y la
-    // base buena es la que hay que subir, no una recien creada.
-    console.error('Sube el respaldo mas reciente a esa ruta. NO corras migrar.mjs:');
-    console.error('crea una base vacia y se lleva todo lo editado desde el panel.');
+    console.error(`No existe la base en ${DB_PATH}.`);
+    arrancarSiembra({ dbPath: DB_PATH, puerto: PUERTO, host: HOST, token: TOKEN });
   } else {
+    console.error(`No existe la base en ${DB_PATH}.`);
     console.error('Corre primero:');
     console.error('  python backend/db/exportar_seed.py');
     console.error('  node backend/db/migrar.mjs');
+    process.exit(1);
   }
-  process.exit(1);
 }
+// Si llegamos aqui en modo siembra, el proceso ya esta escuchando y esta
+// linea reventaria. Se corta explicitamente.
+if (!existsSync(DB_PATH)) { await new Promise(() => {}); }
 const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON');
 db.exec('PRAGMA journal_mode = WAL');

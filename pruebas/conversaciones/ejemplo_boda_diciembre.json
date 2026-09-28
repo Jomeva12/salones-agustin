@@ -1,0 +1,36 @@
+{
+  "titulo": "Boda en diciembre — el cliente mueve la fecha para ahorrar",
+  "contexto": "Entra por la fanpage de Norma Eventos. Hoy es 2026-09-23.",
+  "turnos": [
+    {
+      "cliente": "Hola, estoy interesado en el salón",
+      "extraido": { "salon": "norma", "tipo_evento": null, "fecha_evento": null, "personas": null },
+      "sin_llamada": "con un solo dato no se cotiza. La hoja de reglas lo prohíbe explícitamente.",
+      "maya": "¡Hola! 😊 Qué gusto que nos escribas. Con mucho gusto te cotizo.\nPara darte el precio exacto necesito tres datos: ¿qué tipo de evento tienes pensado,\npara qué fecha, y cuántos invitados calculas?"
+    },
+    {
+      "cliente": "Es una boda, el 12 de diciembre, como 200 personas",
+      "extraido": { "salon": "norma", "tipo_evento": "boda", "fecha_evento": "2026-12-12", "personas": 200 },
+      "llamada": {
+        "ruta": "/api/cotizar",
+        "cuerpo": { "tipo_evento": "boda", "fecha_evento": "2026-12-12", "personas": 200 }
+      },
+      "maya": "Para el sábado 12 de diciembre con 200 invitados, en Norma Eventos ya tenemos\nevento ese día 💛 Pero te lo puedo hacer en Santa Cruz Eventos: Paquete Bronce\nen $39,900, para el rango de 151 a 200 invitados.\n¿Te gustaría venir a conocerlo?"
+    },
+    {
+      "cliente": "Uy, ¿y si lo paso al viernes 11? Sale más barato, ¿no?",
+      "extraido": { "salon": null, "tipo_evento": "boda", "fecha_evento": "2026-12-11", "personas": 200 },
+      "llamada": {
+        "ruta": "/api/cotizar",
+        "cuerpo": { "tipo_evento": "boda", "fecha_evento": "2026-12-11", "personas": 200 }
+      },
+      "maya": "Sí, el viernes baja a $38,900 💛 Nada más que Santa Cruz ya está tomado ese día.\nPara el viernes 11 te puedo ofrecer Esmeralda Eventos, mismo Paquete Bronce\nen $38,900. ¿Cuál te late más, el sábado en Santa Cruz o el viernes en Esmeralda?"
+    },
+    {
+      "cliente": "Mejor el viernes. ¿Puedo ir a verlo mañana?",
+      "extraido": { "salon": "esmeralda", "fecha_visita": "2026-09-24" },
+      "llamada": { "metodo": "GET", "ruta": "/api/disponibilidad?fecha=2026-12-11" },
+      "maya": "¡Claro! Esmeralda Eventos te atiende de miércoles a lunes de 12:00 a 8:00 pm.\nTe agendo la visita y le aviso a Karla, la encargada, para que te reciba 💛"
+    }
+  ]
+}

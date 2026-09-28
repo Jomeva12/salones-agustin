@@ -1,0 +1,14 @@
+{
+  "name": "salones-agustin",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Panel y API de los cuatro salones de eventos. Cero dependencias: Node trae SQLite y el servidor HTTP.",
+  "engines": { "node": ">=22.5" },
+  "scripts": {
+    "start": "node backend/server.js",
+    "migrar": "node backend/db/migrar.mjs",
+    "seed": "python backend/db/exportar_seed.py",
+    "reset": "python backend/db/exportar_seed.py && node backend/db/migrar.mjs"
+  }
+}

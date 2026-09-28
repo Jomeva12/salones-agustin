@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Salones Agustín Barrón</title>
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<div class="app">
+  <aside class="lateral">
+    <div class="marca">
+      <b>Salones Agustín Barrón</b>
+      <span>Norma · Esmeralda · Santa Cruz · Quetzal</span>
+    </div>
+
+    <nav class="menu" id="menu">
+      <div class="grupo">Día a día</div>
+      <a href="#/hoy" data-icono="hoy">Hoy</a>
+      <a href="#/cotizar" data-icono="cotizar">Cotizar</a>
+      <a href="#/agenda" data-icono="agenda">Agenda</a>
+
+      <div class="grupo">Catálogo</div>
+      <a href="#/paquetes" data-icono="paquetes">Paquetes</a>
+      <a href="#/servicios" data-icono="servicios">Servicios</a>
+      <a href="#/respuestas" data-icono="respuestas">Respuestas</a>
+      <a href="#/salones" data-icono="salones">Salones</a>
+      <a href="#/politicas" data-icono="politicas">Políticas</a>
+
+      <div class="grupo">Administración</div>
+      <a href="#/pendientes" data-icono="pendientes">Pendientes</a>
+      <a href="#/configuracion" data-icono="configuracion" hidden>Configuración</a>
+    </nav>
+
+    <div class="quien-caja">
+      <label class="campo" style="margin-bottom:10px">En qué salón
+        <select id="salon">
+          <option value="">Los cuatro salones</option>
+          <option value="norma">Norma Eventos</option>
+          <option value="esmeralda">Esmeralda Eventos</option>
+          <option value="santacruz">Santa Cruz Eventos</option>
+          <option value="quetzal">Quetzal Eventos</option>
+        </select>
+      </label>
+      <div class="sesion" id="sesion">
+        <div class="quien-es">
+          <div class="nombre" id="quien-nombre">—</div>
+          <div class="rol" id="quien-rol"></div>
+        </div>
+        <button type="button" id="salir" class="fantasma">Salir</button>
+      </div>
+    </div>
+    <div class="pie-lateral" id="pie"></div>
+  </aside>
+
+  <main class="lienzo" id="app"></main>
+</div>
+
+<script type="module" src="js/app.js"></script>
+</body>
+</html>

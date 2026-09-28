@@ -1,0 +1,13 @@
+# La base y su volcado en JSON son DATOS, no codigo: llevan la cuenta
+# bancaria del negocio, el numero privado del Lic. y los hashes de las
+# contrasenas. El seed se regenera desde la base con exportar_seed.py.
+backend/db/seed/
+backend/db/*.db
+backend/db/*.db-wal
+backend/db/*.db-shm
+node_modules/
+.DS_Store
+
+# Respaldos de la base: son datos, y pesan.
+backend/db/respaldos/
+para-subir/

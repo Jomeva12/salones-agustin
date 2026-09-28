@@ -1,0 +1,23 @@
+{
+  "titulo": "REAL 1 · +52 33 1025 7… · XV para el 17 de marzo de 2027",
+  "contexto": "Anuncio de Facebook: «¿Deseas saber cómo puedes realizar tu xv años con nosotros este 2027?». Hoy es 2026-09-23.",
+  "turnos": [
+    {
+      "cliente": "¡Hola! Quiero más información. En donde se ubican   (2:34 p.m.)",
+      "extraido": { "salon": "norma", "tipo_evento": "xv", "fecha_evento": null, "personas": null },
+      "sin_llamada": "el tipo de evento viene del anuncio; faltan fecha e invitados. La auxiliar tardó 70 min en contestar.",
+      "maya": "¡Hola! 💛 Norma Eventos está en Av. Pablo Livas 399-A, Colonia 3 Caminos, Guadalupe.\nTe atendemos de miércoles a lunes de 12:00 a 8:00 pm (martes cerrado).\n¿Para qué fecha tienes pensados los XV y cuántos invitados calculas?"
+    },
+    {
+      "cliente": "17 de marzo de 2027 / 150 o 200   (3:45 p.m.)",
+      "extraido": { "salon": "norma", "tipo_evento": "xv", "fecha_evento": "2027-03-17", "personas": 150 },
+      "llamada": { "ruta": "/api/cotizar", "cuerpo": { "salon": "norma", "tipo_evento": "xv", "fecha_evento": "2027-03-17", "personas": 150 } }
+    },
+    {
+      "cliente": "(el mismo mensaje, la otra opción de invitados)",
+      "extraido": { "personas": 200 },
+      "llamada": { "ruta": "/api/cotizar", "cuerpo": { "salon": "norma", "tipo_evento": "xv", "fecha_evento": "2027-03-17", "personas": 200 } },
+      "maya": "El 17 de marzo de 2027 cae en MIÉRCOLES 💛 Te sale mejor que en fin de semana:\nPaquete Onix para 150 invitados: $71,900 · para 200 invitados: $77,400\nIncluye el aro para fotos, el espejo de bienvenida y el arreglo de escalera de cortesía.\n¿Te agendo una visita para conocerlo?"
+    }
+  ]
+}

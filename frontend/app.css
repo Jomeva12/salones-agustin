@@ -1,0 +1,1820 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   Salones Agustín Barrón — sistema visual
+   Tema claro, un solo acento, animaciones con propósito.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+:root{
+  /* neutros cálidos, no grises fríos */
+  --fondo:#FCFCFB;
+  --panel:#FFFFFF;
+  --panel-2:#F5F5F3;
+  --panel-3:#EFEFEC;
+  --tinta:#191B1F;
+  --tinta-2:#55595F;
+  --tinta-3:#868B92;
+  --linea:#E7E6E2;
+  --linea-2:#D6D5D0;
+
+  /* un solo acento: azul tinta */
+  --acento:#2E4057;
+  --acento-claro:#3F587A;
+  --acento-suave:#EAEEF3;
+  --sobre-acento:#FFFFFF;
+
+  /* rojo coral de MediaHub: botones, enlaces y el ítem activo del menú */
+  --coral:#F43F5E;
+  --coral-alto:#E11D48;
+  --coral-bajo:#FFF1F2;
+  --sobre-coral:#FFFFFF;
+
+  /* barra lateral — la paleta nocturna de MediaHub */
+  --nocturno:#1B3446;
+  --nocturno-2:#132533;
+  --noct-activo:var(--coral);
+  --noct-activo-alto:var(--coral-alto);
+  --noct-texto:#9CA3AF;
+  --noct-vivo:#FFFFFF;
+  --noct-hover:rgba(255,255,255,.05);
+  --noct-caja:rgba(255,255,255,.03);
+
+  /* semáforo, separado del acento */
+  --libre:#2F7D52;      --libre-bg:#E8F2EC;
+  --ocupada:#B3372B;    --ocupada-bg:#FBEAE7;
+  --duda:#8A5A12;       --duda-bg:#FBF0DE;
+
+  /* Esquinas rectas, como MediaHub: nada de tarjetas redondeadas. */
+  --r-s:4px; --r-m:4px; --r-l:4px;
+  --sombra-1:0 1px 2px rgba(25,27,31,.05);
+  --sombra-2:0 2px 4px rgba(25,27,31,.05), 0 8px 24px rgba(25,27,31,.06);
+  --sombra-3:0 8px 16px rgba(25,27,31,.08), 0 24px 48px rgba(25,27,31,.10);
+  --lat:236px;
+  --ease:cubic-bezier(.22,.61,.36,1);
+}
+
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  background:var(--fondo);
+  color:var(--tinta);
+  font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+h1,h2,h3,h4{margin:0;font-weight:640;letter-spacing:-.018em;text-wrap:balance}
+p{margin:0}
+button,input,select,textarea{font:inherit;color:inherit}
+.num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
+:focus-visible{outline:2px solid var(--acento);outline-offset:2px;border-radius:4px}
+
+/* ─────────────────────────── estructura ─────────────────────────────────── */
+.app{display:flex;min-height:100%}
+
+aside.lateral{
+  width:var(--lat); flex:none;
+  background:var(--nocturno);
+  border-right:1px solid var(--nocturno-2);
+  color:var(--noct-texto);
+  display:flex; flex-direction:column;
+  position:sticky; top:0; height:100vh;
+  padding-top:env(safe-area-inset-top,0px);
+}
+.marca{padding:20px 18px 16px;border-bottom:1px solid var(--nocturno-2)}
+.marca b{display:flex;align-items:center;gap:8px;font-size:14.5px;font-weight:800;letter-spacing:-.02em;color:var(--noct-vivo)}
+.marca b::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--noct-activo);flex:none}
+.marca span{display:block;font-size:11.5px;color:var(--noct-texto);margin-top:4px}
+
+nav.menu{flex:1;overflow-y:auto;padding:14px 10px}
+.grupo{
+  font-size:10.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;
+  color:var(--noct-texto);padding:12px 8px 6px;
+}
+/* Solo los títulos del menú se atenúan: .grupo también nombra las semanas
+   de la portada, y un opacity aquí las apagaba enteras. */
+nav.menu .grupo{opacity:.7}
+.grupo:first-child{padding-top:2px}
+nav.menu a{
+  display:flex;align-items:center;gap:10px;
+  padding:8px 10px;margin-bottom:2px;border-radius:4px;
+  color:var(--noct-texto);text-decoration:none;font-size:13.5px;font-weight:600;
+  transition:background .12s var(--ease),color .12s var(--ease);
+}
+nav.menu a:hover{background:var(--noct-hover);color:var(--noct-vivo)}
+nav.menu a.on{background:var(--noct-activo);color:#fff;font-weight:700;box-shadow:0 1px 2px rgba(0,0,0,.15)}
+nav.menu a svg{width:17px;height:17px;flex:none;stroke-width:1.75}
+nav.menu a .globo{
+  margin-left:auto;background:var(--noct-activo);color:#fff;
+  font-size:11px;font-weight:700;padding:1px 7px;border-radius:4px;
+}
+nav.menu a.on .globo{background:#fff;color:var(--noct-activo-alto)}
+.pie-lateral{
+  margin:0 12px 14px;padding:12px 10px;
+  border:1px solid var(--nocturno-2);border-radius:4px;background:var(--noct-caja);
+  font-size:11.5px;color:var(--noct-texto);line-height:1.45;word-break:break-word;
+}
+.pie-lateral b{color:var(--noct-vivo)}
+
+main.lienzo{flex:1;min-width:0;padding:30px 38px 72px}
+/* Un solo ancho para todas las páginas, centrado en lo que deja el menú:
+   en pantallas anchas el contenido pegado a la izquierda dejaba un hueco
+   enorme a la derecha. */
+main.lienzo > *{max-width:1400px;margin-inline:auto}
+
+/* ─────────────────────────── cabeceras ──────────────────────────────────── */
+.titulo{margin-bottom:24px;animation:entra .32s var(--ease) both}
+.titulo h2{font-size:26px;letter-spacing:-.025em}
+.titulo p{margin-top:6px;color:var(--tinta-2);font-size:14.5px;max-width:74ch}
+
+/* ───────────────────────────── piezas ───────────────────────────────────── */
+.tarjeta{
+  background:var(--panel);border:1px solid var(--linea);
+  border-radius:var(--r-m);padding:18px;box-shadow:var(--sombra-1);
+}
+.tarjeta.alta{box-shadow:var(--sombra-2)}
+.seccion{margin-bottom:26px;animation:entra .36s var(--ease) both}
+.seccion > h3{font-size:16px;margin-bottom:12px;display:flex;align-items:center;gap:9px}
+.seccion > h3 .cuenta{
+  font-size:12px;font-weight:600;color:var(--tinta-3);
+  background:var(--panel-2);padding:2px 8px;border-radius:20px;
+}
+.rejilla{display:grid;gap:12px}
+.rejilla.c2{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.rejilla.c3{grid-template-columns:repeat(auto-fit,minmax(248px,1fr))}
+.rejilla.c4{grid-template-columns:repeat(auto-fit,minmax(196px,1fr))}
+.fila{display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end}
+
+/* controles */
+label.campo{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--tinta-2);font-weight:550}
+input,select,textarea{
+  padding:9px 11px;border:1px solid var(--linea-2);border-radius:var(--r-s);
+  background:var(--panel);min-width:0;
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease);
+}
+input:hover,select:hover{border-color:var(--tinta-3)}
+input:focus,select:focus{outline:none;border-color:var(--acento);box-shadow:0 0 0 3px var(--acento-suave)}
+button{
+  padding:9px 16px;border:1px solid var(--linea-2);border-radius:var(--r-s);
+  background:var(--panel);cursor:pointer;font-weight:550;font-size:14px;
+  transition:background .15s var(--ease),border-color .15s var(--ease),transform .08s var(--ease);
+}
+button:hover{background:var(--panel-2);border-color:var(--tinta-3)}
+button:active{transform:translateY(1px)}
+button.primario{background:var(--coral);color:var(--sobre-coral);border-color:var(--coral)}
+button.primario:hover{background:var(--coral-alto);border-color:var(--coral-alto)}
+button.primario:focus-visible{outline-color:var(--coral)}
+
+/* enlaces del contenido; los del menú tienen su propia regla */
+main.lienzo a{color:var(--coral);text-decoration-color:rgba(244,63,94,.35);text-underline-offset:2px}
+main.lienzo a:hover{color:var(--coral-alto);text-decoration-color:currentColor}
+button.fantasma{border-color:transparent;background:transparent;color:var(--tinta-2)}
+button.fantasma:hover{background:var(--panel-2)}
+button:disabled{opacity:.5;cursor:not-allowed}
+button.grande{padding:11px 22px;font-size:15px}
+
+.chip{
+  display:inline-flex;align-items:center;gap:5px;
+  padding:3px 8px;border-radius:4px;font-size:11.5px;font-weight:600;white-space:nowrap;
+}
+.chip::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
+.chip.libre{background:var(--libre-bg);color:var(--libre)}
+.chip.ocupada{background:var(--ocupada-bg);color:var(--ocupada)}
+.chip.no_confirmada,.chip.duda{background:var(--duda-bg);color:var(--duda)}
+.chip.neutro{background:var(--panel-2);color:var(--tinta-2)}
+.chip.neutro::before{display:none}
+
+/* indicadores numéricos */
+.indicador{
+  background:var(--panel);border:1px solid var(--linea);border-radius:var(--r-m);
+  padding:16px 17px;box-shadow:var(--sombra-1);
+}
+.indicador .n{font-size:29px;font-weight:680;letter-spacing:-.03em;line-height:1.1}
+.indicador .r{font-size:12.5px;color:var(--tinta-3);margin-top:4px;line-height:1.4}
+
+/* tablas */
+.tabla-caja{overflow-x:auto;border:1px solid var(--linea);border-radius:var(--r-m);background:var(--panel)}
+table{border-collapse:collapse;width:100%;font-size:13.5px}
+th,td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--linea);white-space:nowrap}
+thead th{
+  background:var(--panel-2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;
+  color:var(--tinta-3);font-weight:650;position:sticky;top:0;z-index:1;
+}
+tbody tr{transition:background .12s var(--ease)}
+tbody tr:hover{background:var(--panel-2)}
+tbody tr:last-child td{border-bottom:none}
+td.n{text-align:right;font-variant-numeric:tabular-nums}
+td.libre-txt{white-space:normal}
+tr.ojo td{background:var(--duda-bg)}
+tr.ojo:hover td{background:#F7E8CC}
+
+/* avisos */
+.aviso{padding:12px 15px;border-radius:var(--r-s);font-size:13.5px;line-height:1.5}
+.aviso.atencion{background:var(--duda-bg);color:var(--duda)}
+.aviso.malo{background:var(--ocupada-bg);color:var(--ocupada)}
+.aviso.info{background:var(--acento-suave);color:var(--acento)}
+.vacio{padding:34px;text-align:center;color:var(--tinta-3);font-size:14px}
+
+/* ─────────────────────── cargando (skeleton) ────────────────────────────── */
+.hueso{
+  background:linear-gradient(90deg,var(--panel-2) 25%,var(--panel-3) 37%,var(--panel-2) 63%);
+  background-size:400% 100%;border-radius:var(--r-s);
+  animation:brillo 1.3s ease-in-out infinite;
+}
+.hueso.linea{height:13px;margin-bottom:9px}
+.hueso.bloque{height:92px}
+@keyframes brillo{0%{background-position:100% 50%}100%{background-position:0 50%}}
+
+/* ─────────────────────────── animaciones ────────────────────────────────── */
+@keyframes entra{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes entraLat{from{opacity:0;transform:translateX(18px)}to{opacity:1;transform:none}}
+@keyframes velo{from{opacity:0}to{opacity:1}}
+.escalona > *{animation:entra .34s var(--ease) both}
+.escalona > *:nth-child(1){animation-delay:.02s}
+.escalona > *:nth-child(2){animation-delay:.06s}
+.escalona > *:nth-child(3){animation-delay:.10s}
+.escalona > *:nth-child(4){animation-delay:.14s}
+.escalona > *:nth-child(5){animation-delay:.18s}
+.escalona > *:nth-child(6){animation-delay:.22s}
+.escalona > *:nth-child(n+7){animation-delay:.26s}
+
+/* ────────────────────── panel lateral deslizante ────────────────────────── */
+.velo{
+  position:fixed;inset:0;background:rgba(25,27,31,.34);z-index:60;
+  animation:velo .2s var(--ease) both;
+}
+.cajon{
+  position:fixed;top:0;right:0;bottom:0;width:min(440px,100vw);z-index:61;
+  background:var(--panel);border-left:1px solid var(--linea);
+  box-shadow:var(--sombra-3);overflow-y:auto;
+  padding:22px 22px calc(28px + env(safe-area-inset-bottom,0px));
+  animation:entraLat .28s var(--ease) both;
+}
+/* Con el panel abierto la página de atrás no se desplaza: su barra de
+   scroll se dibujaba encima del panel y tapaba el borde derecho. */
+html:has(.cajon){overflow:hidden}
+.cajon-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;margin-bottom:18px}
+.cajon-top h3{font-size:18px}
+.cerrar{
+  border:none;background:var(--panel-2);width:31px;height:31px;border-radius:4px;
+  display:grid;place-items:center;cursor:pointer;flex:none;padding:0;font-size:16px;color:var(--tinta-2);
+}
+.cerrar:hover{background:var(--panel-3)}
+
+/* ─────────────────────────── calendario ─────────────────────────────────── */
+.mes{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dow{
+  font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:var(--tinta-2);
+  text-align:center;padding:6px 0;font-weight:800;
+}
+.dia{
+  background:var(--panel);border:1px solid var(--linea);border-radius:var(--r-s);
+  min-height:80px;padding:7px;display:flex;flex-direction:column;gap:5px;
+  cursor:pointer;text-align:left;font:inherit;
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease),transform .12s var(--ease);
+}
+.dia:hover{border-color:var(--nocturno);box-shadow:0 4px 6px -1px rgba(0,0,0,.08)}
+.dia.vacio{background:transparent;border:none;cursor:default;box-shadow:none}
+.dia.vacio:hover{transform:none;box-shadow:none}
+.dia.sel{border-color:var(--coral);box-shadow:0 0 0 2px var(--coral-bajo)}
+.dia.hoy{border-color:var(--coral);box-shadow:inset 0 3px 0 var(--coral)}
+.dia .d{font-size:12.5px;color:var(--tinta-3);font-weight:700;font-variant-numeric:tabular-nums}
+.dia.finde{background:#FAFBFC}
+.dia.finde .d{color:var(--nocturno);font-weight:800}
+.dia.hoy .d{color:var(--coral-alto);font-weight:800}
+/* ── qué tiene cada día ───────────────────────────────────────────────────
+   Solo se dibuja lo que tiene algo. Un día del todo libre queda en blanco, y
+   eso es lo que hace que los días con trabajo salten sin tener que leerlos.
+   Antes cada casilla llevaba las cuatro iniciales con número y color: tres
+   cosas que descifrar, cuatro veces, en un cuadro de calendario. */
+.puntos{display:flex;gap:3px;flex-wrap:wrap;margin-top:auto}
+.salones-dia{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto;min-height:19px}
+.sal{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:19px;height:19px;padding:0 5px;border-radius:5px;
+  font-size:10.5px;font-weight:800;letter-spacing:.02em;
+}
+/* Tiene evento pero todavía admite otro: se ve, sin gritar. */
+.sal.cabe{background:var(--panel-2);color:var(--tinta-2);border:1px solid var(--linea-2)}
+/* Lleno de verdad. Es lo raro y lo que hay que ver de lejos. */
+.sal.lleno{background:var(--ocupada);color:#fff}
+.sal.duda{background:var(--duda-bg);color:var(--duda);border:1px solid rgba(138,90,18,.3)}
+
+.leyenda .leg{display:inline-flex;align-items:center;gap:6px}
+.leyenda .leg.tenue{color:var(--tinta-3)}
+.punto.libre{background:var(--libre-bg);color:var(--libre)}
+.punto.ocupada{background:var(--ocupada-bg);color:var(--ocupada)}
+.punto.no_confirmada{background:var(--duda-bg);color:var(--duda)}
+.leyenda{display:flex;gap:13px;flex-wrap:wrap;font-size:12.5px;color:var(--tinta-2);align-items:center}
+
+/* lista de qué incluye */
+.incluye{columns:210px;column-gap:20px;margin-top:4px}
+.incluye li{
+  break-inside:avoid;list-style:none;font-size:13px;color:var(--tinta-2);
+  padding:2px 0 2px 19px;position:relative;
+}
+.incluye li::before{
+  content:"";position:absolute;left:0;top:8px;width:9px;height:5px;
+  border-left:1.8px solid var(--libre);border-bottom:1.8px solid var(--libre);
+  transform:rotate(-45deg);
+}
+.incluye.no li{color:var(--tinta-3)}
+.incluye.no li::before{
+  border:none;left:3px;top:9px;width:9px;height:1.8px;background:var(--tinta-3);transform:none;
+}
+ul{margin:0;padding:0}
+
+/* ───────────────────────────── móvil ────────────────────────────────────── */
+@media (max-width:860px){
+  .app{flex-direction:column}
+  aside.lateral{
+    position:fixed;bottom:0;left:0;right:0;top:auto;width:100%;height:auto;
+    flex-direction:row;border-right:none;border-top:1px solid var(--nocturno-2);
+    padding:0 0 env(safe-area-inset-bottom,0px);z-index:50;box-shadow:0 -2px 12px rgba(25,27,31,.07);
+  }
+  .marca,.pie-lateral,.grupo{display:none}
+  /* Los dos selectores van en su propio renglón arriba de los iconos: metidos
+     en la misma fila aprietan la barra y se vuelven imposibles de tocar. */
+  aside.lateral{flex-direction:column}
+  nav.menu{display:flex;gap:2px;padding:6px 8px;overflow-x:auto;flex:none;width:100%}
+  nav.menu a{
+    flex-direction:column;gap:3px;padding:7px 11px;font-size:10.5px;
+    white-space:nowrap;min-width:62px;justify-content:center;
+  }
+  nav.menu a svg{width:19px;height:19px}
+  nav.menu a .globo{position:absolute;margin:0;transform:translate(14px,-6px);font-size:10px;padding:0 5px}
+  nav.menu a{position:relative}
+  main.lienzo{padding:20px 16px 96px}
+  .titulo h2{font-size:22px}
+  .cajon{width:100%;border-left:none;border-radius:var(--r-l) var(--r-l) 0 0;top:auto;height:88vh}
+  .dia{min-height:62px;padding:5px}
+  .punto{width:15px;height:15px;font-size:9px}
+  .precio-grande{font-size:27px}
+}
+
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
+/* ═════════════════════ patrones de catálogo ═══════════════════════════════ */
+
+/* filtros en fila de píldoras */
+.filtros{display:flex;gap:7px;flex-wrap:wrap}
+.filtro{
+  padding:6px 13px;border-radius:20px;border:1px solid var(--linea-2);
+  background:var(--panel);font-size:13px;font-weight:530;cursor:pointer;color:var(--tinta-2);
+  transition:background .15s var(--ease),border-color .15s var(--ease),color .15s var(--ease);
+}
+.filtro:hover{background:var(--panel-2);border-color:var(--tinta-3)}
+.filtro.sel{background:var(--coral);border-color:var(--coral);color:var(--sobre-coral)}
+.filtro .n{opacity:.65;margin-left:5px;font-variant-numeric:tabular-nums}
+
+/* pestañas dentro del panel deslizante */
+.pestanas{display:flex;border:1px solid var(--linea-2);border-radius:4px;overflow:hidden;margin-bottom:16px}
+.pestanas button{
+  flex:1;border:none;background:var(--panel);border-radius:0;padding:9px 10px;
+  font-size:13px;font-weight:700;color:var(--tinta-2);
+}
+.pestanas button + button{border-left:1px solid var(--linea-2)}
+.pestanas button:hover{background:var(--panel-2);color:var(--tinta)}
+.pestanas button.sel,.pestanas button.sel:hover{background:var(--nocturno);color:#fff}
+
+/* encabezado de categoría */
+.cat{
+  display:flex;align-items:baseline;gap:9px;margin:22px 0 10px;
+  padding-bottom:7px;border-bottom:1px solid var(--linea);
+}
+.cat:first-child{margin-top:0}
+.cat h4{font-size:12px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.cat .n{font-size:12px;color:var(--tinta-3);font-variant-numeric:tabular-nums}
+
+/* tarjeta de servicio */
+/* ── Servicios ────────────────────────────────────────────────────────── */
+.barra-serv{padding:16px 18px;display:flex;flex-direction:column;gap:14px}
+.fila-buscar{display:flex;gap:10px;flex-wrap:wrap}
+.fila-buscar input{flex:1;min-width:240px;padding:10px 12px;font-size:15px}
+.fila-buscar input:focus{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-bajo)}
+.fila-filtros{display:flex;gap:18px 28px;flex-wrap:wrap}
+.filtro-grupo{display:flex;align-items:center;gap:10px}
+.filtro-grupo .etq{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-3)}
+.filtros-cat{display:flex;gap:6px;flex-wrap:wrap;padding-top:14px;border-top:1px solid var(--linea)}
+.filtro-cat{
+  display:inline-flex;align-items:center;gap:7px;padding:6px 10px;border-radius:4px;
+  border:1px solid var(--linea);background:var(--panel-2);font-size:13px;font-weight:600;color:var(--tinta-2);
+}
+.filtro-cat b{font-size:11.5px;font-weight:800;color:var(--tinta-3);font-variant-numeric:tabular-nums}
+.filtro-cat:hover{border-color:var(--tinta-3);background:var(--panel);color:var(--tinta)}
+.filtro-cat.sel,.filtro-cat.sel:hover{background:var(--coral);border-color:var(--coral);color:#fff}
+.filtro-cat.sel b{color:rgba(255,255,255,.8)}
+
+.grupo-serv{margin-top:16px}
+.rejilla-serv{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px;padding:14px}
+.serv{
+  background:var(--panel);border:1px solid var(--linea);border-left:3px solid var(--linea-2);border-radius:4px;
+  padding:12px 14px;cursor:pointer;text-align:left;font:inherit;width:100%;
+  display:flex;flex-direction:column;gap:4px;
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease);
+}
+/* Lo que da el salón deja más margen que lo de un proveedor: se distingue. */
+.serv.propio{border-left-color:var(--nocturno)}
+.serv:hover{border-color:var(--linea-2);box-shadow:0 4px 6px -1px rgba(0,0,0,.08);background:var(--panel)}
+.serv.propio:hover{border-left-color:var(--nocturno)}
+.serv .nom{font-size:13.5px;font-weight:700;line-height:1.35;color:var(--tinta)}
+.serv .pre{font-size:19px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums;color:var(--tinta)}
+.serv .inc{
+  font-size:12px;color:var(--tinta-3);line-height:1.45;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.etiquetas-serv{display:flex;gap:4px;flex-wrap:wrap;margin-top:auto;padding-top:8px}
+.etiquetas-serv .chip{font-size:11px;padding:2px 7px}
+.chip.propio{background:#E8EDF2;color:var(--nocturno)}
+.chip.propio::before{display:none}
+
+/* ── panel de formulario (servicios): mismos tres pisos que Paquetes ─── */
+.cajon.form{width:min(600px,100vw);padding:0;display:flex;flex-direction:column;overflow:hidden;border-top:4px solid var(--nocturno)}
+.cajon.form .cajon-top{padding:18px 24px 14px;margin:0;flex:none;border-bottom:1px solid var(--linea)}
+.cajon.form .cajon-top h3{font-size:20px;font-weight:800;letter-spacing:-.02em}
+.seccion-form{display:flex;flex-direction:column;gap:12px;padding-bottom:18px;margin-bottom:18px;border-bottom:1px solid var(--linea)}
+.seccion-form:last-of-type{border-bottom:none;margin-bottom:0}
+.seccion-form h4{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta)}
+.seccion-form .campo input,.seccion-form .campo select,.seccion-form textarea{width:100%}
+.seccion-form textarea{resize:vertical}
+.seccion-form .fila > .campo{flex:1;min-width:150px}
+.ayuda-campo{font-size:12px;font-weight:400;color:var(--tinta-3)}
+/* «Quién lo da» es un div con botones, no un label: que se vea igual que los demás. */
+.seccion-form div.campo{display:flex;flex-direction:column;gap:5px;font-size:12.5px;color:var(--tinta-2);font-weight:550}
+/* El texto de ejemplo no debe parecer un valor ya capturado. */
+input::placeholder,textarea::placeholder{color:var(--tinta-3);opacity:.7;font-style:italic}
+button.peligro{color:var(--ocupada);border-color:rgba(179,55,43,.3)}
+button.peligro:hover{background:var(--ocupada-bg);border-color:var(--ocupada)}
+
+/* tarjeta de paquete */
+/* ── Paquetes: un bloque por grupo, tarjetas con el color de su nivel ─── */
+.grupo-paq{margin-top:16px}
+.grupo-paq:first-of-type{margin-top:0}
+.cuenta-paq{font-size:12px;color:var(--tinta-3)}
+.rejilla-paq{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px;padding:16px}
+.sub-paq{
+  padding:14px 16px 0;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-3);
+}
+.sub-paq + .rejilla-paq{padding-top:10px}
+.rejilla-paq + .sub-paq{border-top:1px solid var(--linea)}
+.paq{
+  --nivel:var(--nocturno);
+  background:var(--panel);border:1px solid var(--linea);border-top:3px solid var(--nivel);border-radius:4px;
+  padding:14px 15px 13px;display:flex;flex-direction:column;gap:6px;text-align:left;
+  transition:border-color .15s var(--ease),box-shadow .15s var(--ease);
+}
+.paq.nivel-bronce{--nivel:#B0743C}
+.paq.nivel-onix{--nivel:#2A2E35}
+.paq.nivel-plata{--nivel:#A3AAB3}
+.paq.nivel-oro{--nivel:#D4A72C}
+.paq:hover{border-color:var(--linea-2);border-top-color:var(--nivel);box-shadow:0 4px 6px -1px rgba(0,0,0,.08)}
+.paq .cel{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-3)}
+.paq .nom{font-size:16px;font-weight:800;letter-spacing:-.015em;line-height:1.25;color:var(--tinta)}
+.paq .rango{display:flex;flex-direction:column;margin-top:4px;font-variant-numeric:tabular-nums}
+.paq .rango .desde{font-size:11px;font-weight:600;color:var(--tinta-3)}
+.paq .rango .monto{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.1;color:var(--tinta)}
+.paq .rango .hasta{font-size:12px;color:var(--tinta-3);margin-top:2px}
+.paq .donde{display:flex;gap:4px;flex-wrap:wrap;align-items:center;margin-top:auto;padding-top:10px;border-top:1px solid var(--linea)}
+.paq .abrir{margin-left:auto;font-size:12px;font-weight:700;color:var(--coral);opacity:0;transition:opacity .15s var(--ease)}
+.paq:hover .abrir,.paq:focus-visible .abrir{opacity:1}
+
+/* ── panel del paquete ──────────────────────────────────────────────────
+   Tres pisos: cabecera fija, contenido que se desplaza y barra fija. Solo
+   el contenido hace scroll; las pestañas y el salón siempre se ven. */
+.cajon.ancho{
+  --nivel:var(--nocturno);
+  width:min(860px,100vw);padding:0;display:flex;flex-direction:column;overflow:hidden;
+  border-top:4px solid var(--nivel);
+}
+.cajon.ancho.nivel-bronce{--nivel:#B0743C}
+.cajon.ancho.nivel-onix{--nivel:#2A2E35}
+.cajon.ancho.nivel-plata{--nivel:#A3AAB3}
+.cajon.ancho.nivel-oro{--nivel:#D4A72C}
+.cajon.ancho .cajon-top{padding:18px 24px 0;margin:0;flex:none}
+.cajon.ancho .cajon-top h3{font-size:22px;font-weight:800;letter-spacing:-.02em}
+.cajon-cuerpo{flex:1;min-height:0;display:flex;flex-direction:column}
+.cajon-fijo{flex:none;padding:14px 24px 0;border-bottom:1px solid var(--linea);background:var(--panel)}
+.cajon-panel{flex:1;min-height:0;overflow-y:auto;padding:16px 24px 0;display:flex;flex-direction:column}
+.cajon-panel > .barra-guardar{margin-top:auto}
+/* Que nada se encoja: las tablas de precios quedaban con scroll propio. */
+.cajon-panel > *{flex-shrink:0}
+
+.ficha-paq{
+  display:grid;grid-template-columns:repeat(4,1fr);
+  border:1px solid var(--linea);border-radius:4px;background:var(--panel-2);
+}
+.ficha-paq .dato{padding:9px 12px;border-left:1px solid var(--linea)}
+.ficha-paq .dato:first-child{border-left:none}
+.ficha-paq .dato b{display:block;font-size:16px;font-weight:800;letter-spacing:-.015em;font-variant-numeric:tabular-nums}
+.ficha-paq .dato span{font-size:11.5px;color:var(--tinta-3)}
+.fila-controles{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:14px 0}
+.fila-controles .pestanas{margin:0;flex:none;min-width:240px}
+.fila-controles .pildoras{margin-left:auto}
+.solo-salon{margin-left:auto;font-size:13px;font-weight:650;color:var(--tinta-2)}
+
+.campo-cortesia{margin-bottom:16px}
+.etq-regalo{font-size:10.5px;font-weight:800;letter-spacing:.09em;text-transform:uppercase;color:var(--libre)}
+.etq-regalo::before{content:"\1F381  "}
+textarea.cortesia{width:100%;resize:vertical;min-height:44px;font-size:14px;line-height:1.5;padding:9px 11px}
+
+.buscar-conceptos{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+.buscar-conceptos input{flex:1;min-width:200px;padding:8px 11px;font-size:14px}
+.filtro-conceptos{display:flex;border:1px solid var(--linea-2);border-radius:4px;overflow:hidden}
+.filtro-conceptos button{
+  border:none;border-radius:0;background:var(--panel);padding:7px 11px;font-size:12.5px;font-weight:600;color:var(--tinta-2);
+}
+.filtro-conceptos button + button{border-left:1px solid var(--linea-2)}
+.filtro-conceptos button b{font-weight:800;font-variant-numeric:tabular-nums}
+.filtro-conceptos button.si b{color:var(--libre)}
+.filtro-conceptos button.no b{color:var(--ocupada)}
+.filtro-conceptos button.sel{background:var(--nocturno);color:#fff}
+.filtro-conceptos button.sel b{color:#fff}
+.lista-conceptos{border:1px solid var(--linea);border-radius:4px}
+
+/* tarjeta de decisión pendiente */
+.decision{
+  background:var(--panel);border:1px solid var(--linea);border-left:3px solid var(--duda);
+  border-radius:var(--r-m);padding:16px 17px;box-shadow:var(--sombra-1);
+}
+.decision h4{font-size:14.5px;margin-bottom:3px}
+.decision .ctx{font-size:12.5px;color:var(--tinta-3)}
+.decision .opciones{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.decision .opcion{
+  padding:7px 12px;border:1px solid var(--linea-2);border-radius:var(--r-s);
+  background:var(--panel-2);font-size:15px;font-weight:650;font-variant-numeric:tabular-nums;
+}
+.decision .pregunta-final{font-size:12.5px;color:var(--tinta-2);margin-top:11px}
+
+/* acordeón de preguntas */
+.pregunta-caja{
+  background:var(--panel);border:1px solid var(--linea);border-radius:var(--r-m);
+  margin-bottom:8px;overflow:hidden;box-shadow:var(--sombra-1);
+}
+.pregunta-caja > button{
+  width:100%;text-align:left;padding:14px 16px;border:none;border-radius:0;background:transparent;
+  font-weight:570;font-size:14px;display:flex;align-items:center;gap:10px;
+}
+.pregunta-caja > button:hover{background:var(--panel-2)}
+.pregunta-caja > button .flecha{
+  margin-left:auto;color:var(--tinta-3);font-size:12px;
+  transition:transform .2s var(--ease);
+}
+.pregunta-caja > button[aria-expanded="true"] .flecha{transform:rotate(90deg)}
+.respuesta{
+  padding:0 16px 15px;font-size:13.5px;color:var(--tinta-2);
+  white-space:pre-wrap;line-height:1.65;
+}
+.respuesta .nota{
+  margin-top:11px;padding:9px 12px;background:var(--duda-bg);color:var(--duda);
+  border-radius:var(--r-s);font-size:12.5px;white-space:normal;
+}
+
+/* ═════════════════════ edición ════════════════════════════════════════════ */
+.quien-caja{padding:12px 14px;border-top:1px solid var(--nocturno-2)}
+.quien-caja select{
+  width:100%;font-size:13px;padding:7px 9px;border-radius:4px;
+  background:var(--nocturno-2);color:var(--noct-vivo);border-color:rgba(255,255,255,.1);
+}
+.quien-caja select:hover{border-color:rgba(255,255,255,.25)}
+.quien-caja select:focus{border-color:var(--noct-activo);box-shadow:0 0 0 3px rgba(244,63,94,.25)}
+.quien-caja option{background:var(--nocturno);color:var(--noct-vivo)}
+.quien-caja .campo{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--noct-texto)}
+
+/* celdas de precio editables */
+td.editable{padding:4px 6px}
+/* La fila de avisos bajo cada precio solo ocupa lugar cuando dice algo. */
+tr.fila-avisos td{padding:0 14px;border-bottom:none}
+tr.fila-avisos:hover{background:transparent}
+tr.fila-avisos:has(.aviso) td{padding-bottom:6px;border-bottom:1px solid var(--linea)}
+td.editable input{
+  width:84px;padding:6px 8px;text-align:right;font-variant-numeric:tabular-nums;
+  border-color:transparent;background:transparent;font-size:13.5px;
+}
+td.editable input:hover{border-color:var(--linea-2);background:var(--panel)}
+td.editable input:focus{border-color:var(--coral);background:var(--panel);box-shadow:0 0 0 3px var(--coral-bajo)}
+td.editable input.tocado{border-color:var(--duda);background:var(--duda-bg);font-weight:650}
+.guardar-fila{opacity:0;pointer-events:none;transition:opacity .15s var(--ease);padding:5px 10px;font-size:12.5px}
+td:has(> .guardar-fila){padding:4px 8px}
+tr.sucia .guardar-fila{opacity:1;pointer-events:auto}
+tr.sucia td{background:var(--duda-bg)}
+
+/* tres estados de un concepto */
+.concepto-fila{
+  display:flex;align-items:center;gap:12px;padding:6px 8px 6px 12px;
+  border-bottom:1px solid var(--linea);font-size:13.5px;box-shadow:inset 3px 0 0 transparent;
+}
+.concepto-fila:hover{background:var(--panel-2)}
+/* Lo que se cambió y aún no se guarda, marcado a la izquierda. */
+.concepto-fila.cambiado{background:var(--duda-bg);box-shadow:inset 3px 0 0 var(--duda)}
+.concepto-fila:last-child{border-bottom:none}
+.concepto-fila .txt{flex:1;line-height:1.4}
+.concepto-fila.si .txt{color:var(--tinta)}
+.concepto-fila.no .txt{color:var(--tinta-3);text-decoration:line-through}
+.concepto-fila.na .txt{color:var(--tinta-3);opacity:.6}
+.tri{display:flex;gap:2px;background:var(--panel-2);padding:2px;border-radius:4px;flex:none}
+.tri button{
+  border:none;background:transparent;padding:3px 9px;border-radius:3px;
+  font-size:11.5px;font-weight:620;color:var(--tinta-3);min-width:34px;
+}
+.tri button:hover{background:var(--panel);color:var(--tinta)}
+.tri button.sel{box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.tri button.sel[data-v="si"]{background:var(--libre);color:#fff}
+.tri button.sel[data-v="no"]{background:var(--ocupada);color:#fff}
+.tri button.sel[data-v="na"]{background:var(--panel);color:var(--tinta-2)}
+
+.barra-guardar{
+  position:sticky;bottom:0;z-index:2;background:var(--panel);border-top:1px solid var(--linea);
+  margin:16px -24px 0;padding:12px 24px calc(12px + env(safe-area-inset-bottom,0px));
+  display:flex;gap:9px;align-items:center;box-shadow:0 -4px 8px -6px rgba(0,0,0,.12);
+}
+.barra-guardar.sucia{background:#FFFBF3}
+.barra-guardar.sucia .estado{color:var(--duda);font-weight:650}
+.barra-guardar .estado{font-size:12.5px;color:var(--tinta-3);margin-left:auto}
+
+textarea{font:inherit;line-height:1.5}
+.cajon .fila > .campo{flex:1;min-width:120px}
+.cajon-panel th,.cajon-panel td{padding:8px 8px}
+.cajon-panel td.editable{padding:3px 3px}
+/* Los siete días reparten el ancho entre sí y los precios van centrados:
+   con celdas de ancho fijo sobraba una franja vacía a la derecha. */
+.cajon-panel table{table-layout:fixed;width:100%}
+.cajon-panel thead th{text-align:center}
+.cajon-panel thead th:first-child{width:96px;text-align:left}
+.cajon-panel thead th:last-child{width:84px}
+.cajon-panel td.editable input{width:100%;padding:5px 4px;text-align:center}
+.cajon-panel td:has(> .guardar-fila){text-align:center;padding:3px 4px}
+/* La columna de «Guardar» solo existe mientras hay una fila editada. */
+.cajon-panel table:not(:has(tr.sucia)) tr > :last-child:not([colspan]){display:none}
+
+/* ── calendario de un solo salón: cabe el evento escrito ─────────────────── */
+.dia.solo{min-height:88px}
+.dia .ev{
+  width:100%;border-radius:3px;padding:4px 6px;line-height:1.3;
+  display:flex;flex-direction:column;gap:1px;overflow:hidden;
+}
+.dia .ev b{font-size:11.5px;font-weight:640;white-space:nowrap;text-overflow:ellipsis;overflow:hidden}
+.dia .ev span{font-size:10.5px;opacity:.8}
+.dia .ev.contratado{background:var(--ocupada-bg);color:var(--ocupada);box-shadow:inset 2px 0 0 var(--ocupada)}
+.dia .ev.separado{background:var(--duda-bg);color:var(--duda);box-shadow:inset 2px 0 0 var(--duda)}
+.dia .ev.bloqueado{background:var(--panel-3);color:var(--tinta-2)}
+.dia .ev.vacio-ev{
+  font-size:10.5px;font-weight:600;align-items:flex-start;
+  background:transparent;
+}
+.dia .ev.vacio-ev.libre{color:var(--libre)}
+.dia .ev.vacio-ev.no_confirmada{color:var(--duda)}
+@media (max-width:640px){
+  .dia.solo{min-height:70px}
+  .dia .ev b{font-size:10.5px}
+  .dia .ev span{display:none}
+}
+
+
+
+/* ── barra inferior del teléfono ─────────────────────────────────────────────
+   Los dos selectores van ARRIBA de los iconos y en un solo renglón: metidos
+   entre ellos aprietan la barra y se vuelven imposibles de tocar con el dedo.
+   Esta regla va al final a propósito: escrita antes, la base la vencía. */
+@media (max-width:860px){
+  aside.lateral .quien-caja{
+    order:-1;display:flex;gap:9px;width:100%;
+    padding:8px 12px 7px;border-top:none;border-bottom:1px solid var(--nocturno-2);
+  }
+  aside.lateral .quien-caja .campo{
+    flex:1;min-width:0;gap:3px;
+    font-size:9.5px;letter-spacing:.07em;
+  }
+  aside.lateral .quien-caja select{font-size:13.5px;padding:7px 9px;width:100%}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   PORTADA
+   Héroe oscuro a todo el ancho con los números del negocio, y debajo dos
+   columnas: lo que falta vender y lo que viene.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.portada{animation:entra .4s var(--ease) both}
+
+/* ── héroe ──────────────────────────────────────────────────────────────── */
+.hero{
+  position:relative;overflow:hidden;border-radius:4px;color:#fff;
+  background:var(--nocturno);border:1px solid var(--nocturno-2);
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);
+}
+.hero .arriba{padding:36px 40px 30px}
+.hero .dia-rotulo{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(255,255,255,.62);margin-bottom:14px;
+}
+.hero .dia-rotulo::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--coral);flex:none}
+.hero .saludo{
+  font-size:clamp(30px,3.4vw,40px);font-weight:800;
+  letter-spacing:-.035em;line-height:1.06;
+}
+.hero .frase{
+  margin-top:16px;font-size:19.5px;line-height:1.55;font-weight:400;
+  color:rgba(255,255,255,.80);max-width:60ch;
+}
+.hero .frase b{color:#fff;font-weight:620}
+.hero .frase .dest{
+  color:#fff;font-weight:650;
+  box-shadow:inset 0 -.5em 0 rgba(244,63,94,.35);padding:0 3px;border-radius:2px;
+}
+
+/* indicadores dentro del héroe */
+.hero .cifras{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(165px,1fr));
+  border-top:1px solid var(--nocturno-2);background:rgba(0,0,0,.08);
+}
+.hero .cifras > div{
+  padding:20px 34px 24px;border-left:1px solid var(--nocturno-2);
+}
+.hero .cifras > div:first-child{border-left:none}
+.hero .cifras .n{
+  font-size:30px;font-weight:800;letter-spacing:-.03em;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.hero .cifras .n small{font-size:15px;font-weight:500;opacity:.55;margin-left:6px}
+.hero .cifras .r{
+  font-size:12.5px;color:rgba(255,255,255,.60);margin-top:7px;line-height:1.35;
+  white-space:nowrap;
+}
+
+/* ── dos columnas ───────────────────────────────────────────────────────── */
+.portada-cuerpo{
+  display:grid;grid-template-columns:minmax(0,1.15fr) minmax(360px,1fr);
+  gap:26px;margin-top:26px;align-items:start;
+}
+.bloque{
+  background:var(--panel);border:1px solid var(--linea);border-radius:4px;
+  padding:0 20px 20px;box-shadow:0 1px 2px rgba(0,0,0,.05);min-width:0;overflow:hidden;
+  animation:entra .5s var(--ease) both;
+}
+.bloque:nth-child(2){animation-delay:.08s}
+.rotulo{
+  display:flex;align-items:center;gap:11px;
+  margin:0 -20px 20px;padding:14px 20px 12px;border-bottom:1px solid var(--linea);
+  font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--tinta);
+}
+
+/* ── el número y la barra ───────────────────────────────────────────────── */
+.marcador{display:flex;align-items:center;gap:18px;flex-wrap:wrap;margin-bottom:18px}
+.marcador .cifra{
+  font-size:clamp(42px,4.4vw,56px);font-weight:720;letter-spacing:-.045em;
+  line-height:.92;font-variant-numeric:tabular-nums;color:var(--nocturno);font-weight:800;
+}
+.marcador .glosa{font-size:17px;line-height:1.4;color:var(--tinta-2);max-width:34ch}
+.marcador .glosa b{color:var(--tinta);font-weight:650}
+.marcador .glosa .detalle{
+  font-size:13.5px;color:var(--tinta-3);margin-top:5px;line-height:1.45;font-weight:400;
+}
+.barra-prop{
+  height:8px;border-radius:2px;background:var(--panel-3);overflow:hidden;margin-bottom:24px;
+}
+.barra-prop i{display:block;height:100%;border-radius:2px;background:var(--nocturno)}
+
+/* ── rejilla de fines de semana ─────────────────────────────────────────── */
+.semanas{display:flex;gap:8px;align-items:flex-start;overflow-x:auto;padding-bottom:4px}
+.semanas::-webkit-scrollbar{height:6px}
+.semanas::-webkit-scrollbar-thumb{background:var(--linea-2);border-radius:2px}
+.semanas::-webkit-scrollbar-track{background:transparent}
+.semanas .etiquetas,.semanas .grupo{display:grid;grid-template-rows:74px repeat(4,38px)}
+.semanas .etiquetas{flex:none}
+.semanas .etiquetas div{
+  display:flex;align-items:center;gap:8px;font-size:13.5px;font-weight:560;
+  color:var(--tinta-2);padding-right:8px;white-space:nowrap;
+}
+.semanas .etiquetas .cuenta-salon{
+  margin-left:auto;font-size:11.5px;font-weight:700;color:var(--tinta-3);
+  font-variant-numeric:tabular-nums;background:var(--panel-2);
+  padding:2px 6px;border-radius:4px;
+}
+.semanas .etiquetas .cuenta-salon.lleno{background:var(--coral-bajo);color:var(--coral-alto)}
+.semanas .grupo{
+  flex:1;min-width:0;background:var(--panel-2);
+  border:1px solid var(--linea);border-radius:4px;padding:0 5px 8px;
+}
+/* Siete columnas en vez de tres: la casilla se achica para que la semana
+   completa quepa sin barra de desplazamiento. */
+/* Fluida: con siete columnas el ancho fijo desbordaba en cuanto la etiqueta
+   del salón crecía («Santa Cruz»). Que la casilla ceda antes que la rejilla. */
+.semanas .casilla{width:100%;max-width:21px;height:auto;aspect-ratio:1;border-radius:3px;font-size:10px}
+.semanas .etiquetas div{padding-right:6px}
+.semanas .grupo .dias span{font-size:9.5px;letter-spacing:-.02em}
+.semanas .grupo .cabeza{display:flex;flex-direction:column;justify-content:center;gap:8px;padding:12px 0 4px}
+.semanas .grupo .titulo{
+  font-size:10.5px;font-weight:700;color:var(--tinta);text-align:center;
+  letter-spacing:0;white-space:nowrap;
+}
+.semanas .grupo .dias,.semanas .grupo .fila{display:grid;grid-template-columns:repeat(7,1fr)}
+.semanas .grupo .dias span{font-size:10.5px;font-weight:700;color:var(--tinta-3);text-align:center}
+.semanas .grupo .fila{align-items:center}
+.casilla{
+  width:28px;height:28px;border-radius:3px;margin:0 auto;padding:0;
+  display:grid;place-items:center;font-size:12.5px;font-weight:700;
+  /* Ahora es un <button>: hay que apagarle el aspecto de botón y dejarle el
+     cursor, que es lo único que anuncia que el día se puede abrir. */
+  border:none;background:none;color:inherit;font-family:inherit;cursor:pointer;
+  transition:transform .15s var(--ease),box-shadow .15s var(--ease),background .15s var(--ease);
+}
+.casilla:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
+.casilla.vendido{
+  background:var(--nocturno);color:#fff;
+  box-shadow:0 1px 2px rgba(0,0,0,.15);
+}
+.casilla.libre{border:1.5px dashed var(--linea-2);background:var(--panel)}
+/* Con evento pero con hueco para otro: ni lleno ni vacío. */
+.casilla.a-medias{
+  background:var(--acento-suave);color:var(--acento);
+  border:1.5px solid var(--acento);
+}
+.casilla:hover{transform:scale(1.15)}
+.casilla.libre:hover{border-color:var(--coral);border-style:solid;background:var(--coral-bajo)}
+.leyenda-semanas{
+  display:flex;gap:20px;flex-wrap:wrap;align-items:center;
+  margin-top:22px;padding-top:18px;border-top:1px solid var(--linea);
+  font-size:13.5px;color:var(--tinta-2);
+}
+.leyenda-semanas span{display:flex;align-items:center;gap:9px}
+.leyenda-semanas .tenue{color:var(--tinta-3);font-size:12.5px}
+
+/* ── lo que viene ───────────────────────────────────────────────────────── */
+.jornada{display:flex;gap:15px;padding:15px 0;border-top:1px solid var(--linea)}
+.jornada:first-of-type{border-top:none;padding-top:0}
+.ficha-fecha{
+  flex:none;width:52px;height:55px;border-radius:4px;
+  background:var(--panel-2);border:1px solid var(--linea);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;
+}
+.ficha-fecha .num{
+  font-size:20px;font-weight:720;line-height:1;letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+}
+.ficha-fecha .dow{
+  font-size:9.5px;font-weight:700;letter-spacing:.09em;text-transform:uppercase;color:var(--tinta-3);
+}
+.jornada.pronto .ficha-fecha{
+  background:var(--coral);border-color:var(--coral);
+  box-shadow:0 1px 2px rgba(0,0,0,.15);
+}
+.jornada.pronto .ficha-fecha .num{color:var(--sobre-coral)}
+.jornada.pronto .ficha-fecha .dow{color:rgba(255,255,255,.7)}
+.jornada .eventos{flex:1;min-width:0}
+.jornada .relativo{
+  font-size:11px;font-weight:800;color:var(--tinta-3);margin-bottom:6px;letter-spacing:.08em;text-transform:uppercase;
+}
+.jornada .ev-linea{
+  display:flex;gap:10px;align-items:baseline;padding:6px 0;font-size:15px;
+  border-bottom:1px solid var(--linea);
+}
+.jornada .ev-linea:last-child{border-bottom:none;padding-bottom:0}
+.jornada .ev-linea .sal{font-weight:620;min-width:92px}
+.jornada .ev-linea .tipo{color:var(--tinta-2)}
+.jornada .ev-linea .turno{color:var(--tinta-3);font-size:12.5px;margin-left:auto}
+
+.ver-mas{
+  display:inline-flex;align-items:center;gap:7px;margin-top:20px;
+  font-size:14.5px;font-weight:620;color:var(--coral);text-decoration:none;
+  padding:8px 14px;border:1px solid var(--linea-2);border-radius:4px;
+  transition:background .15s var(--ease),border-color .15s var(--ease);
+}
+.ver-mas:hover{background:var(--coral-bajo);border-color:var(--coral);color:var(--coral-alto)}
+
+/* Dos columnas solo cuando la izquierda alcanza para los tres fines de semana.
+   Por debajo de 1400 se apilan: es preferible una columna holgada a dos
+   apretadas con la rejilla cortada.
+   minmax(0,1fr) y no 1fr: con «1fr» la columna hereda min-width:auto, el
+   bloque no puede encoger y la rejilla desborda la página entera. */
+@media (max-width:1400px){
+  .portada-cuerpo{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:640px){
+  .hero{border-radius:4px}
+  .hero .arriba{padding:26px 22px 22px}
+  .hero .frase{font-size:17.5px}
+  .hero .cifras > div{padding:16px 22px 18px;border-left:none;border-top:1px solid var(--nocturno-2)}
+  .hero .cifras > div:first-child{border-top:none}
+  .bloque{padding:0 16px 18px}
+  .rotulo{margin:0 -16px 18px;padding:13px 16px 11px}
+  .jornada{gap:12px}
+  .ficha-fecha{width:48px;height:51px}
+  .jornada .ev-linea{font-size:14.5px;gap:8px}
+  .jornada .ev-linea .sal{min-width:84px}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COTIZAR
+   Mismo lenguaje que la portada: el formulario arriba, y la respuesta como un
+   héroe oscuro con los datos que el sistema dedujo, seguido de una tarjeta
+   por salón.
+   ═══════════════════════════════════════════════════════════════════════════ */
+.cotizador{animation:entra .4s var(--ease) both}
+
+/* ── bloque con cabecera numerada (el .bloque de MediaHub) ──────────────── */
+.bloque-cot{
+  background:var(--panel);border:1px solid var(--linea);border-radius:4px;
+  box-shadow:0 1px 2px rgba(0,0,0,.05);margin-top:20px;
+}
+.cotizador > .bloque-cot{margin-top:0}
+.paso{
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+  padding:13px 20px 12px;border-bottom:1px solid var(--linea);
+}
+.paso .n{
+  width:20px;height:20px;border-radius:4px;flex:none;display:grid;place-items:center;
+  background:var(--nocturno);color:#fff;font-size:11px;font-weight:800;
+}
+.paso h3{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta)}
+.paso .apunte{margin-left:auto;font-size:12.5px;color:var(--tinta-3)}
+
+/* ── paso 1: el formulario ──────────────────────────────────────────────── */
+.bloque-cot .cuerpo{padding:20px;display:flex;flex-direction:column;gap:20px}
+.bloque-cot .campos{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:20px}
+.pregunta{display:flex;flex-direction:column;gap:8px}
+.pregunta .etq{font-size:13px;font-weight:650;color:var(--tinta)}
+.pregunta .etq em{font-style:normal;font-weight:500;color:var(--tinta-3);margin-left:4px}
+.pregunta input{width:100%;padding:11px 12px;font-size:15px;border-radius:4px}
+.pregunta input:focus{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-bajo)}
+.pista{font-size:12.5px;color:var(--tinta-3);line-height:1.4}
+.pista.finde,.pista.semana{font-weight:650}
+.pista.finde{color:var(--nocturno)}
+.pista.semana{color:var(--libre)}
+
+.pildoras{display:flex;flex-wrap:wrap;gap:6px}
+.pildora{
+  padding:8px 14px;border-radius:4px;border:1px solid var(--linea-2);
+  background:var(--panel);font-size:13.5px;font-weight:600;color:var(--tinta-2);
+}
+.pildora:hover{background:var(--panel-2);border-color:var(--tinta-3);color:var(--tinta)}
+.pildora.sel,.pildora.sel:hover{background:var(--nocturno);border-color:var(--nocturno);color:#fff}
+
+.bloque-cot > .pie{
+  display:flex;align-items:center;gap:16px;flex-wrap:wrap;
+  padding:14px 20px;border-top:1px solid var(--linea);background:var(--panel-2);
+}
+.bloque-cot > .pie .nota{font-size:12.5px;color:var(--tinta-3);max-width:52ch;line-height:1.45}
+.cotizador button.primario,.cotizador .acciones button{border-radius:4px}
+
+/* ── resumen: lo que dedujo el sistema + la vigencia ────────────────────── */
+.respuesta-cot{margin-top:20px;animation:entra .42s var(--ease) both}
+.resumen-cot{
+  display:grid;grid-template-columns:minmax(0,1fr) 260px;
+  background:var(--nocturno);border:1px solid var(--nocturno-2);border-radius:4px;color:#fff;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.1), 0 2px 4px -1px rgba(0,0,0,.06);overflow:hidden;
+}
+.resumen-cot .principal{padding:24px 26px 0}
+.resumen-cot .dia-rotulo{
+  display:flex;align-items:center;gap:8px;
+  font-size:11px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,.62);
+}
+.resumen-cot .dia-rotulo::before{content:"";width:8px;height:8px;border-radius:2px;background:var(--coral);flex:none}
+.resumen-cot .fecha{font-size:clamp(24px,2.6vw,32px);font-weight:800;letter-spacing:-.03em;margin-top:10px;line-height:1.1}
+.resumen-cot .datos{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));
+  margin:22px -26px 0;border-top:1px solid var(--nocturno-2);background:rgba(0,0,0,.08);
+}
+.resumen-cot .dato{padding:14px 26px 16px;border-left:1px solid var(--nocturno-2)}
+.resumen-cot .dato:first-child{border-left:none}
+.resumen-cot .dato .n{font-size:19px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.resumen-cot .dato .n.texto{font-size:16px;white-space:nowrap}
+.resumen-cot .dato .r{font-size:12px;color:rgba(255,255,255,.6);margin-top:3px}
+
+.vigencia{padding:22px 22px 20px;background:var(--nocturno-2);border-left:1px solid rgba(255,255,255,.06)}
+.vigencia .r{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.6)}
+.vigencia .cuando{font-size:26px;font-weight:800;letter-spacing:-.02em;margin-top:8px}
+.vigencia .quedan{
+  display:inline-block;margin-top:8px;padding:3px 8px;border-radius:4px;
+  font-size:12px;font-weight:800;background:rgba(255,255,255,.1);color:#fff;
+}
+.vigencia.pronto .quedan{background:var(--coral)}
+.vigencia p{font-size:12px;color:rgba(255,255,255,.55);line-height:1.45;margin-top:12px}
+
+/* ── paso 2: las tarjetas de salón ──────────────────────────────────────── */
+.aviso-venta{margin:16px 20px 0;padding:12px 14px;border-radius:4px;font-size:14px;line-height:1.45}
+.aviso-venta.mal{background:var(--ocupada-bg);color:var(--ocupada);border:1px solid rgba(179,55,43,.2)}
+.aviso-venta b{font-weight:700}
+.rejilla-salones{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px;padding:20px;
+}
+.tarjeta-salon{
+  background:var(--panel);border:1px solid var(--linea);border-radius:4px;
+  padding:16px 16px 14px;display:flex;flex-direction:column;
+  transition:box-shadow .15s var(--ease),border-color .15s var(--ease);
+  animation:entra .45s var(--ease) both;
+}
+.tarjeta-salon:nth-child(2){animation-delay:.05s}
+.tarjeta-salon:nth-child(3){animation-delay:.1s}
+.tarjeta-salon:nth-child(4){animation-delay:.15s}
+.tarjeta-salon.vendible{border-top:3px solid var(--libre)}
+.tarjeta-salon.vendible:hover{border-color:var(--linea-2);border-top-color:var(--libre);box-shadow:0 4px 6px -1px rgba(0,0,0,.08)}
+.tarjeta-salon.apagada{background:var(--panel-2);border-top:3px solid var(--linea-2)}
+.tarjeta-salon .cabecera{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tarjeta-salon .cabecera h4{font-size:16px;font-weight:800;letter-spacing:-.015em}
+.tarjeta-salon .chip{border-radius:4px}
+.tarjeta-salon .horario{font-size:12px;color:var(--tinta-3);margin-top:2px}
+
+.tarjeta-salon .opciones{display:flex;flex-direction:column;gap:6px;margin-top:14px}
+.tarjeta-salon .opcion{
+  display:flex;align-items:center;gap:10px;width:100%;text-align:left;
+  padding:10px 12px;border:1px solid var(--linea);border-radius:4px;background:var(--panel);
+  font-weight:600;font-size:14px;color:var(--tinta);
+}
+.tarjeta-salon .opcion:hover{background:var(--panel-2);border-color:var(--linea-2)}
+.tarjeta-salon .opcion.sel,.tarjeta-salon .opcion.sel:hover{border-color:var(--coral);background:var(--coral-bajo);box-shadow:inset 3px 0 0 var(--coral)}
+.tarjeta-salon .opcion .marca-radio{
+  width:14px;height:14px;border-radius:50%;flex:none;border:1.5px solid var(--linea-2);background:var(--panel);
+}
+.tarjeta-salon .opcion.sel .marca-radio{border:4px solid var(--coral)}
+.tarjeta-salon .opcion .nombre{flex:1;min-width:0;display:flex;flex-direction:column}
+.tarjeta-salon .opcion .nombre small,.tarjeta-salon .opcion .monto small{font-size:11px;font-weight:500;color:var(--tinta-3)}
+.tarjeta-salon .opcion .monto{display:flex;flex-direction:column;align-items:flex-end;font-size:17px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.tarjeta-salon .opcion.sel .monto{color:var(--coral-alto)}
+
+/* En un salón que no se puede ofrecer, el precio es informativo: nada en coral. */
+.tarjeta-salon.apagada .opcion.sel,.tarjeta-salon.apagada .opcion.sel:hover{border-color:var(--linea-2);background:var(--panel);box-shadow:none}
+.tarjeta-salon.apagada .opcion.sel .marca-radio{border-color:var(--tinta-3)}
+.tarjeta-salon.apagada .opcion.sel .monto{color:var(--tinta-2)}
+
+.regalo{
+  margin-top:12px;padding:10px 12px;border-radius:4px;
+  background:var(--panel-2);border:1px solid var(--linea);
+  font-size:12.5px;line-height:1.5;color:var(--tinta-2);
+}
+.regalo b{
+  display:block;font-size:10px;text-transform:uppercase;letter-spacing:.09em;
+  margin-bottom:3px;font-weight:800;color:var(--libre);
+}
+.regalo b::before{content:"\1F381  "}
+.motivo{margin-top:12px;font-size:13px;line-height:1.5;padding:10px 12px;border-radius:4px}
+.motivo.ocupada{background:var(--ocupada-bg);color:var(--ocupada)}
+.motivo.no_confirmada{background:var(--duda-bg);color:var(--duda)}
+.tarjeta-salon .sin{
+  margin-top:12px;padding:10px 12px;background:var(--duda-bg);color:var(--duda);
+  border-radius:4px;font-size:13px;line-height:1.5;
+}
+.tarjeta-salon .sin b{display:block;margin-bottom:3px;font-weight:700}
+.tarjeta-salon .sin .deriva{display:block;margin-top:6px;font-weight:650}
+.tarjeta-salon .acciones{display:flex;gap:8px;flex-wrap:wrap;margin-top:auto;padding-top:14px}
+.tarjeta-salon .acciones button{flex:1;min-width:120px;font-size:13.5px;padding:9px 12px}
+
+@media (max-width:900px){
+  .resumen-cot{grid-template-columns:1fr}
+  .vigencia{border-left:none;border-top:1px solid rgba(255,255,255,.06)}
+}
+@media (max-width:640px){
+  .bloque-cot .cuerpo{padding:16px}
+  .paso{padding:12px 16px}
+  .paso .apunte{margin-left:0;width:100%}
+  .rejilla-salones{grid-template-columns:1fr;padding:16px}
+  .resumen-cot .principal{padding:20px 18px 0}
+  .resumen-cot .datos{margin:18px -18px 0}
+  .resumen-cot .dato{padding:12px 18px 14px}
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   AGENDA
+   ═══════════════════════════════════════════════════════════════════════════ */
+.agenda-barra{
+  display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:16px;
+}
+.agenda-barra .navega{display:flex;border:1px solid var(--linea-2);border-radius:4px;overflow:hidden;background:var(--panel)}
+.agenda-barra .navega button{
+  border:none;border-radius:0;background:transparent;padding:8px 13px;font-size:15px;font-weight:700;color:var(--tinta-2);
+}
+.agenda-barra .navega button + button{border-left:1px solid var(--linea-2)}
+.agenda-barra .navega button:hover{background:var(--panel-2);color:var(--tinta)}
+.agenda-barra .navega .hoy-btn{font-size:13px;padding:8px 14px}
+.agenda-barra .mes-actual{font-size:20px;font-weight:800;letter-spacing:-.025em;min-width:170px}
+.agenda-barra .salon-filtro{margin-left:auto}
+
+/* cabecera de bloque sin número: título a la izquierda, algo a la derecha */
+.cab-bloque{
+  display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+  padding:12px 20px;border-bottom:1px solid var(--linea);
+}
+.cab-bloque h3{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--tinta)}
+.cab-bloque > :last-child{margin-left:auto}
+.calendario .leyenda{display:flex;gap:6px;flex-wrap:wrap}
+.cuerpo-cal{padding:14px 16px 16px}
+.pie-cal{margin-top:12px;font-size:12.5px;color:var(--tinta-3)}
+
+/* ── hasta qué fecha está capturada la agenda ───────────────────────────── */
+.captura{margin-top:16px}
+.captura .actualizar{font-size:13px;padding:6px 12px;border-radius:4px}
+.cuerpo-captura{padding:14px 20px 18px}
+.explica-corta{font-size:13px;color:var(--tinta-3);line-height:1.5;max-width:90ch}
+.estado-todos{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.estado-todos .pastilla{
+  display:flex;align-items:center;gap:8px;padding:7px 12px;border-radius:4px;
+  background:var(--panel-2);border:1px solid var(--linea);font-size:13px;font-weight:500;
+  box-shadow:inset 3px 0 0 var(--libre);
+}
+.estado-todos .pastilla:hover{border-color:var(--tinta-3);background:var(--panel)}
+.estado-todos .pastilla b{font-weight:700;color:var(--tinta)}
+.estado-todos .pastilla span{color:var(--tinta-3);font-variant-numeric:tabular-nums}
+.estado-todos .pastilla.corta{background:var(--duda-bg);border-color:rgba(138,90,18,.24);box-shadow:inset 3px 0 0 var(--duda)}
+.estado-todos .pastilla.corta span{color:var(--duda);font-weight:650}
+
+.captura-form{margin-top:16px;padding-top:16px;border-top:1px solid var(--linea);animation:entra .3s var(--ease) both}
+.captura-form h3{font-size:15px;font-weight:750;letter-spacing:-.01em}
+.captura-form .explico{font-size:13.5px;line-height:1.6;color:var(--tinta-2);margin-top:6px;max-width:80ch}
+.captura-form .explico b{color:var(--tinta);font-weight:650}
+.captura-form .controles{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap;margin-top:14px}
+.captura-form .controles .campo{gap:6px}
+.captura-form .controles select,.captura-form .controles input{font-size:14.5px;padding:9px 11px}
+.captura-form .controles select{min-width:170px}
+.captura-form .resultado{font-size:13.5px;font-weight:650;align-self:center}
+
+@media (max-width:640px){
+  .agenda-barra .salon-filtro{margin-left:0;width:100%}
+  .agenda-barra .mes-actual{font-size:18px;min-width:0}
+  .cuerpo-cal{padding:10px 8px 12px}
+  .cab-bloque{padding:11px 14px}
+  .cuerpo-captura{padding:12px 14px 16px}
+  .captura-form .controles > *,.captura-form .controles select,
+  .captura-form .controles input,.captura-form .controles button{width:100%}
+}
+
+/* Un día con más de dos eventos: el resto se resume en vez de reventar la celda. */
+.dia .puntos .ev.mas{
+  background:transparent;border:1px dashed var(--linea-2);color:var(--tinta-3);
+  font-size:10px;font-weight:650;text-align:center;padding:2px 4px;
+}
+
+@media (max-width:640px){
+  /* En el teléfono la cabecera fija se comía media pantalla: ahí se
+     desplaza todo junto y solo la barra de guardar queda fija. */
+  .cajon-cuerpo{overflow-y:auto}
+  .cajon-panel{overflow:visible;flex:none}
+  .ficha-paq .dato{padding:7px 10px}
+  .ficha-paq .dato b{font-size:14.5px}
+  .ficha-paq{grid-template-columns:repeat(2,1fr)}
+  .ficha-paq .dato:nth-child(3){border-left:none}
+  .ficha-paq .dato:nth-child(n+3){border-top:1px solid var(--linea)}
+  .fila-controles .pildoras,.solo-salon{margin-left:0}
+  .cajon.ancho .cajon-top,.cajon-fijo,.cajon-panel{padding-left:16px;padding-right:16px}
+  .barra-guardar{margin-left:-16px;margin-right:-16px;padding-left:16px;padding-right:16px}
+}
+
+/* ── quién está en la sesión ─────────────────────────────────────────────── */
+/* Vive en el sidebar oscuro: los tokens de tinta son del tema claro y aquí
+   quedan ilegibles. Van los nocturnos. */
+.sesion{
+  display:flex;align-items:center;gap:10px;
+  padding-top:12px;margin-top:12px;border-top:1px solid var(--nocturno-2);
+}
+.sesion .quien-es{min-width:0;flex:1}
+.sesion .nombre{
+  font-size:13.5px;font-weight:620;color:var(--noct-vivo);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.sesion .rol{font-size:11.5px;color:var(--noct-texto);margin-top:1px}
+.sesion button.fantasma{
+  font-size:12.5px;padding:6px 11px;flex:none;
+  color:var(--noct-texto);border-color:var(--nocturno-2);
+}
+.sesion button.fantasma:hover{background:var(--nocturno-2);color:var(--noct-vivo)}
+.quien-caja select:disabled{opacity:.75;cursor:not-allowed}
+
+/* Lo que el rol no puede tocar, no se ofrece. El servidor lo rechaza de todos
+   modos; esto evita el botón que siempre falla. */
+body.no-precios .solo-precios,
+body.no-agenda  .solo-agenda,
+body.no-servicios .solo-servicios{display:none !important}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFIGURACIÓN
+   ═══════════════════════════════════════════════════════════════════════════ */
+.config{max-width:1000px;animation:entra .4s var(--ease) both}
+.encabezado-pagina h2{font-size:26px;font-weight:700;letter-spacing:-.03em}
+.encabezado-pagina p{font-size:14.5px;color:var(--tinta-3);margin-top:5px}
+
+.barra-config{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  flex-wrap:wrap;margin:24px 0 16px;
+}
+.cuenta-cuentas{font-size:14px;color:var(--tinta-2)}
+.cuenta-cuentas b{font-size:19px;font-weight:700;color:var(--tinta);margin-right:3px}
+
+/* ── alta y edición ──────────────────────────────────────────────────────── */
+.alta,.edita{
+  background:var(--panel-2);border:1px solid var(--linea);border-radius:15px;
+  padding:20px 22px;margin-bottom:16px;animation:entra .3s var(--ease) both;
+}
+.edita{margin:12px 0 0;padding:16px 18px}
+.alta .rotulo{margin-bottom:14px}
+.alta .campo.ancho{flex:2}
+.ayuda-rol{font-size:12.5px;color:var(--tinta-3);line-height:1.5;margin-top:9px;max-width:62ch}
+.aviso-form{font-size:13px;color:var(--ocupada);margin-top:10px;line-height:1.45}
+
+/* ── una cuenta ──────────────────────────────────────────────────────────── */
+.usuarios{display:flex;flex-direction:column;gap:12px}
+.tarjeta.cuenta{padding:18px 20px}
+.tarjeta.cuenta.apagada{background:var(--panel-2);opacity:.72;box-shadow:none}
+.cabeza-cuenta{
+  display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;
+}
+.cabeza-cuenta .nombre{font-size:16px;font-weight:650;letter-spacing:-.015em}
+.cabeza-cuenta .usuario{font-size:13px;color:var(--tinta-3);margin-top:2px;font-variant-numeric:tabular-nums}
+.cabeza-cuenta .acceso{font-size:12.5px;color:var(--tinta-3);text-align:right}
+.tarjeta.cuenta .chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.chip.admin{background:var(--acento-suave);color:var(--acento);font-weight:650}
+.chip.encargada{background:var(--libre-bg);color:var(--libre)}
+.chip.consulta{background:var(--panel-2);color:var(--tinta-3)}
+.chip.tu{background:var(--coral);color:var(--sobre-coral);font-weight:700}
+.chip.apagada{background:var(--ocupada-bg);color:var(--ocupada)}
+
+/* ── la contraseña temporal, que se ve una sola vez ──────────────────────── */
+.clave-caja{
+  background:var(--panel);border:2px solid var(--acento);border-radius:18px;
+  padding:26px 28px;box-shadow:var(--sombra-2);animation:entra .35s var(--ease) both;
+}
+.clave-caja .titulo{font-size:17px;font-weight:650;letter-spacing:-.015em;margin-bottom:18px}
+.clave-caja .par{display:flex;gap:26px;align-items:flex-end;flex-wrap:wrap}
+.clave-caja .et{
+  display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.09em;
+  font-weight:750;color:var(--tinta-3);margin-bottom:5px;
+}
+.clave-caja code{
+  font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace;
+  font-size:17px;font-weight:600;background:var(--panel-2);
+  padding:8px 13px;border-radius:9px;border:1px solid var(--linea);display:inline-block;
+}
+.clave-caja code.clave-temporal{font-size:20px;letter-spacing:.04em;color:var(--acento)}
+.clave-caja .pie{font-size:13px;color:var(--tinta-2);line-height:1.55;margin-top:18px;max-width:64ch}
+
+.nota-config{
+  font-size:13px;color:var(--tinta-3);line-height:1.6;margin-top:26px;
+  padding-top:20px;border-top:1px solid var(--linea);max-width:74ch;
+}
+.nota-config b{color:var(--tinta-2)}
+
+@media (max-width:640px){
+  .cabeza-cuenta .acceso{text-align:left}
+  .clave-caja{padding:20px 18px}
+  .clave-caja .par{gap:16px}
+}
+
+/* ── detalle de un día, en el panel lateral ──────────────────────────────── */
+.dia-vacio{
+  background:var(--panel-2);border:1px solid var(--linea);border-radius:13px;
+  padding:15px 17px;font-size:14px;line-height:1.55;color:var(--tinta-2);
+}
+.dia-vacio b{color:var(--tinta)}
+
+.dia-eventos{display:flex;flex-direction:column;gap:10px;margin-top:12px}
+.dia-ev{
+  display:flex;gap:14px;padding:14px 16px;border-radius:13px;
+  background:var(--panel-2);border:1px solid var(--linea);
+  border-left:3px solid var(--nocturno);
+}
+.dia-ev.separado{border-left-color:var(--duda)}
+.dia-ev.bloqueado{border-left-color:var(--tinta-3)}
+.dia-ev .hora{flex:none;min-width:86px;font-variant-numeric:tabular-nums}
+.dia-ev .hora b{display:block;font-size:14.5px;font-weight:700;letter-spacing:-.01em}
+.dia-ev .hora span{display:block;font-size:12.5px;color:var(--tinta-3);margin-top:2px}
+.dia-ev .que{min-width:0;flex:1}
+.dia-ev .tipo{font-size:14.5px;font-weight:600}
+.dia-ev .notas{font-size:12.5px;color:var(--tinta-3);margin-top:5px;line-height:1.5}
+.dia-ev .chip{margin-top:6px}
+
+.huecos{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+.hueco{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:13px 16px;border-radius:13px;
+  background:var(--libre-bg);border:1px solid rgba(47,125,82,.28);
+}
+.hueco .tramo{display:flex;align-items:center;gap:9px;flex-wrap:wrap;font-size:14.5px}
+.hueco .tramo b{font-weight:700;font-variant-numeric:tabular-nums;color:var(--libre)}
+.hueco .tramo span{color:var(--libre);opacity:.7}
+.hueco .cuanto{
+  flex:none;font-size:12.5px;font-weight:700;color:var(--libre);
+  background:rgba(255,255,255,.6);padding:4px 10px;border-radius:99px;
+}
+.pie-huecos{font-size:12.5px;color:var(--tinta-3);line-height:1.55;margin-top:12px}
+
+/* ── a qué hora se puede, dentro de la tarjeta de cotización ─────────────── */
+.horarios{
+  margin-top:14px;padding-top:14px;border-top:1px solid var(--linea);
+}
+.horarios .rot{
+  font-size:11px;text-transform:uppercase;letter-spacing:.07em;font-weight:750;
+  color:var(--tinta-3);margin-bottom:9px;
+}
+.horarios .tiras{display:flex;gap:7px;flex-wrap:wrap}
+.horarios .tira{
+  flex:1 1 auto;min-width:92px;padding:8px 10px;border-radius:9px;
+  display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  font-family:inherit;cursor:pointer;border:1px solid transparent;
+  transition:transform .15s var(--ease),box-shadow .15s var(--ease);
+}
+.horarios .tira b{font-size:13.5px;font-weight:700;font-variant-numeric:tabular-nums}
+.horarios .tira span{font-size:11px;opacity:.75;font-variant-numeric:tabular-nums}
+.horarios .tira.si{background:var(--libre-bg);color:var(--libre);border-color:rgba(47,125,82,.3)}
+.horarios .tira.si:hover{transform:translateY(-1px);box-shadow:var(--sombra-1)}
+.horarios .tira.no{
+  background:var(--panel-2);color:var(--tinta-3);border-color:var(--linea);
+  text-decoration:line-through;text-decoration-thickness:1px;cursor:default;
+}
+.horarios .alterno{
+  margin-top:11px;padding:11px 13px;border-radius:11px;
+  background:var(--duda-bg);color:var(--duda);font-size:12.5px;line-height:1.55;
+}
+.horarios .alterno b{font-weight:700}
+.horarios .alterno.mal{background:var(--ocupada-bg);color:var(--ocupada)}
+.horarios .alterno.duda{background:var(--panel-2);color:var(--tinta-2)}
+.horarios .sin-horario{
+  padding:11px 13px;border-radius:11px;background:var(--duda-bg);color:var(--duda);
+  font-size:12.5px;line-height:1.55;
+}
+
+/* ── atributos calculables del paquete (duración, estancia, cierre) ──────── */
+.atributos-paq{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:14px}
+.atributos-paq .atributo{
+  display:flex;flex-direction:column;gap:1px;padding:9px 13px;border-radius:11px;
+  background:var(--acento-suave);border:1px solid rgba(46,64,87,.14);
+}
+.atributos-paq .atributo b{font-size:14.5px;font-weight:700;color:var(--acento)}
+.atributos-paq .atributo span{font-size:11px;color:var(--tinta-3);text-transform:uppercase;letter-spacing:.05em;font-weight:650}
+.atributos-paq .atributo.tenue{background:var(--panel-2);border-color:var(--linea)}
+.atributos-paq .atributo.tenue b{color:var(--tinta-2)}
+
+/* Cuando el precio no se mueve, el cuadro deja de ser una alarma. */
+.vigencia.estable{background:rgba(255,255,255,.06)}
+.vigencia.estable .r{opacity:.75}
+.vigencia .cuando.chico{font-size:19px;font-weight:650;letter-spacing:-.01em}
+.vigencia p b{font-weight:750;color:#fff}
+
+/* ── selector de fecha: el calendario de MediaHub ─────────────────────── */
+.sf{position:relative;width:100%}
+.sf-disparador{
+  display:flex;align-items:center;gap:9px;width:100%;padding:10px 12px;
+  background:var(--panel);border:1px solid var(--linea-2);border-radius:4px;
+  font-size:15px;font-weight:600;color:var(--tinta);text-align:left;
+  box-shadow:0 1px 2px rgba(0,0,0,.03);
+}
+.sf-disparador:hover{background:var(--panel);border-color:var(--tinta-3)}
+.sf-disparador.activo,.sf-disparador:focus-visible{border-color:var(--coral);box-shadow:0 0 0 3px var(--coral-bajo);outline:none}
+.sf-disparador.vacio .sf-texto{color:var(--tinta-3);font-weight:500}
+.sf-texto{flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sf-icono{width:16px;height:16px;flex:none;color:var(--coral);stroke-width:2}
+.sf-flecha{width:15px;height:15px;flex:none;color:var(--tinta-3);stroke-width:2;transition:transform .15s ease}
+.sf-disparador.activo .sf-flecha{transform:rotate(180deg)}
+
+.sf-pop{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:100;width:310px;max-width:calc(100vw - 32px);
+  background:var(--panel);border:1px solid var(--linea);border-radius:4px;padding:14px;
+  box-shadow:0 10px 25px -5px rgba(0,0,0,.1),0 8px 10px -6px rgba(0,0,0,.05);
+  animation:entra .16s var(--ease) both;
+}
+.sf-atajos{display:flex;gap:4px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid var(--panel-2)}
+.sf-atajo{
+  flex:1;padding:4px 6px;border:1px solid var(--linea);border-radius:4px;background:var(--panel);
+  font-size:11.5px;font-weight:600;color:var(--tinta-2);white-space:nowrap;
+}
+.sf-atajo:hover{border-color:var(--coral);color:var(--coral-alto);background:var(--panel)}
+.sf-atajo.sel{background:var(--coral-bajo);border-color:var(--coral);color:var(--coral)}
+.sf-cabeza{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sf-cabeza span{flex:1;text-align:center;font-size:13px;font-weight:700;color:var(--tinta)}
+.sf-nav{
+  width:26px;height:26px;padding:0;display:grid;place-items:center;
+  background:transparent;border:1px solid var(--linea);border-radius:4px;color:var(--tinta-2);font-size:15px;line-height:1;
+}
+.sf-nav:hover{background:var(--panel-2);border-color:var(--linea-2)}
+.sf-semana,.sf-dias{display:grid;grid-template-columns:repeat(7,1fr);gap:2px}
+.sf-semana{margin-bottom:4px}
+.sf-semana span{font-size:10.5px;font-weight:700;color:var(--tinta-3);text-transform:uppercase;text-align:center;padding:4px 0}
+.sf-dia{
+  height:30px;padding:0;border:0;border-radius:4px;background:transparent;
+  color:#374151;font-size:12.5px;font-weight:500;display:grid;place-items:center;
+  transition:background .1s ease,color .1s ease;
+}
+.sf-dia:hover:not([disabled]){background:var(--coral-bajo);color:var(--coral-alto);border:0}
+.sf-dia.finde{font-weight:800;color:var(--nocturno)}
+.sf-dia.hoy{box-shadow:inset 0 0 0 1px var(--coral);color:var(--coral-alto)}
+.sf-dia.sel,.sf-dia.sel:hover{background:var(--coral);color:#fff;font-weight:800;box-shadow:none}
+.sf-dia[disabled]{color:var(--linea-2);font-weight:500;cursor:not-allowed;opacity:1}
+.sf-dia:focus-visible{outline:2px solid var(--coral);outline-offset:1px}
+.sf-pie{
+  display:flex;align-items:center;gap:8px;margin-top:14px;padding-top:10px;border-top:1px solid var(--panel-2);
+  font-size:11px;color:var(--tinta-3);
+}
+.sf-pie span{flex:1;min-width:0}
+.sf-cancelar{
+  padding:5px 9px;background:var(--panel-2);border:1px solid var(--linea);border-radius:4px;
+  font-size:12px;font-weight:600;color:var(--tinta-2);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CREAR PAQUETE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.titulo.con-accion{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+a.boton{
+  display:inline-flex;align-items:center;justify-content:center;
+  padding:10px 16px;border-radius:9px;font-size:14px;font-weight:620;
+  text-decoration:none;border:1px solid var(--linea);
+}
+a.boton.primario{background:var(--coral);color:var(--sobre-coral);border-color:var(--coral)}
+a.boton.primario:hover{background:var(--coral-alto)}
+a.boton.fantasma{background:transparent;color:var(--tinta-2);border-color:var(--linea)}
+
+.crear-paq{max-width:1100px;animation:entra .4s var(--ease) both}
+.crear-paq .volver{
+  display:inline-block;font-size:13px;color:var(--tinta-3);text-decoration:none;margin-bottom:8px;
+}
+.crear-paq .volver:hover{color:var(--tinta)}
+.pasos-paq{display:flex;flex-direction:column;gap:18px;margin-top:22px}
+.cuerpo-paso{padding:22px 24px;display:flex;flex-direction:column;gap:18px}
+
+.campo-nuevo{display:flex;flex-direction:column;gap:7px}
+.campo-nuevo > .rot{font-size:14px;font-weight:600;color:var(--tinta)}
+.campo-nuevo > .ayuda{font-size:12.5px;color:var(--tinta-3);line-height:1.5;max-width:70ch}
+
+.pildoras-multi{display:flex;gap:7px;flex-wrap:wrap}
+.opciones{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px}
+.opcion{
+  display:flex;flex-direction:column;align-items:flex-start;gap:3px;text-align:left;
+  padding:13px 15px;border-radius:12px;border:1.5px solid var(--linea);
+  background:var(--panel);font-family:inherit;cursor:pointer;
+}
+.opcion b{font-size:14px;font-weight:650}
+.opcion span{font-size:12.5px;color:var(--tinta-3);line-height:1.45}
+.opcion.sel{border-color:var(--nocturno);background:var(--acento-suave)}
+.opcion.sel b{color:var(--acento)}
+
+.rangos{display:flex;flex-direction:column;gap:8px;align-items:flex-start}
+.rango{display:flex;align-items:center;gap:8px;font-size:14px;color:var(--tinta-2)}
+.rango input{width:88px;padding:8px 10px;border-radius:9px;font-size:14.5px}
+.rango .quita{border:none;background:none;color:var(--tinta-3);cursor:pointer;padding:4px 7px;font-size:13px}
+.rango .quita:hover{color:var(--ocupada)}
+
+.derivado{
+  display:flex;flex-direction:column;gap:2px;padding:12px 15px;border-radius:11px;
+  background:var(--acento-suave);border:1px solid rgba(46,64,87,.14);
+}
+.derivado b{font-size:14px;font-weight:700;color:var(--acento)}
+.derivado span{font-size:12.5px;color:var(--tinta-3);line-height:1.5}
+
+.conceptos-nuevo{
+  max-height:300px;overflow-y:auto;margin-top:9px;
+  border:1px solid var(--linea);border-radius:12px;
+}
+.concepto-fila{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 13px;border-bottom:1px solid var(--linea);font-size:13.5px;
+}
+.concepto-fila:last-child{border-bottom:none}
+.concepto-fila.puesto{background:var(--panel-2)}
+.concepto-fila .nom{min-width:0;flex:1}
+.concepto-fila .tres{display:flex;gap:4px;flex:none}
+.concepto-fila .mini{
+  font-size:11.5px;padding:4px 9px;border-radius:7px;border:1px solid var(--linea);
+  background:var(--panel);color:var(--tinta-3);cursor:pointer;font-family:inherit;
+}
+.concepto-fila .mini.sel.si{background:var(--libre-bg);color:var(--libre);border-color:rgba(47,125,82,.3);font-weight:650}
+.concepto-fila .mini.sel.no{background:var(--ocupada-bg);color:var(--ocupada);border-color:rgba(176,58,58,.25);font-weight:650}
+
+/* ── la tabla de precios: una fila por combinación ───────────────────────── */
+.ayuda-precios{font-size:13.5px;color:var(--tinta-2);line-height:1.5}
+.ayuda-precios b{color:var(--tinta)}
+.tabla-precios{margin-top:12px;overflow-x:auto;border:1px solid var(--linea);border-radius:12px}
+.tabla-precios .cab,.tabla-precios .fila-precio{
+  display:grid;grid-template-columns:minmax(230px,1.6fr) repeat(7,minmax(74px,1fr));
+  gap:6px;align-items:center;padding:8px 12px;
+}
+.tabla-precios .cab{
+  background:var(--panel-2);border-bottom:1px solid var(--linea);
+  font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;font-weight:750;color:var(--tinta-3);
+  position:sticky;top:0;
+}
+.tabla-precios .cab .d{text-align:center}
+.tabla-precios .fila-precio{border-bottom:1px solid var(--linea)}
+.tabla-precios .fila-precio:last-child{border-bottom:none}
+.tabla-precios .que{display:flex;flex-direction:column;gap:1px;min-width:0}
+.tabla-precios .que b{font-size:13.5px;font-weight:620}
+.tabla-precios .que span{font-size:11.5px;color:var(--tinta-3)}
+.tabla-precios input{
+  width:100%;padding:7px 8px;font-size:13px;border-radius:8px;text-align:right;
+  font-variant-numeric:tabular-nums;
+}
+
+/* ── el resumen: lo que se va a crear ────────────────────────────────────── */
+.resumen-paq{
+  background:var(--panel);border:1px solid var(--linea);border-radius:16px;
+  padding:22px 24px;box-shadow:var(--sombra-1);
+}
+.resumen-paq .cuentas{display:flex;gap:26px;flex-wrap:wrap}
+.cuenta-nuevo{display:flex;flex-direction:column;gap:1px}
+.cuenta-nuevo b{font-size:26px;font-weight:720;letter-spacing:-.03em;line-height:1}
+.cuenta-nuevo span{font-size:13px;color:var(--tinta-2);margin-top:3px}
+.cuenta-nuevo small{font-size:11.5px;color:var(--tinta-3)}
+.resumen-paq .falta{
+  margin-top:16px;padding:11px 14px;border-radius:11px;
+  background:var(--duda-bg);color:var(--duda);font-size:13px;line-height:1.5;
+}
+.vacio-paso{font-size:13.5px;color:var(--tinta-3);padding:6px 0}
+
+@media (max-width:640px){
+  .cuerpo-paso{padding:18px 16px}
+  .opciones{grid-template-columns:1fr}
+  .resumen-paq .cuentas{gap:18px}
+}
+
+/* ── el aviso de autoguardado, abajo a la derecha ────────────────────────── */
+.autoguardado{
+  position:fixed;right:20px;bottom:20px;z-index:70;
+  display:flex;align-items:center;gap:9px;
+  padding:9px 15px;border-radius:99px;
+  background:var(--panel);border:1px solid var(--linea);box-shadow:var(--sombra-2);
+  font-size:13px;font-weight:560;color:var(--tinta-2);
+  transition:opacity .4s var(--ease),transform .3s var(--ease);
+  animation:entra .3s var(--ease) both;
+}
+.autoguardado.tenue{opacity:.42}
+.autoguardado .punto{width:8px;height:8px;border-radius:50%;flex:none;background:var(--linea-2)}
+.autoguardado.trabajando .punto{background:var(--coral);animation:latir 1s ease-in-out infinite}
+.autoguardado.listo .punto{background:var(--libre)}
+.autoguardado.mal{border-color:rgba(176,58,58,.35);color:var(--ocupada)}
+.autoguardado.mal .punto{background:var(--ocupada)}
+@keyframes latir{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.55);opacity:.45}}
+@media (max-width:640px){
+  .autoguardado{right:12px;bottom:12px;font-size:12.5px;padding:8px 13px}
+}
+
+/* ── un paquete sin terminar, en el catálogo ─────────────────────────────── */
+.paq.borrador{
+  border-style:dashed;border-color:var(--duda);background:var(--duda-bg);
+  position:relative;
+}
+.paq.borrador:hover{border-color:var(--duda);border-style:solid}
+.cinta-borrador{
+  display:inline-flex;align-items:baseline;gap:7px;margin-bottom:9px;
+  padding:4px 10px;border-radius:99px;background:var(--duda);color:#fff;
+}
+.cinta-borrador b{font-size:11px;font-weight:750;letter-spacing:.04em;text-transform:uppercase}
+.cinta-borrador span{font-size:11px;opacity:.85}
+.falta-paq{
+  font-size:12.5px;color:var(--duda);line-height:1.5;margin-top:7px;
+}
+.falta-paq b{font-weight:700}
+
+/* ── pestaña Precios: un año y un escalón a la vez ─────────────────────── */
+.precios-nav{display:flex;flex-direction:column;gap:12px;margin-bottom:14px}
+.precios-anios{display:flex;gap:6px}
+.precios-anio{
+  position:relative;display:flex;flex-direction:column;align-items:flex-start;gap:1px;
+  padding:8px 16px 7px;border:1px solid var(--linea-2);border-radius:4px;background:var(--panel);
+  font-size:17px;font-weight:800;letter-spacing:-.01em;color:var(--tinta-2);font-variant-numeric:tabular-nums;
+}
+.precios-anio small{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tinta-3)}
+.precios-anio:hover{border-color:var(--tinta-3);color:var(--tinta);background:var(--panel)}
+.precios-anio.sel,.precios-anio.sel:hover{background:var(--nocturno);border-color:var(--nocturno);color:#fff}
+.precios-anio.sel small{color:rgba(255,255,255,.65)}
+/* Punto ámbar: en esa tabla hay un precio editado sin guardar. */
+.precios-anio.con-cambios::after,.segmentos button.con-cambios::after{
+  content:"";position:absolute;top:5px;right:5px;width:7px;height:7px;border-radius:50%;background:var(--duda);
+}
+.precios-escalones{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.precios-escalones .etq{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-3)}
+.segmentos{display:flex;border:1px solid var(--linea-2);border-radius:4px;overflow:hidden;flex-wrap:wrap}
+.segmentos button{
+  position:relative;border:none;border-radius:0;background:var(--panel);padding:7px 13px;
+  font-size:12.5px;font-weight:650;color:var(--tinta-2);
+}
+.segmentos button + button{border-left:1px solid var(--linea-2)}
+.segmentos button:hover{background:var(--panel-2);color:var(--tinta)}
+.segmentos button.sel,.segmentos button.sel:hover{background:var(--coral);color:#fff}
+
+.bloque-precios{animation:entra .2s var(--ease) both}
+.precios-resumen{
+  display:flex;align-items:baseline;gap:6px 14px;flex-wrap:wrap;margin-bottom:8px;font-size:12.5px;color:var(--tinta-3);
+}
+.precios-resumen b{font-size:13.5px;font-weight:800;color:var(--tinta)}
+.precios-resumen .rango-precio{margin-left:auto;font-weight:700;color:var(--tinta-2);font-variant-numeric:tabular-nums}
+
+.tabla-precios thead tr.grupo-dias th{
+  padding:6px 8px 0;background:var(--panel);border-bottom:none;
+  font-size:10px;font-weight:800;letter-spacing:.1em;color:var(--tinta-3);
+}
+.tabla-precios thead tr.grupo-dias th[colspan]{border-top:2px solid var(--linea-2)}
+.tabla-precios thead tr.grupo-dias th.finde{border-top-color:var(--nocturno);color:var(--nocturno)}
+.tabla-precios thead tr:last-child th{background:var(--panel);font-weight:800;color:var(--tinta-2)}
+.tabla-precios th.finde,.tabla-precios td.finde{background:#F2F5F8}
+.tabla-precios thead tr:last-child th.finde{color:var(--nocturno)}
+.tabla-precios td.finde input{font-weight:700;color:var(--nocturno)}
+.tabla-precios td.editable input{color:var(--tinta);font-size:13.5px}
+.tabla-precios tbody tr:hover td{background:var(--panel-2)}
+.tabla-precios tbody tr:hover td.finde{background:#E9EEF3}
+.tabla-precios td.invitados{white-space:nowrap;font-variant-numeric:tabular-nums}
+.tabla-precios td.invitados b{font-weight:800;color:var(--tinta)}
+.tabla-precios td.invitados span{margin:0 4px;color:var(--tinta-3)}
+.tabla-precios tr.sucia td,.tabla-precios tr.sucia td.finde{background:var(--duda-bg)}
+
+/* «cabe otro» en la vista de un solo salón */
+.cabe-mas{
+  font-size:9.5px;font-weight:750;letter-spacing:.03em;text-transform:uppercase;
+  color:var(--libre);background:var(--libre-bg);
+  padding:2px 6px;border-radius:99px;margin-top:4px;align-self:flex-start;
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SALONES
+   ════════════════════════════════════════════════════════════════════════════ */
+.salones-pag{animation:entra .4s var(--ease) both}
+
+/* ── los cuatro de un vistazo ───────────────────────────────────────────── */
+.salones-resumen{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin-bottom:20px}
+.resumen-salon{
+  display:flex;flex-direction:column;gap:6px;text-align:left;padding:14px 16px;
+  background:var(--nocturno);border:1px solid var(--nocturno-2);border-radius:4px;color:#fff;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,.1);transition:transform .15s var(--ease),box-shadow .15s var(--ease);
+}
+.resumen-salon:hover{background:var(--nocturno);border-color:var(--nocturno-2);transform:translateY(-2px);box-shadow:0 8px 14px -4px rgba(0,0,0,.2)}
+.resumen-salon b{font-size:16px;font-weight:800;letter-spacing:-.01em}
+.resumen-salon .cap-num{font-size:12px;color:rgba(255,255,255,.6)}
+.resumen-salon .cap-num span{font-size:20px;font-weight:800;color:#fff;letter-spacing:-.02em;margin-right:4px;font-variant-numeric:tabular-nums}
+.barra-cap{position:relative;height:6px;border-radius:2px;background:rgba(255,255,255,.12);margin:2px 0 4px}
+.barra-cap i{position:absolute;top:0;bottom:0;border-radius:2px;background:var(--coral)}
+.resumen-salon .estado-agenda{color:#8FD6AE}
+.resumen-salon .estado-agenda.corta{color:#F5C77E}
+
+.estado-agenda{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:650;color:var(--libre)}
+.estado-agenda::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.estado-agenda.corta{color:var(--duda)}
+
+/* ── la ficha de cada salón ─────────────────────────────────────────────── */
+.salones-rejilla{display:grid;grid-template-columns:repeat(auto-fit,minmax(520px,1fr));gap:16px;align-items:stretch}
+.salon-ficha{display:flex;flex-direction:column;scroll-margin-top:20px;margin:0}
+.cab-salon{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;
+  padding:14px 18px;border-bottom:1px solid var(--linea);
+}
+.nombre-salon{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.nombre-salon h3{font-size:19px;font-weight:800;letter-spacing:-.025em}
+.cap-chip{
+  padding:3px 8px;border-radius:4px;font-size:12px;font-weight:700;
+  background:var(--coral-bajo);color:var(--coral-alto);font-variant-numeric:tabular-nums;
+}
+.cab-salon .reglas{display:flex;gap:6px;flex-wrap:wrap}
+.regla-salon{
+  display:flex;align-items:baseline;gap:5px;padding:5px 9px;border-radius:4px;
+  background:var(--panel-2);border:1px solid var(--linea);
+}
+.regla-salon b{font-size:13px;font-weight:800;color:var(--tinta)}
+.regla-salon span{font-size:11.5px;color:var(--tinta-3)}
+
+.cuerpo-salon{padding:6px 18px 16px;display:flex;flex-direction:column;gap:14px}
+.contacto-salon{display:flex;flex-direction:column}
+.contacto-fila{
+  display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid var(--linea);
+}
+.contacto-fila:last-child{border-bottom:none}
+.contacto-ico{
+  width:30px;height:30px;border-radius:4px;flex:none;display:grid;place-items:center;
+  background:var(--panel-2);color:var(--nocturno);
+}
+.contacto-ico svg{width:16px;height:16px;stroke-width:1.9}
+.contacto-txt{flex:1;min-width:0;display:flex;flex-direction:column;gap:1px}
+.contacto-txt .r{font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--tinta-3)}
+.contacto-txt .v{font-size:13.5px;color:var(--tinta);line-height:1.45;word-break:break-word}
+.contacto-txt .enlace{color:var(--coral);text-decoration:none;font-weight:600}
+.contacto-txt .enlace:hover{text-decoration:underline}
+main.lienzo a.accion-salon{
+  flex:none;align-self:center;padding:5px 10px;border-radius:4px;border:1px solid var(--linea-2);
+  font-size:12px;font-weight:700;color:var(--tinta-2);text-decoration:none;white-space:nowrap;
+}
+main.lienzo a.accion-salon:hover{border-color:var(--coral);color:var(--coral-alto);background:var(--coral-bajo)}
+
+.diferenciador{
+  padding:12px 14px;border-radius:4px;background:var(--panel-2);border-left:3px solid var(--coral);
+}
+.diferenciador .r{
+  display:block;font-size:10.5px;text-transform:uppercase;letter-spacing:.08em;
+  font-weight:800;color:var(--tinta-3);margin-bottom:5px;
+}
+.diferenciador p{font-size:13.5px;line-height:1.6;color:var(--tinta-2)}
+.diferenciador p.recortado{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.leer-mas{margin-top:6px;padding:0;border:none;background:none;font-size:12.5px;font-weight:700;color:var(--coral)}
+.leer-mas:hover{background:none;text-decoration:underline}
+
+.pie-salon{
+  margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:12px 18px;border-top:1px solid var(--linea);background:var(--panel-2);
+}
+.pie-salon button{border-radius:4px;padding:7px 14px;font-size:13px}
+
+/* el formulario de salón dentro del panel lateral */
+.cajon .edita{background:none;border:none;padding:0;margin:0;display:flex;flex-direction:column;gap:12px;animation:none}
+.cajon .edita .campo input,.cajon .edita .campo select,.cajon .edita textarea{width:100%}
+.cajon .edita .ayuda{font-size:12px;font-weight:400;color:var(--tinta-3)}
+/* Los textos de políticas y salones pasan de 500 letras: que se lean sin scroll. */
+.cajon .edita textarea{min-height:170px;line-height:1.55;resize:vertical}
+.cajon .edita .rotulo{margin:8px 0 0;padding:14px 0 0;border-bottom:none;border-top:1px solid var(--linea)}
+.cajon .edita .fila > .campo{flex:1;min-width:120px}
+.cajon .edita .derivado{border-radius:4px}
+
+@media (max-width:640px){
+  .salones-rejilla{grid-template-columns:1fr}
+  .salones-resumen{grid-template-columns:repeat(2,1fr)}
+  .contacto-fila{flex-wrap:wrap}
+  main.lienzo a.accion-salon{margin-left:42px}
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   POLITICAS
+   ════════════════════════════════════════════════════════════════════════════ */
+.politicas-pag{animation:entra .4s var(--ease) both}
+
+/* Quién la puede saber es LA división: cada pestaña con su color. */
+.tabs-vis{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin-top:20px}
+.tab-vis{
+  --vis:var(--libre);--vis-bg:var(--libre-bg);
+  display:flex;flex-direction:column;align-items:stretch;gap:6px;text-align:left;
+  padding:14px 16px;border-radius:4px;border:1px solid var(--linea);border-top:3px solid var(--vis);
+  background:var(--panel);font-family:inherit;cursor:pointer;
+  transition:box-shadow .15s var(--ease),background .15s var(--ease);
+}
+.tab-vis.regla_interna{--vis:var(--nocturno);--vis-bg:#E8EDF2}
+.tab-vis.restringido{--vis:var(--ocupada);--vis-bg:var(--ocupada-bg)}
+.tab-vis:hover{background:var(--panel);box-shadow:0 4px 6px -1px rgba(0,0,0,.08);border-color:var(--linea-2);border-top-color:var(--vis)}
+.tab-vis-cab{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.tab-vis b{font-size:14.5px;font-weight:800;color:var(--tinta)}
+.tab-vis .cuenta{font-size:22px;font-weight:800;letter-spacing:-.02em;color:var(--vis);font-variant-numeric:tabular-nums;line-height:1}
+.tab-vis .explica{font-size:12.5px;line-height:1.45;color:var(--tinta-3)}
+.tab-vis.sel,.tab-vis.sel:hover{background:var(--vis-bg);border-color:var(--vis);box-shadow:inset 0 0 0 1px var(--vis)}
+.tab-vis.sel .explica{color:var(--tinta-2)}
+
+/* una caja por sección, filas en vez de tarjetas */
+.lista-politicas{display:flex;flex-direction:column;gap:16px;margin-top:16px}
+.grupo-pol .cab-bloque{border-top:3px solid var(--libre)}
+.grupo-pol.regla_interna .cab-bloque{border-top-color:var(--nocturno)}
+.grupo-pol.restringido .cab-bloque{border-top-color:var(--ocupada)}
+.filas-pol{display:flex;flex-direction:column}
+.politica{padding:14px 18px;border-bottom:1px solid var(--linea);transition:background .12s var(--ease)}
+.politica:last-child{border-bottom:none}
+.politica:hover{background:#FBFBFA}
+.politica .cab{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
+.politica .tema{font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:var(--tinta)}
+.acciones-pol{display:flex;gap:6px;flex:none;opacity:0;transition:opacity .15s var(--ease)}
+.politica:hover .acciones-pol,.politica:focus-within .acciones-pol{opacity:1}
+@media (hover:none){.acciones-pol{opacity:1}}
+.acciones-pol button{padding:4px 10px;font-size:12px;font-weight:650;border-radius:4px}
+.politica .dice{font-size:13.5px;line-height:1.6;color:var(--tinta-2);margin-top:5px;max-width:110ch}
+.politica .dice.recortado{display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.politica.restringido .dice{color:var(--tinta-3);font-style:italic}
+.nota-pol{
+  display:flex;gap:8px;align-items:baseline;margin-top:8px;padding:7px 10px;border-radius:4px;
+  background:var(--duda-bg);color:var(--duda);font-size:12.5px;line-height:1.5;max-width:110ch;
+}
+.nota-pol b{font-size:10px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;flex:none}
+.campo.ancho{flex:2}
+
+/* ── lo que se le puede agregar al paquete ───────────────────────────────── */
+.agregables{margin-top:14px;border-top:1px solid var(--linea);padding-top:12px}
+.abre-agregables{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;width:100%;
+  padding:9px 12px;border-radius:10px;border:1px solid var(--linea);
+  background:var(--panel-2);font-family:inherit;cursor:pointer;
+  font-size:13px;color:var(--tinta-2);
+}
+.abre-agregables:hover{border-color:var(--linea-2)}
+.abre-agregables b{font-weight:620;color:var(--tinta)}
+.abre-agregables .flecha{transition:transform .2s var(--ease);font-size:17px;color:var(--tinta-3)}
+.abre-agregables.abierto .flecha{transform:rotate(90deg)}
+.cuerpo-agregables{margin-top:9px;animation:entra .25s var(--ease) both}
+.agregable{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding:8px 12px;border-bottom:1px solid var(--linea);font-size:13px;
+}
+.agregable:last-of-type{border-bottom:none}
+.agregable .que{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;min-width:0}
+.agregable .que b{font-weight:600;color:var(--tinta)}
+.agregable .que .ops{font-size:11.5px;color:var(--tinta-3)}
+.agregable .cuanto{flex:none;font-variant-numeric:tabular-nums;white-space:nowrap}
+.agregable .cuanto b{font-weight:700;color:var(--libre)}
+.agregable .cuanto small{font-size:11px;color:var(--tinta-3)}
+.pie-agregables{
+  font-size:11.5px;color:var(--tinta-3);line-height:1.5;
+  margin-top:10px;padding-top:9px;border-top:1px solid var(--linea);
+}
+
+/* La ventana propia de un paquete (las posadas de fin de semana). */
+.regla-horario{
+  margin-top:10px;padding:10px 13px;border-radius:10px;
+  background:var(--acento-suave);border:1px solid rgba(46,64,87,.16);
+  font-size:12.5px;line-height:1.55;color:var(--tinta-2);
+}
+.regla-horario b{color:var(--acento);font-weight:700}
+
+/* El costo de mover un evento de fecha. */
+.cobro-cambio{
+  margin-top:8px;padding:11px 13px;border-radius:10px;
+  background:var(--duda-bg);color:var(--duda);font-size:12.5px;line-height:1.55;
+}
+.cobro-cambio.gratis{background:var(--libre-bg);color:var(--libre)}
+.cobro-cambio.ojo{background:var(--ocupada-bg);color:var(--ocupada)}
+.cobro-cambio b{font-weight:700}
+.cobro-cambio .extra{margin-top:7px;padding-top:7px;border-top:1px solid currentColor;opacity:.92}

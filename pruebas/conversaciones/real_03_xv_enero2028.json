@@ -1,0 +1,12 @@
+{
+  "titulo": "REAL 3 · +52 81 2442 8… · XV el 8 de enero de 2028",
+  "contexto": "Anuncio de Facebook sobre POSADAS 2026, pero el cliente quiere un XV. Cuatro mensajes seguidos, 1:20 p.m.",
+  "turnos": [
+    {
+      "cliente": "Quiero más información del salón Norma Eventos / Para un xv / Fecha el 8 de enero del 2028 / Para 100 personas",
+      "extraido": { "salon": "norma", "tipo_evento": "xv", "fecha_evento": "2028-01-08", "personas": 100 },
+      "llamada": { "ruta": "/api/cotizar", "cuerpo": { "salon": "norma", "tipo_evento": "xv", "fecha_evento": "2028-01-08", "personas": 100 } },
+      "maya": "¡Qué emoción! 💛 El 8 de enero de 2028 cae en sábado y lo tenemos disponible.\nPara 100 invitados nuestro Paquete Onix queda en $76,900.\n¿Te agendo una visita? Si separas en tu primera visita te llevas un cartón de cerveza extra."
+    }
+  ]
+}

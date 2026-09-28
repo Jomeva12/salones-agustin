@@ -1,0 +1,18 @@
+# La base NUNCA entra en la imagen: lleva los hashes de contrasena y los datos
+# del negocio. Vive en el volumen /datos y se sube una sola vez.
+backend/db/*.db
+backend/db/*.db-wal
+backend/db/*.db-shm
+backend/db/respaldos/
+
+# Sin la semilla dentro, migrar.mjs no puede correr en el servidor aunque
+# alguien lo intente. Es destructivo: se lleva todo lo editado desde el panel.
+backend/db/seed/
+backend/db/exportar_seed.py
+
+node_modules/
+pruebas/
+despliegue/
+.git/
+.gitignore
+*.md

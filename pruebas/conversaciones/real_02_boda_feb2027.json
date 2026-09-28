@@ -1,0 +1,20 @@
+{
+  "titulo": "REAL 2 · +52 81 1417 1… · Boda en febrero o marzo de 2027",
+  "contexto": "Anuncio de Instagram: «Paquete Promoción para los meses de Enero, Febrero y Marzo del 2027». Cliente escribió 12:39 a.m., le contestaron a la 1:36 p.m. (13 horas después).",
+  "turnos": [
+    {
+      "cliente": "¡Hola! Bonita noche, me gustaría información para Fecha en febrero / Marzo 2027, 100-150 Personas 🤭  +  «Boda»",
+      "extraido": { "salon": "norma", "tipo_evento": "boda", "fecha_evento": "rango: feb o mar 2027", "personas": "rango: 100-150" },
+      "sin_llamada": "dio dos meses y un rango de invitados. Se cotizan los dos extremos y se le pide que elija."
+    },
+    {
+      "cliente": "(opción A · sábado 20 de febrero de 2027 · 100 invitados)",
+      "llamada": { "ruta": "/api/cotizar", "cuerpo": { "salon": "norma", "tipo_evento": "boda", "fecha_evento": "2027-02-20", "personas": 100 } }
+    },
+    {
+      "cliente": "(opción B · sábado 20 de marzo de 2027 · 150 invitados)",
+      "llamada": { "ruta": "/api/cotizar", "cuerpo": { "salon": "norma", "tipo_evento": "boda", "fecha_evento": "2027-03-20", "personas": 150 } },
+      "maya": "¡Con gusto! 💛 Para tu boda tengo dos opciones según el mes:\nFebrero 2027 · sábado · 100 invitados → Paquete Bronce $55,400\nMarzo 2027 · sábado · 150 invitados → Paquete Onix $77,900\n¿Ya tienes una fecha en mente? Así te confirmo disponibilidad."
+    }
+  ]
+}

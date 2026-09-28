@@ -16,3 +16,7 @@ despliegue/
 .git/
 .gitignore
 *.md
+
+# El intermediario es otro servicio, con su propia imagen y su propio
+# Dockerfile. No tiene nada que hacer dentro de la imagen del panel.
+intermediario/

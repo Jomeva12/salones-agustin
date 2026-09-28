@@ -1,0 +1,17 @@
+{
+  "name": "salones-intermediario-kommo",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "Amortiguador de webhooks Kommo -> n8n para Salones Agustin Barron",
+  "main": "server.mjs",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "dependencies": {
+    "pg": "^8.13.1"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}

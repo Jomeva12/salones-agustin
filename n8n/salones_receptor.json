@@ -1,0 +1,73 @@
+{
+  "name": "salones_receptor",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "salones-entrada-64dcb347",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "2bcf8f31-12c3-413f-af1c-cddd96a14455",
+      "name": "Entrada del intermediario",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "d621c3b3-a66d-470b-b63d-0912f47a6b9b"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Traduce lo que manda Kommo a campos limpios.\n//\n// Kommo envia x-www-form-urlencoded con claves tipo message[add][0][text],\n// y el intermediario lo reenvia intacto: aqui llega igual que salio de Kommo.\nconst b = $input.first().json.body ?? {};\nconst g = (k) => b['message[add][0][' + k + ']'] ?? null;\n\n// Solo se reacciona a lo que ENTRA. Un 'outgoing' es lo que escribio la\n// encargada o el propio agente: contestarlo seria hablar solo.\nif (g('type') !== 'incoming') {\n  return [];\n}\n\nconst epoch = Number(g('created_at'));\n\nreturn [{\n  json: {\n    msg_id:       g('id'),\n    lead_id:      g('entity_id') ?? g('element_id'),\n    contacto_id:  g('contact_id'),\n    chat_id:      g('chat_id'),\n    talk_id:      g('talk_id'),\n    texto:        g('text'),\n    // De donde entro: telegram en pruebas, whatsapp en produccion. Sirve\n    // para excluir el trafico de prueba de los reportes.\n    origen:       g('origin'),\n    autor:        b['message[add][0][author][name]'] ?? null,\n    tipo_mensaje: g('message_type'),\n    adjunto_tipo: b['message[add][0][attachment][type]'] ?? null,\n    adjunto_url:  b['message[add][0][attachment][link]'] ?? b['message[add][0][attachment][url]'] ?? null,\n    creado_at:    Number.isFinite(epoch) ? new Date(epoch * 1000).toISOString() : null,\n    subdominio:   b['account[subdomain]'] ?? null,\n  },\n}];"
+      },
+      "id": "ece760fa-2f03-4bf7-aa4a-492b94c7a9ae",
+      "name": "Leer el mensaje",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        220,
+        0
+      ]
+    },
+    {
+      "parameters": {},
+      "id": "bf5aed3a-aa9d-4d49-aaa0-45c41a9d4f85",
+      "name": "Aqui entra el Director",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        440,
+        0
+      ]
+    }
+  ],
+  "connections": {
+    "Entrada del intermediario": {
+      "main": [
+        [
+          {
+            "node": "Leer el mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Leer el mensaje": {
+      "main": [
+        [
+          {
+            "node": "Aqui entra el Director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

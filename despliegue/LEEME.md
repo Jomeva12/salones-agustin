@@ -34,7 +34,7 @@ En Easypanel, proyecto `automatizaciones` → **+ Service** → **App**.
 
 | Campo | Valor |
 |---|---|
-| Name | `salones-datos` |
+| Name | `datos` |
 | Mount path | `/datos` |
 
 Sin el volumen, la base vive dentro del contenedor y **cada redespliegue la
@@ -58,8 +58,15 @@ queda **abierta** y el panel lo grita al arrancar.
 
 ## 4. Dominio
 
-**Domains** → agregar el subdominio, puerto interno **4300**, HTTPS activado.
-Traefik pide el certificado solo; solo hace falta que el DNS ya apunte a la IP.
+Easypanel genera uno solo al crear el servicio:
+
+    https://automatizaciones-salones-panel.hpzji3.easypanel.host
+
+Venia apuntando al puerto **80** y hubo que cambiarlo al **4300**, que es donde
+escucha el contenedor. Con eso ya funciona y el certificado lo saca Traefik.
+
+Si mas adelante quieren un dominio propio (`panel.salonesbarron.mx`), se agrega
+en esa misma pantalla y el DNS tiene que apuntar a la IP del VPS.
 
 ## 5. Subir la base
 
@@ -77,7 +84,7 @@ Ese archivo (`salones-AAAA-MM-DD.db`) se sube al volumen **como
 `/datos/salones.db`**, por el explorador de archivos de Easypanel o por SSH:
 
 ```bash
-scp para-subir/salones-*.db root@2.25.143.27:/etc/easypanel/projects/automatizaciones/salones-panel/volumes/salones-datos/salones.db
+scp para-subir/salones-*.db root@2.25.143.27:/etc/easypanel/projects/automatizaciones/salones-panel/volumes/datos/salones.db
 ```
 
 Usa `respaldar.mjs` y no una copia del archivo: copiar `salones.db` a secas se
@@ -119,8 +126,11 @@ n8n vive en el mismo proyecto de Easypanel, así que lo alcanza **por la red
 interna**, sin salir a internet:
 
 ```
-http://salones-panel:4300/api/cotizar
+http://automatizaciones_salones-panel:4300/api/cotizar
 ```
+
+Ojo con el nombre: es `automatizaciones_salones-panel`, con guion bajo entre el
+proyecto y el servicio. Asi lo arma Easypanel.
 
 Más rápido y sin exponer nada. El dominio público queda para que las
 encargadas entren desde su teléfono.

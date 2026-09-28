@@ -1711,7 +1711,10 @@ servidor.listen(PUERTO, HOST, () => {
   console.log(`\n  Salones Agustín Barrón`);
   console.log(`  panel .... http://${visible}:${PUERTO}/`);
   console.log(`  api ...... http://${visible}:${PUERTO}/api/salud`);
-  console.log(`  escucha .. ${HOST}:${PUERTO}${HOST === '0.0.0.0' ? '  (expuesto; detras de un proxy usa HOST=127.0.0.1)' : ''}`);
+  const enContenedor = existsSync('/.dockerenv');
+  const aviso = HOST === '0.0.0.0' && !enContenedor
+    ? '  (expuesto en todas las interfaces; detras de un proxy local usa HOST=127.0.0.1)' : '';
+  console.log(`  escucha .. ${HOST}:${PUERTO}${aviso}`);
   console.log(`  hoy ...... ${L.hoyMonterrey()} (America/Monterrey)`);
   console.log(`  auth ..... ${TOKEN ? 'token activo' : 'ABIERTA - define API_TOKEN antes de exponerla'}\n`);
 });

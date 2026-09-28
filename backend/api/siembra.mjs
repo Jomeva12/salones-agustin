@@ -153,8 +153,11 @@ export function arrancarSiembra({ dbPath, puerto, host, token }) {
         json(200, { ok: true, resumen,
           detalle: `Listo: ${resumen.salones} salones, ${resumen.tarifas} tarifas, ` +
                    `${resumen.usuarios} usuario(s). El panel se está reiniciando.` });
-        // Salir con 0 para que el contenedor reinicie y arranque normal.
-        setTimeout(() => { servidor.close(); process.exit(0); }, 400);
+        // Salir con codigo DISTINTO DE CERO, aunque la siembra haya ido bien.
+        // Docker reinicia con la politica on-failure, que mira el codigo: con 0
+        // entiende «termino su trabajo» y deja el contenedor abajo. Paso en el
+        // primer despliegue real: la base quedo puesta y el panel no volvio.
+        setTimeout(() => { servidor.close(); process.exit(1); }, 400);
       } catch (e) {
         try { if (existsSync(temporal)) unlinkSync(temporal); } catch {}
         json(400, { error: 'no se pudo leer la base', detalle: e.message });

@@ -12,6 +12,7 @@ const CAMPO = {
   tipo_evento: 352872,
   fecha_evento: 352874,
   invitados: 352876,
+  ia_activa: 352882,
 };
 
 // Los select de Kommo guardan enum_id, no texto.
@@ -67,6 +68,20 @@ const invitados = Number(datos.invitados);
 if (Number.isFinite(invitados) && invitados > 0) {
   valores.push({ field_id: CAMPO.invitados, values: [{ value: invitados }] });
   anotado.invitados = invitados;
+}
+
+// Kommo NO devuelve los checkbox sin marcar: los omite del lead. Por eso un
+// lead nuevo llega sin «IA activa» y el interruptor no puede distinguir
+// «nadie lo ha tocado» de «la encargada lo apago».
+//
+// Se resuelve marcandolo en el primer contacto. A partir de ahi el campo
+// existe y dice la verdad: si la encargada lo desmarca, llega en false y el
+// flujo se detiene. Y no se vuelve a marcar solo, porque ya no esta ausente.
+const campos = $('formatLead').first().json.campos ?? {};
+const primeraVez = campos['IA activa'] === undefined || campos['IA activa'] === null;
+if (primeraVez) {
+  valores.push({ field_id: CAMPO.ia_activa, values: [{ value: true }] });
+  anotado.ia_activa = true;
 }
 
 return [{

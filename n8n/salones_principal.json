@@ -8,7 +8,7 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "e1204d95-7943-4c3d-97f1-631bc53a8bf0",
+      "id": "a6de8919-ea4c-4b56-b982-2e009297108c",
       "name": "new_message",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
@@ -16,7 +16,7 @@
         -600,
         0
       ],
-      "webhookId": "c114188a-1d3c-4973-8202-7ab0c739e205"
+      "webhookId": "407f620c-8301-4672-bc58-8f6458f6a7f7"
     },
     {
       "parameters": {
@@ -29,7 +29,7 @@
           },
           "conditions": [
             {
-              "id": "35018632-8a34-46ee-9e4e-f92de05f7491",
+              "id": "6bc3126e-fbb4-4c8a-950e-4504ea658fac",
               "leftValue": "={{ $json.body['message[add][0][type]'] }}",
               "rightValue": "incoming",
               "operator": {
@@ -43,7 +43,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "6b0b665f-60c8-49d9-a702-0f4f29aaadcc",
+      "id": "c89f46c1-198a-4004-9757-31912d343ace",
       "name": "es_mensaje_entrante",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -56,7 +56,7 @@
       "parameters": {
         "jsCode": "// Traduce el payload de Kommo a campos limpios.\nconst b = $input.first().json.body ?? {};\nconst g = (k) => b['message[add][0][' + k + ']'] ?? null;\nconst epoch = Number(g('created_at'));\nreturn [{ json: {\n  msg_id: g('id'),\n  lead_id: g('entity_id') ?? g('element_id'),\n  contacto_id: g('contact_id'),\n  chat_id: g('chat_id'),\n  talk_id: g('talk_id'),\n  texto: g('text') ?? '',\n  // telegram en pruebas, whatsapp en produccion: sirve para dejar fuera de\n  // los reportes el trafico que nos mandamos nosotros.\n  origen: g('origin'),\n  autor: b['message[add][0][author][name]'] ?? null,\n  adjunto_tipo: b['message[add][0][attachment][type]'] ?? null,\n  adjunto_url: b['message[add][0][attachment][link]'] ?? b['message[add][0][attachment][url]'] ?? null,\n  creado_at: Number.isFinite(epoch) ? new Date(epoch * 1000).toISOString() : null,\n}}];"
       },
-      "id": "79ad088e-5b4b-4310-823b-b47e5ccf1d6d",
+      "id": "8dfb766b-96a4-48fb-a061-4eac941cab14",
       "name": "formatear",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -73,7 +73,7 @@
           "queryReplacement": "={{ [$json.lead_id, $json.msg_id, $json.texto] }}"
         }
       },
-      "id": "381ede79-8a61-426c-9311-b59f60516212",
+      "id": "ef0b9d2c-61c5-4f11-973b-ba273b3d46e5",
       "name": "guardar_en_buffer",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -92,7 +92,7 @@
       "parameters": {
         "amount": 15
       },
-      "id": "4a150809-6963-4288-a479-217a729eb1fa",
+      "id": "a288e3b6-558b-4aee-a6aa-968772b52b57",
       "name": "esperar_rafaga",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -100,7 +100,7 @@
         200,
         0
       ],
-      "webhookId": "885d87dd-5b51-4b0b-ba8c-8ba0a94f66bf"
+      "webhookId": "3e038d29-fa0d-4011-9df6-c1f099b5cbc7"
     },
     {
       "parameters": {
@@ -110,7 +110,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id, $('formatear').first().json.msg_id] }}"
         }
       },
-      "id": "1dc2332a-aaa4-4378-9e79-edc10aca7041",
+      "id": "2021be1e-51ae-4677-bb9d-6a2eb96f3714",
       "name": "leer_rafaga",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -136,7 +136,7 @@
           },
           "conditions": [
             {
-              "id": "590eb59e-abf9-48e6-b0cc-c42a890d3bfa",
+              "id": "e2d3ef52-7484-475e-905b-6c9faa31b253",
               "leftValue": "={{ $json.mas_nuevos }}",
               "rightValue": "0",
               "operator": {
@@ -150,7 +150,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "7f177e43-ed0c-435c-8d26-935049be3559",
+      "id": "ee66d779-d383-43bb-92e5-a870c5f1c1f2",
       "name": "soy_el_ultimo",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -167,7 +167,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id] }}"
         }
       },
-      "id": "3cb6ca3c-7b6c-4eb3-a928-77a8861e11ee",
+      "id": "f2e9009e-dc68-47c3-8bc0-d6e08d247cbb",
       "name": "marcar_consumidos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -189,7 +189,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "20553624-a03e-4862-848b-8cdc5e891ba9",
+      "id": "6aa36364-e14e-4730-b1f0-bc0a059ee7bb",
       "name": "traer_lead",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -208,7 +208,7 @@
       "parameters": {
         "jsCode": "// Aplana los campos personalizados de Kommo a algo legible.\nconst l = $input.first().json ?? {};\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nconst msg = $('formatear').first().json;\nconst rafaga = $('leer_rafaga').first().json;\nreturn [{ json: {\n  lead_id: String(l.id ?? msg.lead_id),\n  etapa_id: l.status_id ?? null,\n  responsable_id: l.responsible_user_id ?? null,\n  presupuesto: l.price ?? 0,\n  campos,\n  // Todo lo que el cliente dijo en la rafaga, ya junto en un solo texto.\n  chats: rafaga.chats ?? msg.texto,\n  cuantos_mensajes: rafaga.cuantos ?? 1,\n  origen: msg.origen,\n  autor: msg.autor,\n  adjunto_tipo: msg.adjunto_tipo,\n  adjunto_url: msg.adjunto_url,\n}}];"
       },
-      "id": "c205cfa7-a00f-4e7e-9eed-527182deb218",
+      "id": "b3473052-342b-4ac6-88fd-813e6cbc48ec",
       "name": "formatLead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -228,7 +228,7 @@
           },
           "conditions": [
             {
-              "id": "d795884f-d0f8-4d94-9482-4505b7aa56ea",
+              "id": "fb47549b-8e1e-4423-8329-7a847b7d8d0a",
               "leftValue": "={{ $json.campos['IA activa'] }}",
               "rightValue": "false",
               "operator": {
@@ -242,7 +242,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "09afc5be-7074-498e-bd57-dc7055b5cb24",
+      "id": "9425b22b-84a4-4025-937c-53917a49672f",
       "name": "ia_activa",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -259,7 +259,7 @@
           "systemMessage": "Eres el Director de Salones Agustin Barron. Clasificas y enrutas; NUNCA le hablas al cliente.\nResponde SOLO un JSON: {\"agente\":\"ventas\"} | {\"agente\":\"cliente\"} | {\"agente\":\"seguimiento\"}.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "b2048b54-00c3-4921-a66c-0c9f72cc8900",
+      "id": "99fab9c8-eb47-40d8-bb97-205451292972",
       "name": "director",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -278,7 +278,7 @@
         },
         "options": {}
       },
-      "id": "407cd2e0-5fbb-4ba7-a691-83e18686b64a",
+      "id": "05074a76-a1b6-4341-8367-131706c476a0",
       "name": "modelo_director",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -299,7 +299,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-director",
         "contextWindowLength": 30
       },
-      "id": "5ab5e7b1-e7c0-4eb8-8c03-f32adb17f393",
+      "id": "494b1cfa-fe14-4f94-a900-18bac8271191",
       "name": "memoria_director",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -328,7 +328,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "49ed2652-66e6-4192-b5f2-f595d892f976",
+                    "id": "e74f250e-18b6-48f1-a5bb-a6e95033773d",
                     "leftValue": "={{ JSON.stringify($json.output) }}",
                     "rightValue": "ventas",
                     "operator": {
@@ -352,7 +352,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "b20e31c5-cce4-4b62-ad4f-6bd1568e280d",
+                    "id": "ef4cd128-e720-4dd8-b76a-13476961756b",
                     "leftValue": "={{ JSON.stringify($json.output) }}",
                     "rightValue": "cliente",
                     "operator": {
@@ -376,7 +376,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "3c3efe9b-716e-4a77-8a72-f22b2e6b08cd",
+                    "id": "4ef693b1-a105-478a-8f93-8c2cf6e8b362",
                     "leftValue": "={{ JSON.stringify($json.output) }}",
                     "rightValue": "seguimiento",
                     "operator": {
@@ -396,7 +396,7 @@
           "fallbackOutput": 0
         }
       },
-      "id": "61ef33d0-1ae3-4e92-924d-ca33fddac30c",
+      "id": "854c2f43-c2fe-4d7e-a780-8f97657e0b7f",
       "name": "enrutar",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -413,7 +413,7 @@
           "systemMessage": "Eres Maya, del departamento de atencion a clientes de Salones Agustin Barron. Atiendes prospectos.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "1109c19b-2330-4d03-957f-c30938dd93ae",
+      "id": "0c6017e6-4504-46ba-ae5c-487b4884316d",
       "name": "ventas",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -432,7 +432,7 @@
         },
         "options": {}
       },
-      "id": "c9baedb0-18b2-480e-8d9f-0c8f1f07f76f",
+      "id": "8d285fac-ab27-4816-860a-f0a6c96dc90d",
       "name": "modelo_ventas",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -453,7 +453,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas",
         "contextWindowLength": 30
       },
-      "id": "4b1abe09-f41a-4f64-aa92-8d77a85032f9",
+      "id": "4e2b4b71-ef47-48f9-81ad-ee45732c4264",
       "name": "memoria_ventas",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -476,7 +476,7 @@
           "systemMessage": "Eres Maya. Atiendes a quien YA contrato: comprobantes y detalles del evento. NUNCA vendes.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "f7441504-d850-4a9a-ba70-30bbd9b6784b",
+      "id": "1709f380-708e-43d0-ba43-8a349f45cc12",
       "name": "cliente",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -495,7 +495,7 @@
         },
         "options": {}
       },
-      "id": "c560ce8c-62ef-4192-974c-b01e82b8717e",
+      "id": "596ed90a-795c-45bf-8fa4-1b4fa274b74d",
       "name": "modelo_cliente",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -516,7 +516,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-cliente",
         "contextWindowLength": 30
       },
-      "id": "32913b66-75d2-46ab-89ac-53536466437e",
+      "id": "9579b613-3f82-4301-9473-7866a2e5dfc8",
       "name": "memoria_cliente",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -539,7 +539,7 @@
           "systemMessage": "Eres Maya. Reescribes a quien dejo de contestar, dentro de las primeras 24 horas.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "1f1c495b-c398-484f-8926-917ce694be6c",
+      "id": "19a5d699-34e3-4f0a-b6d4-d153d0c00bfd",
       "name": "seguimiento",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -558,7 +558,7 @@
         },
         "options": {}
       },
-      "id": "04cc9d54-c21b-41b3-b291-454b23ca1af3",
+      "id": "cf2af98d-c039-486d-92b3-2208d242f56b",
       "name": "modelo_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -579,7 +579,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-seguimiento",
         "contextWindowLength": 30
       },
-      "id": "34a948ce-5fbb-4ec8-95cf-9cb1a0c30989",
+      "id": "8d0da785-d348-4d3b-a53f-5a8608377d04",
       "name": "memoria_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -595,13 +595,36 @@
       }
     },
     {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO conversacion_turnos\n  (lead_id, msg_id, origen, autor, cliente_dijo, en_rafaga, agente,\n   respuesta, etapa_id, campos)\nVALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb)\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [ $('formatLead').first().json.lead_id, $('formatear').first().json.msg_id, $('formatLead').first().json.origen, $('formatLead').first().json.autor, $('formatLead').first().json.chats, $('formatLead').first().json.cuantos_mensajes, $prevNode.name, (typeof $json.output === 'string' ? $json.output : JSON.stringify($json.output)), $('formatLead').first().json.etapa_id, JSON.stringify($('formatLead').first().json.campos) ] }}"
+        }
+      },
+      "id": "4cba2fa4-d53f-429f-a9c3-b63436ab600f",
+      "name": "registrar_turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2400,
+        120
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
       "parameters": {},
-      "id": "7043e260-3be9-4c1f-81a3-28e4c033abc2",
+      "id": "b84fa0c0-f930-44cb-a97d-795021ad46b2",
       "name": "enviar_respuesta",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
       "position": [
-        2400,
+        2650,
         120
       ]
     }
@@ -680,7 +703,7 @@
       "main": [
         [
           {
-            "node": "enviar_respuesta",
+            "node": "registrar_turno",
             "type": "main",
             "index": 0
           }
@@ -713,7 +736,7 @@
       "main": [
         [
           {
-            "node": "enviar_respuesta",
+            "node": "registrar_turno",
             "type": "main",
             "index": 0
           }
@@ -743,6 +766,17 @@
       ]
     },
     "seguimiento": {
+      "main": [
+        [
+          {
+            "node": "registrar_turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_turno": {
       "main": [
         [
           {

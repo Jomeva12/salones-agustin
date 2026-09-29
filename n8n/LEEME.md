@@ -60,7 +60,8 @@ provisional, porque primero se prueba que el mensaje recorra todo el camino.
 new_message -> es_mensaje_entrante -> formatear
   -> guardar_en_buffer -> esperar_rafaga (15 s) -> leer_rafaga -> soy_el_ultimo
   -> marcar_consumidos -> traer_lead -> formatLead -> ia_activa
-  -> director -> enrutar -> {ventas | cliente | seguimiento} -> enviar_respuesta
+  -> director -> enrutar -> {ventas | cliente | seguimiento}
+  -> registrar_turno -> enviar_respuesta
 ```
 
 Cuatro agentes, cada uno con su modelo (OpenAI `INCAD`) y su memoria Postgres.
@@ -91,3 +92,41 @@ apaga.
 
 **Una memoria por agente y por lead.** Si compartieran clave de sesion, el
 agente de seguimiento leeria como suyo lo que dijo ventas.
+
+### El registro, que por ahora ES el producto
+
+`registrar_turno` guarda cada turno en `conversacion_turnos`: lo que dijo el
+cliente, que agente contesto, que redacto, y una foto de los campos del lead
+en ese momento.
+
+Mientras `enviar_respuesta` siga siendo un marcador, esa tabla es el unico
+lugar donde se lee lo que el agente HABRIA contestado. Nadie lo recibe.
+
+La foto de `campos` no es un extra: sin ella, revisar meses despues por que
+cotizo lo que cotizo es imposible, porque los campos de Kommo ya cambiaron.
+
+Para leer lo ultimo:
+
+```sql
+SELECT creado_en, agente, cliente_dijo, respuesta
+  FROM conversacion_turnos
+ ORDER BY creado_en DESC
+ LIMIT 20;
+```
+
+## Trabajar con la API de n8n
+
+Hay una API key en `.n8n_key` (fuera del repositorio). Los comandos la leen
+sin que el valor quede escrito:
+
+```bash
+curl -H "X-N8N-API-KEY: $(tr -d '
+' < .n8n_key)"   https://automatizaciones-n8n.hpzji3.easypanel.host/api/v1/workflows
+
+# Actualizar salones_principal desde el archivo versionado
+curl -X PUT ".../api/v1/workflows/eXHsmGJcQ2VNgvEs"   -H "X-N8N-API-KEY: $(tr -d '
+' < .n8n_key)"   -H "content-type: application/json" --data-binary @put.json
+```
+
+El PUT solo acepta `name`, `nodes`, `connections` y `settings`; con cualquier
+otra clave responde 400.

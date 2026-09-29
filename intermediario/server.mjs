@@ -122,6 +122,8 @@ CREATE TABLE IF NOT EXISTS conversacion_turnos (
 );
 CREATE INDEX IF NOT EXISTS ix_turnos_lead ON conversacion_turnos (lead_id, creado_en DESC);
 CREATE INDEX IF NOT EXISTS ix_turnos_fecha ON conversacion_turnos (creado_en DESC);
+-- Como quedo partida la respuesta: es lo que de verdad se enviaria.
+ALTER TABLE conversacion_turnos ADD COLUMN IF NOT EXISTS partes JSONB;
 
 -- Buffer de rafagas para n8n. No lo usa el intermediario: lo usa el flujo,
 -- que junta los mensajes seguidos de una misma conversacion y contesta una

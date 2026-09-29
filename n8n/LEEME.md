@@ -130,3 +130,31 @@ curl -X PUT ".../api/v1/workflows/eXHsmGJcQ2VNgvEs"   -H "X-N8N-API-KEY: $(tr -d
 
 El PUT solo acepta `name`, `nodes`, `connections` y `settings`; con cualquier
 otra clave responde 400.
+
+## Los prompts
+
+Viven en `n8n/prompts/*.md` y el generador los lee. Asi se revisan en el diff
+como cualquier cambio, en vez de quedar escondidos dentro de un nodo.
+
+| Agente | Tamano | Que hace |
+|---|---|---|
+| director | 1.4 KB | Enruta y extrae datos. No le habla al cliente |
+| ventas | 3.2 KB | Califica, cotiza, invita a visitar |
+| cliente | 1.4 KB | Atiende a quien ya contrato. No vende |
+| seguimiento | 0.7 KB | Reescribe a quien dejo de contestar |
+
+**Seis kilobytes los cuatro.** Los de Revolution suman 92 KB. La diferencia no
+es estilo: alli los precios, los escalones y las reglas viven dentro del
+prompt; aqui viven en el panel y el agente los consulta. Un prompt corto es
+consecuencia de tener herramientas, no una virtud aparte.
+
+### La clave de sesion lleva version
+
+`{lead}-{agente}-{MEMORIA_V}`. Cuando cambia lo que el agente PUEDE hacer
+-sus herramientas o su prompt-, se sube la version y empieza con memoria
+limpia.
+
+No es cosmetico. Con las herramientas caidas el agente contesto "tengo un
+problema con el sistema"; eso quedo en su historial y, ya arregladas las
+herramientas, **seguia repitiendo la disculpa sin intentar llamarlas**. Ese
+fallo no da error: da una excusa educada para siempre.

@@ -158,3 +158,32 @@ No es cosmetico. Con las herramientas caidas el agente contesto "tengo un
 problema con el sistema"; eso quedo en su historial y, ya arregladas las
 herramientas, **seguia repitiendo la disculpa sin intentar llamarlas**. Ese
 fallo no da error: da una excusa educada para siempre.
+
+## El Director escribe en Kommo
+
+Despues de clasificar, el Director pasa por `armar_patch` -> `hay_datos` ->
+`guardar_en_kommo`, que parcha los campos del lead.
+
+**Solo el Director escribe.** Si cada agente parchara el mismo lead se
+pisarian entre ellos y no habria forma de saber quien puso que. Los demas
+agentes solo leen.
+
+**Solo se escribe lo que el cliente dijo.** Un campo que el Director no pudo
+determinar se queda como esta. Sobrescribir con null borraria lo que una
+encargada capturo a mano, y eso no se nota hasta que alguien busca el dato.
+
+**Las fechas van a mediodia UTC.** Kommo las guarda como epoch; a las 00:00
+UTC en Monterrey (UTC-6) todavia es el dia anterior, y la fecha del evento
+aparecería corrida un dia.
+
+IDs de los campos, por si hay que tocarlos:
+
+| Campo | id | Opciones |
+|---|---|---|
+| Salon | 352870 | norma 281622, esmeralda 281624, santacruz 281626, quetzal 281628 |
+| Tipo de evento | 352872 | xv 281630, boda 281632, graduacion 281634, posada 281636, cumpleanos 281638, babyshower 281640 |
+| Fecha del evento | 352874 | fecha (epoch) |
+| Invitados | 352876 | numero |
+| Paquete cotizado | 352880 | Plata 281642, Onix 281644, Bronce 281646, Oro 281648 |
+| IA activa | 352882 | casilla |
+| Estado de contacto | 352884 | Activo 281650, En frio 281652 |

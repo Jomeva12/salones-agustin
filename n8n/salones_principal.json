@@ -8,7 +8,7 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "d8056fbc-b1e3-4aba-a994-6619ed9fd22e",
+      "id": "057e7c94-8493-469f-83e5-851032561312",
       "name": "new_message",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
@@ -16,7 +16,7 @@
         -600,
         0
       ],
-      "webhookId": "7f5472b9-a378-4263-9f77-0343098fb036"
+      "webhookId": "fea7c015-655d-4c9a-b936-6c29850c2616"
     },
     {
       "parameters": {
@@ -29,7 +29,7 @@
           },
           "conditions": [
             {
-              "id": "45314f0a-b591-4027-8a0a-7a0a165beb3a",
+              "id": "d93ac8d7-3b9f-4bd2-a2fc-73f019c32e36",
               "leftValue": "={{ $json.body['message[add][0][type]'] }}",
               "rightValue": "incoming",
               "operator": {
@@ -43,7 +43,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "cdbbdfcb-94e9-4b5a-8219-24ce62534f1b",
+      "id": "0b35a262-aa64-4481-8687-66ed5e114607",
       "name": "es_mensaje_entrante",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -56,7 +56,7 @@
       "parameters": {
         "jsCode": "// Traduce el payload de Kommo a campos limpios.\nconst b = $input.first().json.body ?? {};\nconst g = (k) => b['message[add][0][' + k + ']'] ?? null;\nconst epoch = Number(g('created_at'));\nreturn [{ json: {\n  msg_id: g('id'),\n  lead_id: g('entity_id') ?? g('element_id'),\n  contacto_id: g('contact_id'),\n  chat_id: g('chat_id'),\n  talk_id: g('talk_id'),\n  texto: g('text') ?? '',\n  // telegram en pruebas, whatsapp en produccion: sirve para dejar fuera de\n  // los reportes el trafico que nos mandamos nosotros.\n  origen: g('origin'),\n  autor: b['message[add][0][author][name]'] ?? null,\n  adjunto_tipo: b['message[add][0][attachment][type]'] ?? null,\n  adjunto_url: b['message[add][0][attachment][link]'] ?? b['message[add][0][attachment][url]'] ?? null,\n  creado_at: Number.isFinite(epoch) ? new Date(epoch * 1000).toISOString() : null,\n}}];"
       },
-      "id": "fc967614-1916-446b-ab2d-0a6cb27ffd10",
+      "id": "46491b5b-073d-4e1f-bfc5-a98af6bd30a8",
       "name": "formatear",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -73,7 +73,7 @@
           "queryReplacement": "={{ [$json.lead_id, $json.msg_id, $json.texto] }}"
         }
       },
-      "id": "9bd4fa80-1e87-4e99-b8b8-10cf2db94327",
+      "id": "9eee4131-bde7-4ff6-8a49-bc577b62041b",
       "name": "guardar_en_buffer",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -92,7 +92,7 @@
       "parameters": {
         "amount": 15
       },
-      "id": "0839cc54-bfd8-4b52-8401-388b0a226932",
+      "id": "e26c41f4-21f3-4585-93ef-650d6ad6555e",
       "name": "esperar_rafaga",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -100,7 +100,7 @@
         200,
         0
       ],
-      "webhookId": "118236a9-d095-4db7-8d3f-7b23af636741"
+      "webhookId": "2328ea91-ccf1-4bc7-92b9-fe0e3a0aa646"
     },
     {
       "parameters": {
@@ -110,7 +110,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id, $('formatear').first().json.msg_id] }}"
         }
       },
-      "id": "c824535d-2d64-49af-9789-4b713409712a",
+      "id": "74fecc0a-b239-4782-bfcf-92715a4036ce",
       "name": "leer_rafaga",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -136,7 +136,7 @@
           },
           "conditions": [
             {
-              "id": "b045f248-b857-4dad-a64c-4a8c9d411a99",
+              "id": "8e745481-181a-45ee-99fb-f9bf1240c9c9",
               "leftValue": "={{ $json.mas_nuevos }}",
               "rightValue": "0",
               "operator": {
@@ -150,7 +150,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "c8e681d1-dfa3-4746-aa0f-233fae85ed34",
+      "id": "f0468da2-ec12-4d3d-a73b-71e7b73abee5",
       "name": "soy_el_ultimo",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -167,7 +167,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id] }}"
         }
       },
-      "id": "2ab9dc22-8f1e-4f12-8363-a7f5e68be584",
+      "id": "7f200448-db08-479d-aa34-5b1bc38370de",
       "name": "marcar_consumidos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -195,7 +195,7 @@
           }
         }
       },
-      "id": "359341be-babd-45f0-8039-3214069b108c",
+      "id": "16ddc4b6-50f2-4036-802d-d2c2ea4dc164",
       "name": "traer_lead",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -214,7 +214,7 @@
       "parameters": {
         "jsCode": "// Aplana los campos personalizados de Kommo a algo legible.\nconst crudo = $input.first().json ?? {};\nconst l = crudo.data ?? crudo;\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nconst msg = $('formatear').first().json;\nconst rafaga = $('leer_rafaga').first().json;\nreturn [{ json: {\n  lead_id: String(l.id ?? msg.lead_id),\n  etapa_id: l.status_id ?? null,\n  responsable_id: l.responsible_user_id ?? null,\n  presupuesto: l.price ?? 0,\n  campos,\n  // Todo lo que el cliente dijo en la rafaga, ya junto en un solo texto.\n  chats: rafaga.chats ?? msg.texto,\n  cuantos_mensajes: Number(rafaga.cuantos ?? 1),\n  origen: msg.origen,\n  autor: msg.autor,\n  adjunto_tipo: msg.adjunto_tipo,\n  adjunto_url: msg.adjunto_url,\n}}];"
       },
-      "id": "b1b698fd-19ee-425f-99fd-1af6f66aad8a",
+      "id": "efa1010a-7ce3-49c6-8ccf-82fa0af21f47",
       "name": "formatLead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -234,7 +234,7 @@
           },
           "conditions": [
             {
-              "id": "1ff94a4b-e61d-4636-ab52-009d9850af58",
+              "id": "2a6529c4-ef85-4cfe-b4ec-c9738b42c54d",
               "leftValue": "={{ $json.campos['IA activa'] }}",
               "rightValue": "false",
               "operator": {
@@ -248,7 +248,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "6dcafc38-6689-4105-8954-698450043b7c",
+      "id": "914c23c8-cd65-44b7-948c-fbee49b1cd7d",
       "name": "ia_activa",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -265,7 +265,7 @@
           "systemMessage": "Eres el Director de Salones Agustin Barron. Clasificas y enrutas; NUNCA le hablas al cliente.\nResponde SOLO un JSON: {\"agente\":\"ventas\"} | {\"agente\":\"cliente\"} | {\"agente\":\"seguimiento\"}.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "5ef0e032-38ce-4fd8-af7e-c09d796a46a9",
+      "id": "1d9a6109-0c49-4bc8-b75a-7e8db95d2a45",
       "name": "director",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -284,7 +284,7 @@
         },
         "options": {}
       },
-      "id": "ebc958e8-2ff4-4e39-a2b5-7815520a6e8d",
+      "id": "71563966-b433-4213-a27e-1a3830de7d1a",
       "name": "modelo_director",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -305,7 +305,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-director",
         "contextWindowLength": 30
       },
-      "id": "61c64a41-1f7f-4cfb-8b80-c28cda9f915a",
+      "id": "8d2715f3-42fe-464e-bd3d-a6f918257c9c",
       "name": "memoria_director",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -334,7 +334,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "bd4d9171-8a5e-4f69-a2c7-7db888bdc313",
+                    "id": "c086ee90-f1c3-4318-8c8c-08dcbeb61a5d",
                     "leftValue": "={{ JSON.stringify($json.output) }}",
                     "rightValue": "ventas",
                     "operator": {
@@ -358,7 +358,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "22b4ea4a-1bdb-4a59-b8be-f208928c126c",
+                    "id": "3591bd24-8e13-47b5-8632-ac6df1145d87",
                     "leftValue": "={{ JSON.stringify($json.output) }}",
                     "rightValue": "cliente",
                     "operator": {
@@ -382,7 +382,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "26978866-f54f-4c3c-a077-b946b2245557",
+                    "id": "d2353c8b-eb8c-4b37-af3d-169741d8362f",
                     "leftValue": "={{ JSON.stringify($json.output) }}",
                     "rightValue": "seguimiento",
                     "operator": {
@@ -402,7 +402,7 @@
           "fallbackOutput": 0
         }
       },
-      "id": "bd68419e-a0c8-44c0-a6ec-1d32ef4312c0",
+      "id": "f381c839-8dfd-4d8a-9721-c279c1ecd275",
       "name": "enrutar",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -419,7 +419,7 @@
           "systemMessage": "Eres Maya, del departamento de atencion a clientes de Salones Agustin Barron. Atiendes prospectos.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "fb5dfd77-3983-43b8-baf4-b1cd93546ca2",
+      "id": "24ba703b-e5e4-4357-9a48-f1e029cf25b3",
       "name": "ventas",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -438,7 +438,7 @@
         },
         "options": {}
       },
-      "id": "d18592ac-f6e9-4abe-b046-b79720119498",
+      "id": "aca4bd50-bcff-4f16-959a-dda90a623199",
       "name": "modelo_ventas",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -459,7 +459,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas",
         "contextWindowLength": 30
       },
-      "id": "294c47ad-5056-4240-a185-fdbb3c2b4b7f",
+      "id": "f5e97471-ce35-4abc-9954-e9d33278ffcb",
       "name": "memoria_ventas",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -482,7 +482,7 @@
           "systemMessage": "Eres Maya. Atiendes a quien YA contrato: comprobantes y detalles del evento. NUNCA vendes.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "34c31a4b-4b12-4d3a-9760-44115d9795d9",
+      "id": "f2b4d309-564b-4221-8b82-66598eef0bde",
       "name": "cliente",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -501,7 +501,7 @@
         },
         "options": {}
       },
-      "id": "4ee2dfe4-bb63-47d6-b0a9-be5bcfcb41c3",
+      "id": "5d2f17c8-71bf-45a7-85d0-06b55c24f63d",
       "name": "modelo_cliente",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -522,7 +522,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-cliente",
         "contextWindowLength": 30
       },
-      "id": "f45c6d8d-b33e-41e9-a297-2e7fab3a2a9e",
+      "id": "5255ee12-e6d1-4413-b96c-f281983b1a03",
       "name": "memoria_cliente",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -545,7 +545,7 @@
           "systemMessage": "Eres Maya. Reescribes a quien dejo de contestar, dentro de las primeras 24 horas.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
         }
       },
-      "id": "b911b179-4312-400f-8de2-bae2a2688c5e",
+      "id": "30754139-164e-47d9-8823-1af03976ab31",
       "name": "seguimiento",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -564,7 +564,7 @@
         },
         "options": {}
       },
-      "id": "1644cb36-8314-4ac3-be6f-c071a7c8824f",
+      "id": "47522087-e4cf-472f-ba41-a069a0eff216",
       "name": "modelo_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -585,7 +585,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-seguimiento",
         "contextWindowLength": 30
       },
-      "id": "a9083b5b-cdc9-4a68-8b2c-b49b887076d1",
+      "id": "f7377517-b89c-4d5b-a7bf-a9e2d7eefe6f",
       "name": "memoria_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -604,7 +604,7 @@
       "parameters": {
         "jsCode": "// Parte la respuesta del agente en las piezas que espera enviar_mensaje_salones.\n//\n// Se hace con codigo y no con otro agente a proposito: partir en frontera de\n// parrafo es una regla, no un juicio. Un modelo haciendo esto cuesta, tarda, y\n// algun dia devuelve algo distinto para el mismo texto.\nconst bruto = $json.output ?? '';\nlet texto = typeof bruto === 'string' ? bruto : JSON.stringify(bruto);\n\n// El modelo a veces envuelve la respuesta en cercos de codigo o en un JSON.\ntexto = texto.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\nif (texto.startsWith('{')) {\n  try {\n    const o = JSON.parse(texto);\n    texto = o.respuesta ?? o.parte1 ?? o.output ?? texto;\n  } catch (e) { /* no era JSON: se queda con el texto tal cual */ }\n}\n\nconst MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro\nconst CORTE = 600;\n\n// Nunca se corta a media frase: si no hay frontera de parrafo, va entera.\n// Un mensaje largo de una sola pieza molesta menos que uno cortado a la mitad.\nfunction partir(t) {\n  if (t.length <= CORTE) return [t];\n  const parrafos = t.split(/\\n\\s*\\n/).map((x) => x.trim()).filter(Boolean);\n  if (parrafos.length < 2) return [t];\n  const partes = [];\n  let actual = '';\n  for (const p of parrafos) {\n    if (!actual) { actual = p; continue; }\n    if (partes.length === MAX_PARTES - 1 || (actual + p).length <= CORTE) {\n      actual += '\\n\\n' + p;\n    } else {\n      partes.push(actual);\n      actual = p;\n    }\n  }\n  if (actual) partes.push(actual);\n  return partes.slice(0, MAX_PARTES);\n}\n\nconst partes = partir(texto);\nconst fl = $('formatLead').first().json;\n\nreturn [{\n  json: {\n    cuantas_partes: partes.length,\n    parte1: partes[0] ?? '',\n    parte2: partes[1] ?? '',\n    parte3: '',\n    parte4: '',\n    lead_id: fl.lead_id,\n    // El subflujo solo acepta imagenes del dominio de Kommo. Sin imagen por ahora.\n    imagen_url: '',\n    mensaje_cliente: fl.chats,\n    // Declarados en el subflujo pero sin usar en su codigo: van en cero para\n    // no mover ninguna etapa por accidente.\n    proximo_paso: 0,\n    status_id: 0,\n    // Que agente redacto. Se guarda aqui porque despues de este nodo\n    // $prevNode.name ya seria 'formatear_respuesta'.\n    agente: $prevNode.name,\n    texto_completo: texto,\n  },\n}];\n"
       },
-      "id": "ae50a9f3-8530-4b61-abc2-ee364757f278",
+      "id": "09399c91-ebbc-4939-951d-b7b3b2efb194",
       "name": "formatear_respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -621,7 +621,7 @@
           "queryReplacement": "={{ [ $('formatLead').first().json.lead_id, $('formatear').first().json.msg_id, $('formatLead').first().json.origen, $('formatLead').first().json.autor, $('formatLead').first().json.chats, $('formatLead').first().json.cuantos_mensajes, $prevNode.name, $json.texto_completo, $('formatLead').first().json.etapa_id, JSON.stringify($('formatLead').first().json.campos), JSON.stringify([$json.parte1, $json.parte2].filter(Boolean)) ] }}"
         }
       },
-      "id": "94f17d4b-9614-499c-b357-6ff62a85a2c3",
+      "id": "99bc826d-481a-492d-acbf-4e0ea4da4a79",
       "name": "registrar_turno",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -637,8 +637,122 @@
       }
     },
     {
+      "parameters": {
+        "toolDescription": "Cotiza un evento y devuelve los paquetes REALES con sus precios. Usala SIEMPRE antes de mencionar cualquier precio o nombre de paquete: nunca los inventes ni los recuerdes de otra conversacion. Exige los tres datos; sin ellos no llames a esta herramienta, preguntalos. Si dejas salon vacio, devuelve los cuatro salones y marca cuales son vendibles ese dia, que es lo que sirve cuando la fecha esta ocupada. Las opciones vienen YA ORDENADAS: ofrece la primera.",
+        "method": "POST",
+        "url": "http://automatizaciones_salones-panel:4300/api/cotizar",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "tipo_evento",
+              "description": "XV anos, Boda, Graduacion, Posada, Aniversario / Cumpleanos, o Baby shower, despedida o bautizo",
+              "type": "string"
+            },
+            {
+              "name": "fecha_evento",
+              "description": "Fecha del evento en formato AAAA-MM-DD",
+              "type": "string"
+            },
+            {
+              "name": "personas",
+              "description": "Numero de invitados",
+              "type": "number"
+            },
+            {
+              "name": "salon",
+              "description": "norma, esmeralda, santacruz o quetzal. Dejalo vacio para consultar los cuatro",
+              "type": "string"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\"tipo_evento\": \"{tipo_evento}\", \"fecha_evento\": \"{fecha_evento}\", \"personas\": {personas}, \"salon\": \"{salon}\"}"
+      },
+      "id": "7921890f-6497-4b9f-8a3a-c203c6953eed",
+      "name": "cotizar",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2100,
+        620
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PONER_ID",
+          "name": "panel_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Dice si una fecha esta libre en cada uno de los cuatro salones. Usala antes de dar por buena cualquier fecha. Si esta ocupada, ofrece de inmediato esa misma fecha en los otros salones, y tambien otro dia parecido: si pidio sabado y no hay, busca otro sabado.",
+        "method": "GET",
+        "url": "http://automatizaciones_salones-panel:4300/api/disponibilidad?fecha={fecha}&turno=noche",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "fecha",
+              "description": "Fecha en formato AAAA-MM-DD",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "324a2bc9-3c72-497d-a995-aa5755062cff",
+      "name": "disponibilidad",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2100,
+        780
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PONER_ID",
+          "name": "panel_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "toolDescription": "Consulta las reglas del negocio: anticipos, formas de pago, cancelacion, cambio de fecha, horarios, que incluye cada paquete. Usala cuando el cliente pregunte por cualquier condicion. Si la consulta no devuelve nada, NO improvises: di que lo confirmas y avisa a la encargada.",
+        "method": "GET",
+        "url": "http://automatizaciones_salones-panel:4300/api/politicas?incluir=agente&q={q}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "placeholderDefinitions": {
+          "values": [
+            {
+              "name": "q",
+              "description": "Palabra o frase del tema a buscar, por ejemplo: anticipo, tarjeta, cancelacion, cortesias",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "id": "8ce6bcc9-f1aa-4cff-a7ec-e08736da8530",
+      "name": "politicas",
+      "type": "@n8n/n8n-nodes-langchain.toolHttpRequest",
+      "typeVersion": 1.1,
+      "position": [
+        2100,
+        940
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PONER_ID",
+          "name": "panel_salones"
+        }
+      }
+    },
+    {
       "parameters": {},
-      "id": "115c4b06-e336-4d36-b5bb-e67ff42122a6",
+      "id": "33255876-76d5-49b4-839b-176628783973",
       "name": "enviar_respuesta",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -649,7 +763,7 @@
     },
     {
       "parameters": {},
-      "id": "40fb69da-fb2b-4789-8a6d-7033e5c0b300",
+      "id": "b1d6d6d7-e4b4-47fa-9bf3-f3a13eaa8b0e",
       "name": "sin_respuesta",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -812,6 +926,44 @@
           {
             "node": "registrar_turno",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cotizar": {
+      "ai_tool": [
+        [
+          {
+            "node": "ventas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "disponibilidad": {
+      "ai_tool": [
+        [
+          {
+            "node": "ventas",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "politicas": {
+      "ai_tool": [
+        [
+          {
+            "node": "ventas",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "cliente",
+            "type": "ai_tool",
             "index": 0
           }
         ]

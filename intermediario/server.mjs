@@ -94,6 +94,35 @@ CREATE INDEX IF NOT EXISTS ix_cola_entity     ON cola_mensajes (entity_id, estad
 CREATE INDEX IF NOT EXISTS ix_cola_recibido   ON cola_mensajes (recibido_en DESC);
 ALTER TABLE cola_mensajes ADD COLUMN IF NOT EXISTS adjunto TEXT;
 
+-- Un renglon por turno de conversacion: lo que dijo el cliente, que agente
+-- contesto y que redacto. Tampoco la usa el intermediario, la escribe el
+-- flujo; vive aqui por lo mismo que el buffer.
+--
+-- Mientras la respuesta no se envie, esta tabla ES el producto: es donde se
+-- lee lo que el agente HABRIA contestado, sin que ningun cliente lo reciba.
+-- Por eso 'enviada' arranca en false y no se toca hasta que exista el envio.
+--
+-- 'campos' guarda como estaba el lead en ese momento. Sin esa foto, revisar
+-- meses despues por que cotizo lo que cotizo es imposible: los campos de
+-- Kommo ya cambiaron.
+CREATE TABLE IF NOT EXISTS conversacion_turnos (
+  id            BIGSERIAL PRIMARY KEY,
+  lead_id       TEXT        NOT NULL,
+  msg_id        TEXT,
+  origen        TEXT,
+  autor         TEXT,
+  cliente_dijo  TEXT,
+  en_rafaga     INT,
+  agente        TEXT,
+  respuesta     TEXT,
+  enviada       BOOLEAN     NOT NULL DEFAULT false,
+  etapa_id      BIGINT,
+  campos        JSONB,
+  creado_en     TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS ix_turnos_lead ON conversacion_turnos (lead_id, creado_en DESC);
+CREATE INDEX IF NOT EXISTS ix_turnos_fecha ON conversacion_turnos (creado_en DESC);
+
 -- Buffer de rafagas para n8n. No lo usa el intermediario: lo usa el flujo,
 -- que junta los mensajes seguidos de una misma conversacion y contesta una
 -- sola vez. Vive aqui porque este proceso es el unico que administra el

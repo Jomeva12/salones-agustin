@@ -1122,12 +1122,27 @@ const rutas = {
       : incluir === 'agente' ? ['publico', 'regla_interna']
       : ['publico'];
     const marcas = vis.map(() => '?').join(',');
-    return {
-      incluir,
-      politicas: db.prepare(
-        `SELECT id, seccion, tema, detalle, notas, visibilidad FROM politica
-          WHERE visibilidad IN (${marcas}) ORDER BY seccion, id`).all(...vis),
-    };
+    const todas = db.prepare(
+      `SELECT id, seccion, tema, detalle, notas, visibilidad FROM politica
+        WHERE visibilidad IN (${marcas}) ORDER BY seccion, id`).all(...vis);
+
+    // El filtro se hace aqui y no en SQL porque el LIKE de SQLite no ignora
+    // acentos: buscar «cortesias» no encontraba «cortesías», y el agente va a
+    // escribirlo de las dos formas. Son 50 filas; filtrarlas en memoria no
+    // cuesta nada y evita esa clase de silencio.
+    //
+    // Se busca tambien en las notas: ahi viven las restricciones («no se
+    // aceptan tarjetas», «esto no lo da el agente»), que es justo lo que
+    // impide prometer algo que no existe.
+    const q = (u.searchParams.get('q') ?? '').trim();
+    const plano = (t) => (t ?? '')
+      .normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const aguja = plano(q);
+    const politicas = aguja
+      ? todas.filter((p) => plano(`${p.tema} ${p.detalle} ${p.notas}`).includes(aguja))
+      : todas;
+
+    return { incluir, q: q || null, total: politicas.length, politicas };
   },
 
   // ════════════ escritura: respuestas y políticas ════════════

@@ -94,6 +94,25 @@ CREATE INDEX IF NOT EXISTS ix_cola_entity     ON cola_mensajes (entity_id, estad
 CREATE INDEX IF NOT EXISTS ix_cola_recibido   ON cola_mensajes (recibido_en DESC);
 ALTER TABLE cola_mensajes ADD COLUMN IF NOT EXISTS adjunto TEXT;
 
+-- Buffer de rafagas para n8n. No lo usa el intermediario: lo usa el flujo,
+-- que junta los mensajes seguidos de una misma conversacion y contesta una
+-- sola vez. Vive aqui porque este proceso es el unico que administra el
+-- esquema de esta base, y asi la tabla se crea sola en cada arranque.
+--
+-- Sin columna de candado no hay nada que se pueda trabar: una fila sin consumir
+-- es trabajo pendiente, no una conversacion bloqueada. Si una
+-- ejecucion muere a medias, el siguiente mensaje se lleva todo lo que quedo.
+CREATE TABLE IF NOT EXISTS buffer_mensajes (
+  id           BIGSERIAL PRIMARY KEY,
+  lead_id      TEXT        NOT NULL,
+  msg_id       TEXT        UNIQUE,
+  texto        TEXT,
+  recibido_en  TIMESTAMPTZ NOT NULL DEFAULT now(),
+  consumido_en TIMESTAMPTZ
+);
+CREATE INDEX IF NOT EXISTS ix_buffer_pendientes
+  ON buffer_mensajes (lead_id, recibido_en) WHERE consumido_en IS NULL;
+
 CREATE TABLE IF NOT EXISTS latencia_ack (
   id       BIGSERIAL PRIMARY KEY,
   momento  TIMESTAMPTZ NOT NULL DEFAULT now(),

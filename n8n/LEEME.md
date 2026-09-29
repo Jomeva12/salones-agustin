@@ -49,3 +49,45 @@ http://automatizaciones_n8n:5678/webhook/salones-entrada-64dcb347
 
 Ese valor va en `N8N_WEBHOOK_URL` del intermediario, y solo surte efecto
 cuando se quite `SOLO_REGISTRAR=true`.
+
+
+## salones_principal
+
+El flujo principal. Esqueleto: el cableado completo con los prompts en
+provisional, porque primero se prueba que el mensaje recorra todo el camino.
+
+```
+new_message -> es_mensaje_entrante -> formatear
+  -> guardar_en_buffer -> esperar_rafaga (15 s) -> leer_rafaga -> soy_el_ultimo
+  -> marcar_consumidos -> traer_lead -> formatLead -> ia_activa
+  -> director -> enrutar -> {ventas | cliente | seguimiento} -> enviar_respuesta
+```
+
+Cuatro agentes, cada uno con su modelo (OpenAI `INCAD`) y su memoria Postgres.
+
+### El buffer de rafagas, sin candado
+
+Junta los mensajes seguidos para contestar una sola vez. Quien contesta es la
+ejecucion del **ultimo** mensaje: las anteriores consultan si llego algo mas
+nuevo y se apagan solas.
+
+Revolution resuelve esto con una fila de `procesando` en Supabase. Ese candado
+ya dejo una conversacion muda con todo en verde: la fila se quedo trabada y
+nadie lo vio, porque no hay ejecucion en rojo que mirar. Aqui no hay candado
+que trabar — una fila sin consumir es trabajo pendiente, y si una ejecucion
+muere a medias el siguiente mensaje se lleva todo lo que quedo.
+
+La tabla `buffer_mensajes` la crea el intermediario al arrancar.
+
+### Detalles que no son obvios
+
+**Los INSERT van parametrizados, no interpolados.** El cliente escribe signos
+`$` cuando habla de precios, y un `$` pegado a una comilla rompe la consulta;
+el error ademas apunta a la linea siguiente y cuesta encontrarlo.
+
+**El interruptor de la IA es el campo de Kommo,** no una tabla aparte. Llega
+gratis en la misma llamada que trae el lead, y es lo que la encargada ve y
+apaga.
+
+**Una memoria por agente y por lead.** Si compartieran clave de sesion, el
+agente de seguimiento leeria como suyo lo que dijo ventas.

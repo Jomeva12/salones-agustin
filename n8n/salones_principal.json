@@ -1,0 +1,892 @@
+{
+  "name": "salones_principal",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "salones_principal",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "e1204d95-7943-4c3d-97f1-631bc53a8bf0",
+      "name": "new_message",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -600,
+        0
+      ],
+      "webhookId": "c114188a-1d3c-4973-8202-7ab0c739e205"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "35018632-8a34-46ee-9e4e-f92de05f7491",
+              "leftValue": "={{ $json.body['message[add][0][type]'] }}",
+              "rightValue": "incoming",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "6b0b665f-60c8-49d9-a702-0f4f29aaadcc",
+      "name": "es_mensaje_entrante",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Traduce el payload de Kommo a campos limpios.\nconst b = $input.first().json.body ?? {};\nconst g = (k) => b['message[add][0][' + k + ']'] ?? null;\nconst epoch = Number(g('created_at'));\nreturn [{ json: {\n  msg_id: g('id'),\n  lead_id: g('entity_id') ?? g('element_id'),\n  contacto_id: g('contact_id'),\n  chat_id: g('chat_id'),\n  talk_id: g('talk_id'),\n  texto: g('text') ?? '',\n  // telegram en pruebas, whatsapp en produccion: sirve para dejar fuera de\n  // los reportes el trafico que nos mandamos nosotros.\n  origen: g('origin'),\n  autor: b['message[add][0][author][name]'] ?? null,\n  adjunto_tipo: b['message[add][0][attachment][type]'] ?? null,\n  adjunto_url: b['message[add][0][attachment][link]'] ?? b['message[add][0][attachment][url]'] ?? null,\n  creado_at: Number.isFinite(epoch) ? new Date(epoch * 1000).toISOString() : null,\n}}];"
+      },
+      "id": "79ad088e-5b4b-4310-823b-b47e5ccf1d6d",
+      "name": "formatear",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO buffer_mensajes (lead_id, msg_id, texto)\nVALUES ($1, $2, $3)\nON CONFLICT (msg_id) DO NOTHING;",
+        "options": {
+          "queryReplacement": "={{ [$json.lead_id, $json.msg_id, $json.texto] }}"
+        }
+      },
+      "id": "381ede79-8a61-426c-9311-b59f60516212",
+      "name": "guardar_en_buffer",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "amount": 15
+      },
+      "id": "4a150809-6963-4288-a479-217a729eb1fa",
+      "name": "esperar_rafaga",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        200,
+        0
+      ],
+      "webhookId": "885d87dd-5b51-4b0b-ba8c-8ba0a94f66bf"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  (SELECT COUNT(*) FROM buffer_mensajes\n     WHERE lead_id = $1 AND consumido_en IS NULL\n       AND recibido_en > (SELECT recibido_en FROM buffer_mensajes WHERE msg_id = $2)\n  ) AS mas_nuevos,\n  (SELECT string_agg(texto, chr(10) ORDER BY recibido_en)\n     FROM buffer_mensajes WHERE lead_id = $1 AND consumido_en IS NULL\n  ) AS chats,\n  (SELECT COUNT(*) FROM buffer_mensajes\n     WHERE lead_id = $1 AND consumido_en IS NULL) AS cuantos;",
+        "options": {
+          "queryReplacement": "={{ [$('formatear').first().json.lead_id, $('formatear').first().json.msg_id] }}"
+        }
+      },
+      "id": "1dc2332a-aaa4-4378-9e79-edc10aca7041",
+      "name": "leer_rafaga",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        400,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "590eb59e-abf9-48e6-b0cc-c42a890d3bfa",
+              "leftValue": "={{ $json.mas_nuevos }}",
+              "rightValue": "0",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "7f177e43-ed0c-435c-8d26-935049be3559",
+      "name": "soy_el_ultimo",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE buffer_mensajes SET consumido_en = now()\n WHERE lead_id = $1 AND consumido_en IS NULL\n RETURNING msg_id;",
+        "options": {
+          "queryReplacement": "={{ [$('formatear').first().json.lead_id] }}"
+        }
+      },
+      "id": "3cb6ca3c-7b6c-4eb3-a928-77a8861e11ee",
+      "name": "marcar_consumidos",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        800,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://administracioneventos6.kommo.com/api/v4/leads/{{ $('formatear').first().json.lead_id }}?with=contacts,source_id",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "id": "20553624-a03e-4862-848b-8cdc5e891ba9",
+      "name": "traer_lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1000,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YrRdSRPkquUkNRAB",
+          "name": "kommo_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aplana los campos personalizados de Kommo a algo legible.\nconst l = $input.first().json ?? {};\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nconst msg = $('formatear').first().json;\nconst rafaga = $('leer_rafaga').first().json;\nreturn [{ json: {\n  lead_id: String(l.id ?? msg.lead_id),\n  etapa_id: l.status_id ?? null,\n  responsable_id: l.responsible_user_id ?? null,\n  presupuesto: l.price ?? 0,\n  campos,\n  // Todo lo que el cliente dijo en la rafaga, ya junto en un solo texto.\n  chats: rafaga.chats ?? msg.texto,\n  cuantos_mensajes: rafaga.cuantos ?? 1,\n  origen: msg.origen,\n  autor: msg.autor,\n  adjunto_tipo: msg.adjunto_tipo,\n  adjunto_url: msg.adjunto_url,\n}}];"
+      },
+      "id": "c205cfa7-a00f-4e7e-9eed-527182deb218",
+      "name": "formatLead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "d795884f-d0f8-4d94-9482-4505b7aa56ea",
+              "leftValue": "={{ $json.campos['IA activa'] }}",
+              "rightValue": "false",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "09afc5be-7074-498e-bd57-dc7055b5cb24",
+      "name": "ia_activa",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=El cliente dice: {{ $json.chats }}",
+        "options": {
+          "systemMessage": "Eres el Director de Salones Agustin Barron. Clasificas y enrutas; NUNCA le hablas al cliente.\nResponde SOLO un JSON: {\"agente\":\"ventas\"} | {\"agente\":\"cliente\"} | {\"agente\":\"seguimiento\"}.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
+        }
+      },
+      "id": "b2048b54-00c3-4921-a66c-0c9f72cc8900",
+      "name": "director",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        1600,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "407cd2e0-5fbb-4ba7-a691-83e18686b64a",
+      "name": "modelo_director",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        1540,
+        -50
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "aLFrGO9FtcPzpgXL",
+          "name": "INCAD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('formatLead').first().json.lead_id }}-director",
+        "contextWindowLength": 30
+      },
+      "id": "5ab5e7b1-e7c0-4eb8-8c03-f32adb17f393",
+      "name": "memoria_director",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        1710,
+        -50
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "49ed2652-66e6-4192-b5f2-f595d892f976",
+                    "leftValue": "={{ JSON.stringify($json.output) }}",
+                    "rightValue": "ventas",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "ventas"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "b20e31c5-cce4-4b62-ad4f-6bd1568e280d",
+                    "leftValue": "={{ JSON.stringify($json.output) }}",
+                    "rightValue": "cliente",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "cliente"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": false,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "3c3efe9b-716e-4a77-8a72-f22b2e6b08cd",
+                    "leftValue": "={{ JSON.stringify($json.output) }}",
+                    "rightValue": "seguimiento",
+                    "operator": {
+                      "type": "string",
+                      "operation": "contains"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "seguimiento"
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": 0
+        }
+      },
+      "id": "61ef33d0-1ae3-4e92-924d-ca33fddac30c",
+      "name": "enrutar",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        1800,
+        -240
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=El cliente dice: {{ $json.chats }}",
+        "options": {
+          "systemMessage": "Eres Maya, del departamento de atencion a clientes de Salones Agustin Barron. Atiendes prospectos.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
+        }
+      },
+      "id": "1109c19b-2330-4d03-957f-c30938dd93ae",
+      "name": "ventas",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2100,
+        -140
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "c9baedb0-18b2-480e-8d9f-0c8f1f07f76f",
+      "name": "modelo_ventas",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2040,
+        50
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "aLFrGO9FtcPzpgXL",
+          "name": "INCAD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas",
+        "contextWindowLength": 30
+      },
+      "id": "4b1abe09-f41a-4f64-aa92-8d77a85032f9",
+      "name": "memoria_ventas",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2210,
+        50
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=El cliente dice: {{ $json.chats }}",
+        "options": {
+          "systemMessage": "Eres Maya. Atiendes a quien YA contrato: comprobantes y detalles del evento. NUNCA vendes.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
+        }
+      },
+      "id": "f7441504-d850-4a9a-ba70-30bbd9b6784b",
+      "name": "cliente",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2100,
+        120
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "c560ce8c-62ef-4192-974c-b01e82b8717e",
+      "name": "modelo_cliente",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2040,
+        310
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "aLFrGO9FtcPzpgXL",
+          "name": "INCAD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('formatLead').first().json.lead_id }}-cliente",
+        "contextWindowLength": 30
+      },
+      "id": "32913b66-75d2-46ab-89ac-53536466437e",
+      "name": "memoria_cliente",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2210,
+        310
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=El cliente dice: {{ $json.chats }}",
+        "options": {
+          "systemMessage": "Eres Maya. Reescribes a quien dejo de contestar, dentro de las primeras 24 horas.\n\nPROVISIONAL: el prompt de verdad se escribe al final, cuando el resto del flujo este probado."
+        }
+      },
+      "id": "1f1c495b-c398-484f-8926-917ce694be6c",
+      "name": "seguimiento",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        2100,
+        380
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "04cc9d54-c21b-41b3-b291-454b23ca1af3",
+      "name": "modelo_seguimiento",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        2040,
+        570
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "aLFrGO9FtcPzpgXL",
+          "name": "INCAD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('formatLead').first().json.lead_id }}-seguimiento",
+        "contextWindowLength": 30
+      },
+      "id": "34a948ce-5fbb-4ec8-95cf-9cb1a0c30989",
+      "name": "memoria_seguimiento",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        2210,
+        570
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "7043e260-3be9-4c1f-81a3-28e4c033abc2",
+      "name": "enviar_respuesta",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        2400,
+        120
+      ]
+    }
+  ],
+  "connections": {
+    "modelo_director": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "director",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoria_director": {
+      "ai_memory": [
+        [
+          {
+            "node": "director",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "modelo_ventas": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "ventas",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoria_ventas": {
+      "ai_memory": [
+        [
+          {
+            "node": "ventas",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enrutar": {
+      "main": [
+        [
+          {
+            "node": "ventas",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "cliente",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "seguimiento",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ventas": {
+      "main": [
+        [
+          {
+            "node": "enviar_respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "modelo_cliente": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "cliente",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoria_cliente": {
+      "ai_memory": [
+        [
+          {
+            "node": "cliente",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cliente": {
+      "main": [
+        [
+          {
+            "node": "enviar_respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "modelo_seguimiento": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "seguimiento",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoria_seguimiento": {
+      "ai_memory": [
+        [
+          {
+            "node": "seguimiento",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "seguimiento": {
+      "main": [
+        [
+          {
+            "node": "enviar_respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "new_message": {
+      "main": [
+        [
+          {
+            "node": "es_mensaje_entrante",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "es_mensaje_entrante": {
+      "main": [
+        [
+          {
+            "node": "formatear",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formatear": {
+      "main": [
+        [
+          {
+            "node": "guardar_en_buffer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "guardar_en_buffer": {
+      "main": [
+        [
+          {
+            "node": "esperar_rafaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "esperar_rafaga": {
+      "main": [
+        [
+          {
+            "node": "leer_rafaga",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "leer_rafaga": {
+      "main": [
+        [
+          {
+            "node": "soy_el_ultimo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "soy_el_ultimo": {
+      "main": [
+        [
+          {
+            "node": "marcar_consumidos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "marcar_consumidos": {
+      "main": [
+        [
+          {
+            "node": "traer_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "traer_lead": {
+      "main": [
+        [
+          {
+            "node": "formatLead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formatLead": {
+      "main": [
+        [
+          {
+            "node": "ia_activa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ia_activa": {
+      "main": [
+        [
+          {
+            "node": "director",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "director": {
+      "main": [
+        [
+          {
+            "node": "enrutar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

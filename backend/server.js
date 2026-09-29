@@ -937,6 +937,61 @@ const rutas = {
     };
   },
 
+  /**
+   * «¿Qué sábados hay libres en diciembre?» — la pregunta más común de quien
+   * busca salón, y la que el agente no puede contestar solo.
+   *
+   * Existe porque un modelo calculó que el 5 de diciembre de 2027 era sábado
+   * (es domingo), consultó ese día y cotizó sobre él. Los días de la semana
+   * los cuenta SQLite con strftime, que no se equivoca ni depende de la zona
+   * horaria porque trabaja sobre fechas sin hora.
+   */
+  'GET /api/dias-disponibles': (u) => {
+    const mes = u.searchParams.get('mes');
+    if (!/^\d{4}-(0[1-9]|1[0-2])$/.test(mes ?? '')) return { error: 'mes inválido, usa YYYY-MM' };
+    const turno = u.searchParams.get('turno') ?? 'noche';
+
+    const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+    const pedido = (u.searchParams.get('dia_semana') ?? '').trim().toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '');
+    let filtro = null;
+    if (pedido) {
+      // Se aceptan «sabado» y «sábado», y también el plural que escribe la gente.
+      const i = DIAS.findIndex((d) => {
+        const s = d.normalize('NFD').replace(/[̀-ͯ]/g, '');
+        return s === pedido || s + 's' === pedido;
+      });
+      if (i < 0) return { error: 'día de la semana desconocido' };
+      filtro = String(i);
+    }
+
+    const dias = db.prepare(
+      `WITH RECURSIVE d(f) AS (
+         SELECT date(? || '-01')
+         UNION ALL SELECT date(f,'+1 day') FROM d WHERE date(f,'+1 day') < date(? || '-01','+1 month'))
+       SELECT f AS fecha, strftime('%w', f) AS dow FROM d`).all(mes, mes);
+
+    const salones = db.prepare('SELECT id, clave, nombre FROM salon WHERE activo = 1 ORDER BY id').all();
+    return {
+      mes, turno, dia_semana: filtro === null ? null : DIAS[Number(filtro)],
+      dias: dias.filter((d) => filtro === null || d.dow === filtro).map((d) => {
+        const est = salones.map((s) => ({
+          salon: s.clave, nombre: s.nombre,
+          ...L.disponibilidadSalon(db, s.id, d.fecha, turno),
+        }));
+        return {
+          fecha: d.fecha,
+          dia_semana: DIAS[Number(d.dow)],
+          // Se separan a proposito: «no_confirmada» no es «libre», y el agente
+          // no debe poder confundirlas leyendo una sola lista.
+          libres: est.filter((e) => e.estado === 'libre').map((e) => e.salon),
+          por_confirmar: est.filter((e) => e.estado === 'no_confirmada').map((e) => e.salon),
+          ocupados: est.filter((e) => e.estado === 'ocupada').map((e) => e.salon),
+        };
+      }),
+    };
+  },
+
   // Rango de fechas para pintar el calendario del frontend.
   // El detalle de un día en un salón: lo que hay y, sobre todo, dónde quedan
   // los huecos. Es lo que abre el panel lateral al tocar un día.

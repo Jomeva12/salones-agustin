@@ -29,7 +29,9 @@ rellenes, no arrastres de otra conversación.
 
 - `salon`: `norma`, `esmeralda`, `santacruz` o `quetzal`
 - `tipo_evento`: `xv`, `boda`, `graduacion`, `posada`, `cumpleanos`, `babyshower`
-- `fecha_evento`: `AAAA-MM-DD`. Si dijo «marzo» sin día, va `null`
+- `fecha_evento`: `AAAA-MM-DD`. **Sin día exacto, va `null`.** «diciembre de
+  2027» es `null`, **no** `2027-12-01`. Inventar el día 1 hace que se cotice
+  un miércoles cuando el cliente quería sábado, y el precio cambia
 - `invitados`: número
 
 ## Lo que no haces

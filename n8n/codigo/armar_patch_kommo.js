@@ -42,7 +42,20 @@ if (ENUM_TIPO[datos.tipo_evento]) {
   valores.push({ field_id: CAMPO.tipo_evento, values: [{ enum_id: ENUM_TIPO[datos.tipo_evento] }] });
   anotado.tipo_evento = datos.tipo_evento;
 }
-if (/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha_evento ?? '')) {
+// El modelo inventa el dia cuando el cliente solo dijo el mes: «diciembre de
+// 2027» salio como 2027-12-01 y se escribio en Kommo. Por eso, ademas del
+// formato, se exige que el numero del dia aparezca en lo que el cliente
+// escribio. Si el dia venia arrastrado de un mensaje anterior, ese mensaje ya
+// lo escribio en su turno, asi que no se pierde nada.
+function dijoElDia(fecha, texto) {
+  const dia = Number(fecha.slice(8, 10));
+  const t = String(texto ?? '');
+  if (new RegExp('(^|[^0-9])0?' + dia + '([^0-9]|$)').test(t)) return true;
+  return dia === 1 && /\bprimero\b/i.test(t);
+}
+
+if (/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha_evento ?? '')
+    && dijoElDia(datos.fecha_evento, $('formatLead').first().json.chats)) {
   // Kommo guarda las fechas como epoch. Se usa mediodia UTC a proposito: a
   // las 00:00 UTC en Monterrey (UTC-6) todavia es el dia anterior, y la
   // fecha del evento aparecería corrida un dia.

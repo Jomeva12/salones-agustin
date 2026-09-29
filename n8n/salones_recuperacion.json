@@ -1,0 +1,117 @@
+{
+  "name": "salones_recuperacion",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "0 9-20 * * *"
+            }
+          ]
+        }
+      },
+      "id": "bb93de5d-d8fd-4074-8121-4e70d47f1ae6",
+      "name": "cada_hora",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "WITH ultimo AS (\n  SELECT DISTINCT ON (lead_id) lead_id, agente, enviada, creado_en\n    FROM conversacion_turnos\n   ORDER BY lead_id, creado_en DESC\n)\nSELECT lead_id\n  FROM ultimo\n WHERE enviada\n   AND agente NOT IN ('seguimiento', 'aviso_reinicio')\n   AND creado_en < now() - interval '24 hours'\n   AND creado_en > now() - interval '7 days'\n ORDER BY creado_en\n LIMIT 10;",
+        "options": {}
+      },
+      "id": "153a4d70-846c-4040-8205-e9bcb3dff22c",
+      "name": "buscar_callados",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -200,
+        0
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "XCjUoeCFF7OJLQao",
+          "mode": "list",
+          "cachedResultName": "salones_recuperacion_lead",
+          "cachedResultUrl": "/workflow/XCjUoeCFF7OJLQao"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "lead_id": "={{ $json.lead_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {
+          "waitForSubWorkflow": true
+        }
+      },
+      "id": "ba925d39-c972-45f4-bf6f-775135e2f537",
+      "name": "uno_por_uno",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    }
+  ],
+  "connections": {
+    "cada_hora": {
+      "main": [
+        [
+          {
+            "node": "buscar_callados",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "buscar_callados": {
+      "main": [
+        [
+          {
+            "node": "uno_por_uno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Monterrey"
+  }
+}

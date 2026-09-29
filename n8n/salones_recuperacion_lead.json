@@ -1,0 +1,529 @@
+{
+  "name": "salones_recuperacion_lead",
+  "nodes": [
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "lead_id"
+            }
+          ]
+        }
+      },
+      "id": "493da355-1671-4772-9903-9e2c8c29ff85",
+      "name": "inicio",
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "=https://administracioneventos6.kommo.com/api/v4/leads/{{ $json.lead_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "3f296fd1-4e27-44e7-9576-78722dde62be",
+      "name": "traer_lead",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -400,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YrRdSRPkquUkNRAB",
+          "name": "kommo_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mismo aplanado que el flujo principal, sin la parte del mensaje: aqui no\n// hay mensaje del cliente, justamente porque dejo de escribir.\nconst crudo = $input.first().json ?? {};\nconst l = crudo.data ?? crudo;\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nreturn [{ json: {\n  lead_id: String(l.id ?? $('inicio').first().json.lead_id),\n  etapa_id: l.status_id ?? null,\n  campos,\n  // Lo que el agente vera como \"lo que dijo el cliente\". No es un mensaje:\n  // es la instruccion de por que se le esta escribiendo.\n  chats: '',\n}}];"
+      },
+      "id": "43544617-d11a-4a57-8fb2-8393896bbcc5",
+      "name": "formatLead",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": false,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "fb4f4070-e7d9-44d9-b249-bfbadf00b1c3",
+              "leftValue": "={{ [112261047, 112261051, 112261055, 142, 143].includes($json.etapa_id) === false && String($json.campos['IA activa']) !== 'false' }}",
+              "rightValue": "true",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "a022c859-3bfd-4f16-b65a-b5c4f106b8c1",
+      "name": "se_puede",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Han pasado 24 horas sin respuesta de este cliente. Escribele un mensaje breve para retomar la conversacion donde se quedo.",
+        "options": {
+          "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón. Le escribes a alguien que **dejó de contestar**.\n\n## Un solo mensaje, corto\n\nRetomas por donde se quedó la conversación, sin reprochar y sin repetir todo\nlo que ya le dijiste. Si estaba a punto de dar un dato, se lo vuelves a pedir.\nSi ya tenía cotización, le recuerdas que puede venir a conocer el salón.\n\nDos o tres líneas. Nada de volver a listar precios.\n\n## Nunca\n\n- Escribir como si fuera la primera vez.\n- Insistir con urgencia o presión. Si no contesta, no contesta.\n- Ofrecer un descuento para reenganchar. No existen.\n- Inventar una promoción o una fecha límite que nadie te dijo.\n\nSi el cliente responde, la conversación vuelve a ventas: tú no cotizas.\n"
+        }
+      },
+      "id": "03423fb5-db2b-438a-83e9-7f0a1fbbe76b",
+      "name": "seguimiento",
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        220,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-4.1-mini",
+          "mode": "list",
+          "cachedResultName": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "id": "6fa986de-4382-4ee9-ad66-6b14e14adc7c",
+      "name": "modelo_seguimiento",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.3,
+      "position": [
+        160,
+        140
+      ],
+      "credentials": {
+        "openAiApi": {
+          "id": "aLFrGO9FtcPzpgXL",
+          "name": "INCAD"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas-v6",
+        "contextWindowLength": 30
+      },
+      "id": "72f4ee73-8de6-449f-a981-daa5e95a56dd",
+      "name": "memoria_seguimiento",
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        330,
+        140
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parte la respuesta del agente en las piezas que espera enviar_mensaje_salones.\n//\n// Se hace con codigo y no con otro agente a proposito: partir en frontera de\n// parrafo es una regla, no un juicio. Un modelo haciendo esto cuesta, tarda, y\n// algun dia devuelve algo distinto para el mismo texto.\nconst bruto = $json.output ?? '';\nlet texto = typeof bruto === 'string' ? bruto : JSON.stringify(bruto);\n\n// El modelo a veces envuelve la respuesta en cercos de codigo o en un JSON.\ntexto = texto.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\nif (texto.startsWith('{')) {\n  try {\n    const o = JSON.parse(texto);\n    texto = o.respuesta ?? o.parte1 ?? o.output ?? texto;\n  } catch (e) { /* no era JSON: se queda con el texto tal cual */ }\n}\n\nconst MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro\n\n// Se corta por ritmo de WhatsApp, no por longitud: la informacion en un\n// mensaje y la pregunta de cierre en otro. Antes se cortaba a los 600\n// caracteres, pero una cotizacion tipica ronda los 400 — con esa regla el\n// corte en dos casi nunca se activaba.\n//\n// Nunca se corta a media frase: si no hay frontera de parrafo, va entera. Un\n// mensaje largo de una sola pieza molesta menos que uno partido a la mitad.\nfunction partir(t) {\n  const parrafos = t.split(/\\n\\s*\\n/).map((x) => x.trim()).filter(Boolean);\n  if (parrafos.length < 2) return [t];\n  // El ultimo parrafo se va solo: en las respuestas de Maya es la invitacion\n  // a visitar o la pregunta. Lo anterior se junta en el primer mensaje.\n  return [parrafos.slice(0, -1).join('\\n\\n'), parrafos[parrafos.length - 1]]\n    .slice(0, MAX_PARTES);\n}\n\nconst partes = partir(texto);\nconst fl = $('formatLead').first().json;\n\nreturn [{\n  json: {\n    cuantas_partes: partes.length,\n    parte1: partes[0] ?? '',\n    parte2: partes[1] ?? '',\n    parte3: '',\n    parte4: '',\n    lead_id: fl.lead_id,\n    // El subflujo solo acepta imagenes del dominio de Kommo. Sin imagen por ahora.\n    imagen_url: '',\n    mensaje_cliente: fl.chats,\n    // Declarados en el subflujo pero sin usar en su codigo: van en cero para\n    // no mover ninguna etapa por accidente.\n    proximo_paso: 0,\n    status_id: 0,\n    // Que agente redacto. Se guarda aqui porque despues de este nodo\n    // $prevNode.name ya seria 'formatear_respuesta'.\n    agente: $prevNode.name,\n    texto_completo: texto,\n  },\n}];\n"
+      },
+      "id": "e8fe8e71-7775-4d23-9a3c-0b7156394674",
+      "name": "formatear_respuesta",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        440,
+        -60
+      ]
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO conversacion_turnos\n  (lead_id, msg_id, origen, autor, cliente_dijo, en_rafaga, agente,\n   respuesta, etapa_id, campos, partes)\nVALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11::jsonb)\nRETURNING id;",
+        "options": {
+          "queryReplacement": "={{ [ $('formatLead').first().json.lead_id, null, 'recuperacion', 'sistema', null, 0, $json.agente, $json.texto_completo, $('formatLead').first().json.etapa_id, JSON.stringify($('formatLead').first().json.campos), JSON.stringify([$json.parte1, $json.parte2].filter(Boolean)) ] }}"
+        }
+      },
+      "id": "00861e41-6428-4cb8-8c32-ff509f3cd73c",
+      "name": "registrar_turno",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        640,
+        -60
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "workflowId": {
+          "__rl": true,
+          "value": "znqsX6lvLCqIQ2LB",
+          "mode": "list",
+          "cachedResultName": "enviar_mensaje_salones",
+          "cachedResultUrl": "/workflow/znqsX6lvLCqIQ2LB"
+        },
+        "workflowInputs": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "cuantas_partes": "={{ $('formatear_respuesta').first().json.cuantas_partes }}",
+            "parte1": "={{ $('formatear_respuesta').first().json.parte1 }}",
+            "parte2": "={{ $('formatear_respuesta').first().json.parte2 }}",
+            "parte3": "={{ $('formatear_respuesta').first().json.parte3 }}",
+            "parte4": "={{ $('formatear_respuesta').first().json.parte4 }}",
+            "imagen_url": "={{ $('formatear_respuesta').first().json.imagen_url }}",
+            "mensaje_cliente": "={{ $('formatear_respuesta').first().json.mensaje_cliente }}",
+            "proximo_paso": "={{ $('formatear_respuesta').first().json.proximo_paso }}",
+            "status_id": "={{ $('formatear_respuesta').first().json.status_id }}",
+            "lead_id": "={{ $('formatear_respuesta').first().json.lead_id.toString() }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "cuantas_partes",
+              "displayName": "cuantas_partes",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "parte1",
+              "displayName": "parte1",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "parte2",
+              "displayName": "parte2",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "parte3",
+              "displayName": "parte3",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "parte4",
+              "displayName": "parte4",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "lead_id",
+              "displayName": "lead_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "imagen_url",
+              "displayName": "imagen_url",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "mensaje_cliente",
+              "displayName": "mensaje_cliente",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "string"
+            },
+            {
+              "id": "proximo_paso",
+              "displayName": "proximo_paso",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            },
+            {
+              "id": "status_id",
+              "displayName": "status_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "canBeUsedToMatch": true,
+              "type": "number"
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": true
+        },
+        "options": {}
+      },
+      "id": "e545a685-b5c2-4299-b0a0-e0438b3059ef",
+      "name": "enviar_mensaje",
+      "type": "n8n-nodes-base.executeWorkflow",
+      "typeVersion": 1.3,
+      "position": [
+        840,
+        -60
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE conversacion_turnos SET enviada = true WHERE id = $1;",
+        "options": {
+          "queryReplacement": "={{ [$('registrar_turno').first().json.id] }}"
+        }
+      },
+      "id": "d69023d2-77ef-4e16-a0cf-ad09098191f1",
+      "name": "marcar_enviada",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1040,
+        -60
+      ],
+      "credentials": {
+        "postgres": {
+          "id": "NaGMrunSEarhp4cc",
+          "name": "postgres_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://administracioneventos6.kommo.com/api/v4/leads/{{ $('formatLead').first().json.lead_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ custom_fields_values: [ { field_id: 352884, values: [ { enum_id: 281652 } ] } ] }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "e0ff93d7-f303-407d-be5a-2fa74de1b803",
+      "name": "marcar_en_frio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1240,
+        -60
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YrRdSRPkquUkNRAB",
+          "name": "kommo_salones"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "id": "555e1d3e-8f15-4ad9-8efd-0744548728dd",
+      "name": "no_aplica",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        220,
+        160
+      ]
+    }
+  ],
+  "connections": {
+    "modelo_seguimiento": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "seguimiento",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "memoria_seguimiento": {
+      "ai_memory": [
+        [
+          {
+            "node": "seguimiento",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "inicio": {
+      "main": [
+        [
+          {
+            "node": "traer_lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "traer_lead": {
+      "main": [
+        [
+          {
+            "node": "formatLead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formatLead": {
+      "main": [
+        [
+          {
+            "node": "se_puede",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "se_puede": {
+      "main": [
+        [
+          {
+            "node": "seguimiento",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "no_aplica",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "seguimiento": {
+      "main": [
+        [
+          {
+            "node": "formatear_respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "formatear_respuesta": {
+      "main": [
+        [
+          {
+            "node": "registrar_turno",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "registrar_turno": {
+      "main": [
+        [
+          {
+            "node": "enviar_mensaje",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_mensaje": {
+      "main": [
+        [
+          {
+            "node": "marcar_enviada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "marcar_enviada": {
+      "main": [
+        [
+          {
+            "node": "marcar_en_frio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Monterrey"
+  }
+}

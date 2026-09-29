@@ -11,3 +11,16 @@ node_modules/
 # Respaldos de la base: son datos, y pesan.
 backend/db/respaldos/
 para-subir/
+
+# La API key de n8n. Vive en un archivo para poder usarla en comandos con
+# $(cat .n8n_key), sin que el valor quede escrito en ningun lado.
+.n8n_key
+
+# Cualquier archivo con credenciales que caiga en esta carpeta. El repositorio
+# es PUBLICO: un `git add -A` distraido publica tokens vivos para siempre.
+.env
+.env.*
+*variables*.txt
+*credencial*
+*secret*
+*token*.txt

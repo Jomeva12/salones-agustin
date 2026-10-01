@@ -8,6 +8,7 @@ import { readFile, stat } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
 import { join, dirname, extname, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import * as L from './api/logica.mjs';
 import * as A from './api/acceso.mjs';
 import { arrancarSiembra } from './api/siembra.mjs';
@@ -25,6 +26,50 @@ const HOST = process.env.HOST ?? '0.0.0.0';
 // Si se define, los endpoints del agente exigen este token. n8n baja los
 // headers a minúsculas, por eso aquí se leen ya normalizados.
 const TOKEN = process.env.API_TOKEN ?? '';
+
+// El token de Kommo, solo para subir imagenes a su Drive. Sin el, el panel
+// las sigue mostrando —eso no necesita token— pero no puede cambiarlas.
+const KOMMO_TOKEN = process.env.KOMMO_TOKEN ?? '';
+const KOMMO_BASE = process.env.KOMMO_BASE ?? 'https://administracioneventos6.kommo.com';
+
+/**
+ * Sube una imagen al Drive de Kommo y devuelve su URL y su uuid.
+ *
+ * El host del Drive se pregunta, no se adivina: cambia segun la cuenta, y
+ * dar por bueno el de otra deja la imagen fuera del dominio que el salesbot
+ * acepta. Y los archivos grandes van por partes, donde la siguiente URL
+ * llega en `next_url` y no en `upload_url`, que es el nombre del primer paso.
+ */
+async function subirAKommo(bytes, nombre, tipo) {
+  const cab = { Authorization: 'Bearer ' + KOMMO_TOKEN };
+  const cuenta = await (await fetch(KOMMO_BASE + '/api/v4/account?with=drive_url',
+    { headers: cab })).json();
+  if (!cuenta.drive_url) throw new Error('Kommo no devolvio drive_url');
+
+  const ses = await (await fetch(cuenta.drive_url + '/v1.0/sessions', {
+    method: 'POST', headers: { ...cab, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ file_name: nombre, file_size: bytes.length,
+                           content_type: tipo, with_preview: true }),
+  })).json();
+  if (!ses.upload_url) throw new Error('Kommo no abrio la subida');
+
+  const trozo = ses.max_part_size || bytes.length;
+  let destino = ses.upload_url, desde = 0, f = null;
+  while (desde < bytes.length) {
+    const parte = bytes.subarray(desde, Math.min(desde + trozo, bytes.length));
+    f = await (await fetch(destino, { method: 'POST',
+      headers: { 'Content-Type': 'application/octet-stream' }, body: parte })).json();
+    desde += parte.length;
+    if (desde < bytes.length) {
+      destino = f?.next_url ?? f?.upload_url;
+      if (!destino) throw new Error('Kommo no dio URL para la siguiente parte');
+    }
+  }
+  const url = f?._links?.download?.href;
+  if (!url) throw new Error('Kommo no devolvio la URL del archivo');
+  // El uuid es el penultimo tramo, que es lo que el adjunto pide como `id`.
+  return { url, uuid: url.split('/')[5] };
+}
 
 if (!existsSync(DB_PATH)) {
   // Sin base no se puede servir el panel, pero tampoco hay que rendirse:
@@ -122,6 +167,23 @@ async function cuerpoJSON(req) {
   }
   if (!trozos.length) return {};
   return JSON.parse(Buffer.concat(trozos).toString('utf8'));
+}
+
+/**
+ * Para subir una lámina: llegan los bytes de la imagen tal cual, sin
+ * multipart. El panel es el único cliente de esta ruta y el servidor no tiene
+ * dependencias, así que parsear multipart a mano seria trabajo sin premio:
+ * el nombre del archivo viaja en una cabecera.
+ */
+async function cuerpoBinario(req) {
+  const trozos = [];
+  let total = 0;
+  for await (const t of req) {
+    total += t.length;
+    if (total > 12_000_000) throw new Error('la imagen pesa demasiado');
+    trozos.push(t);
+  }
+  return { bytes: Buffer.concat(trozos) };
 }
 
 const num = (v) => (v === null || v === undefined || v === '' ? null : Number(v));
@@ -1017,19 +1079,63 @@ const rutas = {
     // subida le mandaría al cliente la de Norma.
     salones: db.prepare('SELECT clave, nombre FROM salon WHERE activo = 1 ORDER BY id').all(),
     laminas: db.prepare(
-      `SELECT p.nombre AS paquete, s.clave AS salon, s.nombre AS salon_nombre,
+      `SELECT i.id, p.nombre AS paquete, s.clave AS salon, s.nombre AS salon_nombre,
               i.etiqueta, i.url, i.subida_at
          FROM paquete_imagen i
          JOIN paquete p ON p.id = i.paquete_id
          JOIN salon   s ON s.id = i.salon_id
         ORDER BY s.id, p.nombre, i.etiqueta`).all(),
     cortesias: db.prepare(
-      `SELECT c.clave, c.titulo, s.clave AS salon, s.nombre AS salon_nombre,
+      `SELECT c.id, c.clave, c.titulo, s.clave AS salon, s.nombre AS salon_nombre,
               c.url, c.subida_at
          FROM cortesia_imagen c
          JOIN salon s ON s.id = c.salon_id
         ORDER BY s.id, c.clave`).all(),
   }),
+
+  /**
+   * Cambiar la lámina de un paquete o la foto de una cortesía, desde el panel.
+   *
+   * Sube la imagen al Drive de Kommo y reemplaza la URL. La vieja se queda en
+   * el Drive a propósito: si la nueva sale mal, ahí está la anterior.
+   *
+   * Hace falta KOMMO_TOKEN. Sin él el panel sigue mostrando las imágenes —
+   * eso no necesita token—, pero no puede cambiarlas.
+   */
+  'POST /api/imagenes/archivo': async (u, c) => {
+    if (!KOMMO_TOKEN) {
+      return { error: 'sin token', detalle: 'Falta KOMMO_TOKEN para poder subir imágenes a Kommo.' };
+    }
+    const tipo = u.searchParams.get('tipo');
+    const id = entero(u.searchParams.get('id'));
+    const tabla = tipo === 'cortesia' ? 'cortesia_imagen' : tipo === 'paquete' ? 'paquete_imagen' : null;
+    if (!tabla || !id) return { error: 'faltan datos', detalle: 'Indica tipo (paquete o cortesia) e id.' };
+
+    const fila = db.prepare(`SELECT id FROM ${tabla} WHERE id = ?`).get(id);
+    if (!fila) return { error: 'no existe', detalle: 'Esa imagen no está registrada.' };
+
+    const bytes = c?.bytes;
+    if (!bytes?.length) return { error: 'sin archivo', detalle: 'No llegó ninguna imagen.' };
+    // La firma de los formatos que Kommo muestra como foto. Se mira el
+    // contenido y no la extensión, que la pone quien sube.
+    const esJPG = bytes[0] === 0xff && bytes[1] === 0xd8;
+    const esPNG = bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const esWEBP = bytes.subarray(0, 4).toString('latin1') === 'RIFF'
+                && bytes.subarray(8, 12).toString('latin1') === 'WEBP';
+    if (!esJPG && !esPNG && !esWEBP) {
+      return { error: 'no es imagen', detalle: 'Solo se aceptan JPG, PNG o WebP.' };
+    }
+
+    const nombre = (u.searchParams.get('nombre') || 'lamina.jpg').slice(0, 120);
+    const subida = await subirAKommo(bytes, nombre, esPNG ? 'image/png' : esWEBP ? 'image/webp' : 'image/jpeg');
+
+    const sha = createHash('sha256').update(bytes).digest('hex');
+    db.prepare(`UPDATE ${tabla} SET url = ?, archivo_uuid = ?, nombre = ?, sha256 = ?,
+                subida_at = datetime('now') WHERE id = ?`)
+      .run(subida.url, subida.uuid, nombre, sha, id);
+    anotar(tabla, id, 'cambio', c._autor, `imagen reemplazada (${nombre})`);
+    return { ok: true, url: subida.url };
+  },
 
   // Rango de fechas para pintar el calendario del frontend.
   // El detalle de un día en un salón: lo que hay y, sobre todo, dónde quedan
@@ -1698,6 +1804,9 @@ async function servirEstatico(req, res, ruta) {
 /** Lo único que se puede tocar sin haber entrado. */
 const ABIERTAS = new Set(['POST /api/entrar', 'GET /api/salud', 'GET /api/yo', 'POST /api/salir']);
 
+// Rutas cuyo cuerpo son bytes y no JSON.
+const BINARIAS = new Set(['POST /api/imagenes/archivo']);
+
 /** Y lo único que se puede hacer con la contraseña temporal todavía puesta. */
 const CON_CLAVE_TEMPORAL = new Set([...ABIERTAS, 'POST /api/cambiar-clave']);
 
@@ -1731,6 +1840,7 @@ const AREA = {
   'DELETE /api/politicas': 'respuestas',
   'POST /api/paquetes/borrador': 'precios',
   'POST /api/paquetes/publicar': 'precios',
+  'POST /api/imagenes/archivo': 'precios',
   'POST /api/usuarios': 'usuarios',
   'PUT /api/usuarios': 'usuarios',
   'POST /api/usuarios/clave': 'usuarios',
@@ -1799,14 +1909,15 @@ const servidor = createServer(async (req, res) => {
   }
 
   try {
-    const cuerpo = req.method === 'GET' ? null : await cuerpoJSON(req);
+    const cuerpo = req.method === 'GET' ? null
+      : (BINARIAS.has(clave) ? await cuerpoBinario(req) : await cuerpoJSON(req));
     // La bitácora deja de creerle al cliente: quién hizo el cambio sale de la
     // sesión, no de un campo que cualquiera puede escribir. Va en `_autor` y
     // no en `usuario` porque ese nombre ya significa otra cosa en las rutas de
     // cuentas, donde `usuario` es a QUIÉN se le aplica el cambio: escribir
     // encima dejaba esas rutas sin destinatario.
     if (cuerpo && ctx.usuario) cuerpo._autor = ctx.usuario.nombre;
-    const salida = manejar(u, cuerpo, ctx);
+    const salida = await manejar(u, cuerpo, ctx);
     const cabeceras = ctx.cookie ? { 'set-cookie': ctx.cookie } : null;
     json(res, salida && salida.error ? (CODIGO[salida.error] ?? 400) : 200, salida, cabeceras);
   } catch (e) {

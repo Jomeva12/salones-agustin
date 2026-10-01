@@ -8,7 +8,7 @@
 //
 // Los archivos viven en el Drive de Kommo, no aquí: el adjunto del salesbot
 // solo acepta un uuid de archivo de Kommo y descarta cualquier otra URL.
-import { api, error, salonActual } from './api.js';
+import { api, error, salonActual, puede } from './api.js';
 import { el, limpiar, cargando } from './ui.js';
 
 const ETIQUETA = {
@@ -17,14 +17,76 @@ const ETIQUETA = {
   bautizo: 'Bautizo',
 };
 
-function ficha({ url, titulo, pie, marca }) {
-  const enlace = el('a', { href: url, target: '_blank', rel: 'noopener', class: 'lam-foto' },
-    [el('img', { src: url, alt: titulo, loading: 'lazy' })]);
-  const texto = [el('b', { text: titulo })];
-  if (pie) texto.push(el('span', { class: 'lam-etq', text: pie }));
-  if (marca) texto.push(el('span', { class: 'lam-marca', text: marca }));
-  return el('figure', { class: 'lam-pieza' },
-    [enlace, el('figcaption', {}, texto)]);
+// Al tocar una imagen se abre a pantalla completa en vez de descargarse: la
+// URL de Kommo viene con content-disposition attachment, asi que un enlace
+// normal se la baja al disco sin enseñarla.
+function verImagen(pieza, alCambiar) {
+  const img = el('img', { src: pieza.url, alt: pieza.titulo });
+  const titulo = el('div', { class: 'vis-titulo' }, [
+    el('b', { text: pieza.titulo }),
+    el('span', { text: pieza.donde }),
+  ]);
+
+  const acciones = el('div', { class: 'vis-acciones' });
+  acciones.appendChild(el('a', { class: 'btn fantasma', href: pieza.url,
+    download: '', target: '_blank', rel: 'noopener', text: 'Descargar' }));
+
+  let entrada = null;
+  if (puede('precios')) {
+    entrada = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', hidden: '' });
+    const aviso = el('span', { class: 'vis-aviso' });
+    const boton = el('button', { class: 'btn', text: 'Reemplazar',
+      onclick: () => entrada.click() });
+    entrada.addEventListener('change', async () => {
+      const f = entrada.files?.[0];
+      if (!f) return;
+      boton.disabled = true;
+      aviso.className = 'vis-aviso';
+      aviso.textContent = 'Subiendo a Kommo…';
+      try {
+        const r = await api.reemplazarImagen(pieza.tipo, pieza.id, f);
+        // El navegador tiene cacheada la anterior con la misma URL cuando
+        // Kommo reusa el nombre: el sello la obliga a volver a pedirla.
+        const nueva = r.url + (r.url.includes('?') ? '&' : '?') + 'v=' + Date.now();
+        img.src = nueva;
+        aviso.textContent = 'Listo. Ya es la que manda el agente.';
+        alCambiar?.(r.url);
+      } catch (e) {
+        aviso.className = 'vis-aviso mal';
+        aviso.textContent = e.message;
+      } finally {
+        boton.disabled = false;
+        entrada.value = '';
+      }
+    });
+    acciones.append(boton, entrada, aviso);
+  }
+
+  const caja = el('div', { class: 'vis-caja', onclick: (ev) => ev.stopPropagation() },
+    [img, el('div', { class: 'vis-pie' }, [titulo, acciones])]);
+
+  const cerrar = () => { capa.remove(); document.removeEventListener('keydown', tecla); };
+  const tecla = (ev) => { if (ev.key === 'Escape') cerrar(); };
+  const capa = el('div', { class: 'visor', role: 'dialog', 'aria-modal': 'true',
+    'aria-label': pieza.titulo, onclick: cerrar }, [
+    el('button', { class: 'vis-cerrar', 'aria-label': 'Cerrar', text: '×', onclick: cerrar }),
+    caja,
+  ]);
+  document.addEventListener('keydown', tecla);
+  document.body.appendChild(capa);
+  capa.querySelector('.vis-cerrar').focus();
+}
+
+function ficha(pieza) {
+  const img = el('img', { src: pieza.url, alt: pieza.titulo, loading: 'lazy' });
+  const boton = el('button', { class: 'lam-foto', type: 'button',
+    'aria-label': `Ver ${pieza.titulo}`,
+    onclick: () => verImagen(pieza, (url) => { img.src = url + '?v=' + Date.now(); }) },
+    [img]);
+  const texto = [el('b', { text: pieza.titulo })];
+  if (pieza.pie) texto.push(el('span', { class: 'lam-etq', text: pieza.pie }));
+  if (pieza.marca) texto.push(el('span', { class: 'lam-marca', text: pieza.marca }));
+  return el('figure', { class: 'lam-pieza' }, [boton, el('figcaption', {}, texto)]);
 }
 
 export async function laminas(raiz) {
@@ -77,14 +139,14 @@ export async function laminas(raiz) {
     const rejilla = el('div', { class: 'lam-rejilla' });
     for (const x of suyas) {
       rejilla.appendChild(ficha({
-        url: x.url,
+        tipo: 'paquete', id: x.id, url: x.url, donde: s.nombre,
         titulo: x.paquete.replace(/^Paquete /, ''),
         pie: ETIQUETA[x.etiqueta] ?? '',
       }));
     }
     for (const x of suyasC) {
       rejilla.appendChild(ficha({
-        url: x.url,
+        tipo: 'cortesia', id: x.id, url: x.url, donde: s.nombre,
         titulo: x.titulo || x.clave,
         marca: 'cortesía',
       }));

@@ -29,9 +29,13 @@ rellenes, no arrastres de otra conversación.
 
 - `salon`: `norma`, `esmeralda`, `santacruz` o `quetzal`
 - `tipo_evento`: `xv`, `boda`, `graduacion`, `posada`, `cumpleanos`, `babyshower`
-- `fecha_evento`: `AAAA-MM-DD`. **Sin día exacto, va `null`.** «diciembre de
-  2027» es `null`, **no** `2027-12-01`. Inventar el día 1 hace que se cotice
-  un miércoles cuando el cliente quería sábado, y el precio cambia
+- `fecha_evento`: `AAAA-MM-DD`. Si **dijo el día, va**; si no lo dijo, `null`.
+  No es que las fechas se eviten: es que no se inventa el día que falta.
+  - «el sábado 11 de diciembre de 2027» → `2027-12-11` ✅
+  - «el 20 de marzo» (del año que viene) → `2027-03-20` ✅
+  - «diciembre de 2027», «para marzo» → `null` ✅
+  - «diciembre de 2027» → `2027-12-01` ❌ — ese día es miércoles y el
+    cliente quería sábado; con esa fecha se cotiza mal
 - `invitados`: número
 
 ## Lo que no haces

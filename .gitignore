@@ -25,3 +25,11 @@ para-subir/
 *credencial*
 *secret*
 *token*.txt
+
+# Las laminas de los paquetes: son arte del cliente, pesan, y su sitio es el
+# Drive de Kommo, no un repositorio publico. Lo que si se versiona es el
+# mapa.json que dice que lamina es de que paquete.
+imagenes/**/*.jpeg
+imagenes/**/*.jpg
+imagenes/**/*.png
+imagenes/*.zip

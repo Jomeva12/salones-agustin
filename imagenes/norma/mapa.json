@@ -1,0 +1,74 @@
+[
+ {
+  "archivo": "n01.jpeg",
+  "paquete": "Paquete Bronce",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n02.jpeg",
+  "paquete": "Paquete Plata",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n03.jpeg",
+  "paquete": "Paquete Graduación",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n04.jpeg",
+  "paquete": "Paquete Onix",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n05.jpeg",
+  "paquete": "Paquete Día de las Madres",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n06.jpeg",
+  "paquete": "Paquete Día del Maestro",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n07.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "norma",
+  "etiqueta": "despedida"
+ },
+ {
+  "archivo": "n08.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "norma",
+  "etiqueta": "babyshower"
+ },
+ {
+  "archivo": "n09.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "norma",
+  "etiqueta": "bautizo"
+ },
+ {
+  "archivo": "n10.jpeg",
+  "paquete": "Posada Deluxe",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n11.jpeg",
+  "paquete": "Posada Basica",
+  "salon": "norma",
+  "etiqueta": null
+ },
+ {
+  "archivo": "n12.jpeg",
+  "paquete": "Paquete Oro",
+  "salon": "norma",
+  "etiqueta": null
+ }
+]

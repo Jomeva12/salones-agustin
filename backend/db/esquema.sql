@@ -418,3 +418,28 @@ CREATE TABLE concepto_servicio (
   origen      TEXT NOT NULL DEFAULT 'curado' CHECK (origen IN ('curado','sugerido')),
   PRIMARY KEY (concepto_id, servicio_id)
 );
+
+-- La lamina de cada paquete, en el Drive de Kommo. Aqui solo vive la URL: el
+-- adjunto del salesbot exige un uuid de archivo de Kommo, asi que la imagen
+-- no puede estar alojada en el panel ni en ningun otro lado.
+--
+-- Es tabla aparte y no una columna de paquete_contenido porque alli la clave
+-- incluye el escalon, y un paquete puede necesitar varias laminas sin que eso
+-- tenga que ver con la anticipacion: «Baby Shower, Despedidas de Soltera y
+-- Bautizos» es un solo paquete en precio y contenido, pero el arte lo parte en
+-- tres y a quien va a bautizar no se le enseñan globos de despedida. Eso es lo
+-- que distingue `etiqueta`; NULL es la lamina unica del paquete.
+CREATE TABLE paquete_imagen (
+  id            INTEGER PRIMARY KEY,
+  paquete_id    INTEGER NOT NULL REFERENCES paquete(id) ON DELETE CASCADE,
+  salon_id      INTEGER NOT NULL REFERENCES salon(id)   ON DELETE CASCADE,
+  etiqueta      TEXT,
+  url           TEXT NOT NULL,
+  archivo_uuid  TEXT NOT NULL,
+  nombre        TEXT,
+  -- Para no resubir una lamina que no cambio, y para notar cuando si cambio.
+  sha256        TEXT NOT NULL,
+  subida_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE UNIQUE INDEX paquete_imagen_unica
+  ON paquete_imagen (paquete_id, salon_id, COALESCE(etiqueta, ''));

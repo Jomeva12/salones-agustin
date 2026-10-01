@@ -443,3 +443,24 @@ CREATE TABLE paquete_imagen (
 );
 CREATE UNIQUE INDEX paquete_imagen_unica
   ON paquete_imagen (paquete_id, salon_id, COALESCE(etiqueta, ''));
+
+-- La foto de una cortesia, por salon. Separada de paquete_imagen porque una
+-- cortesia no pertenece a un paquete: el Espejo de Bienvenida aparece en el
+-- Onix, el Plata y el Oro, y es la misma foto.
+--
+-- La clave es un identificador estable (espejo_bienvenida, aro_iluminado...)
+-- y no el texto de cortesias, que viene del Excel y cambia de redaccion entre
+-- paquetes.
+CREATE TABLE cortesia_imagen (
+  id            INTEGER PRIMARY KEY,
+  clave         TEXT NOT NULL,
+  salon_id      INTEGER NOT NULL REFERENCES salon(id) ON DELETE CASCADE,
+  -- Como se le nombra al cliente, para que el agente lo diga igual.
+  titulo        TEXT,
+  url           TEXT NOT NULL,
+  archivo_uuid  TEXT NOT NULL,
+  nombre        TEXT,
+  sha256        TEXT NOT NULL,
+  subida_at     TEXT NOT NULL DEFAULT (datetime('now'))
+);
+CREATE UNIQUE INDEX cortesia_imagen_unica ON cortesia_imagen (clave, salon_id);

@@ -61,6 +61,20 @@ db.exec(`
   );
   CREATE UNIQUE INDEX IF NOT EXISTS paquete_imagen_unica
     ON paquete_imagen (paquete_id, salon_id, COALESCE(etiqueta, ''));
+
+  CREATE TABLE IF NOT EXISTS cortesia_imagen (
+    id            INTEGER PRIMARY KEY,
+    clave         TEXT NOT NULL,
+    salon_id      INTEGER NOT NULL REFERENCES salon(id),
+    titulo        TEXT,
+    url           TEXT NOT NULL,
+    archivo_uuid  TEXT NOT NULL,
+    nombre        TEXT,
+    sha256        TEXT NOT NULL,
+    subida_at     TEXT NOT NULL DEFAULT (datetime('now'))
+  );
+  CREATE UNIQUE INDEX IF NOT EXISTS cortesia_imagen_unica
+    ON cortesia_imagen (clave, salon_id);
 `);
 
 // El host del Drive es distinto en cada cuenta de Kommo: se pregunta, no se
@@ -110,29 +124,44 @@ async function subir(ruta, nombreEnKommo) {
 let subidas = 0, saltadas = 0, fallos = 0;
 
 for (const m of mapa) {
+  // Una entrada es de paquete (lámina) o de cortesía (foto de una cosa
+  // concreta). Se distinguen por cuál de los dos campos traen.
+  const esCortesia = !!m.cortesia;
   const etq = m.etiqueta ?? null;
-  const donde = `${m.paquete} · ${m.salon}${etq ? ' · ' + etq : ''}`;
+  const donde = esCortesia
+    ? `${m.cortesia} · ${m.salon}`
+    : `${m.paquete} · ${m.salon}${etq ? ' · ' + etq : ''}`;
 
-  const paq = db.prepare('SELECT id FROM paquete WHERE nombre = ?').get(m.paquete);
+  const paq = esCortesia ? null : db.prepare('SELECT id FROM paquete WHERE nombre = ?').get(m.paquete);
   const sal = db.prepare('SELECT id FROM salon WHERE clave = ?').get(m.salon);
-  if (!paq || !sal) { console.log(`  FALLO    ${donde}: paquete o salón desconocido.`); fallos++; continue; }
+  if (!sal || (!esCortesia && !paq)) { console.log(`  FALLO    ${donde}: paquete o salón desconocido.`); fallos++; continue; }
 
   const ruta = join(CARPETA, m.archivo);
   if (!existsSync(ruta)) { console.log(`  FALLO    ${donde}: no existe ${m.archivo}.`); fallos++; continue; }
   const sha = createHash('sha256').update(readFileSync(ruta)).digest('hex');
 
-  const ya = db.prepare(
+  const ya = esCortesia
+    ? db.prepare('SELECT id, sha256 FROM cortesia_imagen WHERE clave = ? AND salon_id = ?')
+      .get(m.cortesia, sal.id)
+    : db.prepare(
     'SELECT id, sha256 FROM paquete_imagen WHERE paquete_id = ? AND salon_id = ? AND COALESCE(etiqueta,\'\') = ?')
-    .get(paq.id, sal.id, etq ?? '');
+      .get(paq.id, sal.id, etq ?? '');
   if (ya && ya.sha256 === sha) { console.log(`  igual    ${donde}`); saltadas++; continue; }
 
   try {
-    const nombreEnKommo = `${m.salon} - ${m.paquete}${etq ? ' (' + etq + ')' : ''}.jpg`;
+    const nombreEnKommo = esCortesia
+      ? `${m.salon} - cortesia ${m.cortesia}.jpg`
+      : `${m.salon} - ${m.paquete}${etq ? ' (' + etq + ')' : ''}.jpg`;
     const { url, uuid } = await subir(ruta, nombreEnKommo);
+    const tabla = esCortesia ? 'cortesia_imagen' : 'paquete_imagen';
     if (ya) {
-      db.prepare('UPDATE paquete_imagen SET url=?, archivo_uuid=?, nombre=?, sha256=?, subida_at=datetime(\'now\') WHERE id=?')
+      db.prepare('UPDATE ' + tabla + ' SET url=?, archivo_uuid=?, nombre=?, sha256=?, subida_at=datetime(\'now\') WHERE id=?')
         .run(url, uuid, m.archivo, sha, ya.id);
       console.log(`  CAMBIADA ${donde}`);
+    } else if (esCortesia) {
+      db.prepare('INSERT INTO cortesia_imagen (clave, salon_id, titulo, url, archivo_uuid, nombre, sha256) VALUES (?,?,?,?,?,?,?)')
+        .run(m.cortesia, sal.id, m.titulo ?? null, url, uuid, m.archivo, sha);
+      console.log(`  SUBIDA   ${donde}`);
     } else {
       db.prepare('INSERT INTO paquete_imagen (paquete_id, salon_id, etiqueta, url, archivo_uuid, nombre, sha256) VALUES (?,?,?,?,?,?,?)')
         .run(paq.id, sal.id, etq, url, uuid, m.archivo, sha);
@@ -160,6 +189,12 @@ const manifiesto = db.prepare(`
     JOIN paquete p ON p.id = i.paquete_id
     JOIN salon   s ON s.id = i.salon_id
    ORDER BY s.clave, p.nombre, i.etiqueta`).all();
+const manifiestoCortesias = db.prepare(`
+  SELECT c.clave AS cortesia, s.clave AS salon, c.titulo, c.url,
+         c.archivo_uuid, c.nombre, c.sha256
+    FROM cortesia_imagen c
+    JOIN salon s ON s.id = c.salon_id
+   ORDER BY s.clave, c.clave`).all();
 const rutaManifiesto = join(RAIZ, 'imagenes', 'laminas.json');
-writeFileSync(rutaManifiesto, JSON.stringify(manifiesto, null, 1) + '\n', 'utf8');
+writeFileSync(rutaManifiesto, JSON.stringify(manifiesto.concat(manifiestoCortesias), null, 1) + '\n', 'utf8');
 console.log(`Manifiesto escrito en ${rutaManifiesto}`);

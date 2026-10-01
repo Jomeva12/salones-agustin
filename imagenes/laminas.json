@@ -322,5 +322,50 @@
   "archivo_uuid": "3a428ba2-dfbe-43b3-b4c3-b6127c280083",
   "nombre": "c11.jpeg",
   "sha256": "d6d0b6d424127a0670cb92aa39a7ee7aa828ff11d9aa8443a557b17728ba93c6"
+ },
+ {
+  "cortesia": "aro_iluminado",
+  "salon": "norma",
+  "titulo": "Aro iluminado",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/ce5c460a-cea3-471c-9029-02137115382b/norma-cortesia-aro-iluminado.jpg",
+  "archivo_uuid": "ce5c460a-cea3-471c-9029-02137115382b",
+  "nombre": "k01.jpeg",
+  "sha256": "0a6cb218b1c2b101b9d1211e616370967cdb3e6e618151dab4fd32274d356fc2"
+ },
+ {
+  "cortesia": "arreglos_mesa",
+  "salon": "norma",
+  "titulo": "Arreglos de mesa en préstamo",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/3842169d-e6a0-4dc1-ab43-4844e63a76a6/norma-cortesia-arreglos-mesa.jpg",
+  "archivo_uuid": "3842169d-e6a0-4dc1-ab43-4844e63a76a6",
+  "nombre": "k05.jpeg",
+  "sha256": "38a5931f6f805f4ac33c4dea2a53037a3491518d10241896300caa025423b1c8"
+ },
+ {
+  "cortesia": "espejo_bienvenida",
+  "salon": "norma",
+  "titulo": "Espejo de Bienvenida",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/7c800904-6f4b-4755-b328-34376ce03f41/norma-cortesia-espejo-bienvenida.jpg",
+  "archivo_uuid": "7c800904-6f4b-4755-b328-34376ce03f41",
+  "nombre": "k07.jpeg",
+  "sha256": "a3c1a21e57a78311b35fad9921bffd23c3256388ca9033a1ac64c0ad21d34e5e"
+ },
+ {
+  "cortesia": "marco_digital",
+  "salon": "norma",
+  "titulo": "Marco Digital",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/8105c690-9fab-4e42-806e-75f2a0d813fc/norma-cortesia-marco-digital.jpg",
+  "archivo_uuid": "8105c690-9fab-4e42-806e-75f2a0d813fc",
+  "nombre": "k09.jpeg",
+  "sha256": "f2f7f4e9a28028648e3d192b932fa7fc82aebced13797f840383cc61e500c21d"
+ },
+ {
+  "cortesia": "presentacion_elite",
+  "salon": "norma",
+  "titulo": "Presentación Elite",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/c2a1a6f2-8456-4cbf-9973-44627de070fa/norma-cortesia-presentacion-elite.jpg",
+  "archivo_uuid": "c2a1a6f2-8456-4cbf-9973-44627de070fa",
+  "nombre": "k03.jpeg",
+  "sha256": "297a260f3a880fe108cab6190c547ddbc6e7828f2b79ba36e551950bcb94bcea"
  }
 ]

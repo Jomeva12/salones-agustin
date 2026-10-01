@@ -1347,26 +1347,27 @@ const rutas = {
     // nada y contestaba que no lo tenía — siendo que va incluido en tres
     // paquetes. Se buscan aquí porque es la herramienta a la que acude.
     //
-    // El texto es una frase que enumera varias, así que se devuelve entera
-    // junto con los paquetes que la traen: con eso se puede responder qué es
-    // y en qué paquete viene.
+    // Se devuelve la cortesía SUELTA y no la frase entera: el texto enumera
+    // cinco, y al agente dárselas juntas le hizo fundir el Espejo de
+    // Bienvenida con el uso del vestido en una sola cosa.
     const cortesias = [];
     if (aguja) {
       const filas = db.prepare(
-        `SELECT DISTINCT pc.cortesias, p.nombre AS paquete, s.nombre AS salon
+        `SELECT DISTINCT pc.cortesias, p.nombre AS paquete
            FROM paquete_contenido pc
            JOIN paquete p ON p.id = pc.paquete_id
-           JOIN salon   s ON s.id = pc.salon_id
           WHERE COALESCE(TRIM(pc.cortesias), '') <> ''`).all();
-      const porTexto = new Map();
+      const porCortesia = new Map();
       for (const f of filas) {
-        if (!plano(f.cortesias).includes(aguja)) continue;
-        if (!porTexto.has(f.cortesias)) porTexto.set(f.cortesias, { incluida_en: new Set(), salones: new Set() });
-        porTexto.get(f.cortesias).incluida_en.add(f.paquete);
-        porTexto.get(f.cortesias).salones.add(f.salon);
+        for (const suelta of L.cortesiasSueltas(f.cortesias)) {
+          if (!plano(suelta).includes(aguja)) continue;
+          const clave = plano(suelta);
+          if (!porCortesia.has(clave)) porCortesia.set(clave, { cortesia: suelta, incluida_en: new Set() });
+          porCortesia.get(clave).incluida_en.add(f.paquete);
+        }
       }
-      for (const [texto, v] of porTexto) {
-        cortesias.push({ texto, incluida_en: [...v.incluida_en], salones: [...v.salones] });
+      for (const v of porCortesia.values()) {
+        cortesias.push({ cortesia: v.cortesia, incluida_en: [...v.incluida_en] });
       }
     }
 

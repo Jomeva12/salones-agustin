@@ -947,3 +947,32 @@ export function contenido(db, contenidoId) {
     no_incluye: filas.filter((f) => !f.incluido).map((f) => f.nombre),
   };
 }
+
+/**
+ * Parte la frase de cortesías en las cosas que enumera.
+ *
+ * Las comas de dentro de un paréntesis no separan: «Presentación Elite
+ * (… vals en las nubes, lluvia de mariposas …)» es UNA cortesía, no cuatro.
+ * Y la «y» que cierra la enumeración separa igual que una coma, porque así se
+ * enumera en español: «la mesa principal y el Aro iluminado» son dos.
+ */
+export function cortesiasSueltas(texto) {
+  const t = String(texto ?? '');
+  const partes = [];
+  let actual = '', hondo = 0;
+  for (let i = 0; i < t.length; i++) {
+    const ch = t[i];
+    if (ch === '(') hondo++;
+    else if (ch === ')') hondo = Math.max(0, hondo - 1);
+    if (hondo === 0) {
+      if (ch === ',') { partes.push(actual); actual = ''; continue; }
+      const m = /^\s+(y|e)\s+/i.exec(t.slice(i));
+      if (m) { partes.push(actual); actual = ''; i += m[0].length - 1; continue; }
+    }
+    actual += ch;
+  }
+  partes.push(actual);
+  return partes
+    .map((p) => p.trim().replace(/^(el|la|los|las)\s+/i, '').trim())
+    .filter(Boolean);
+}

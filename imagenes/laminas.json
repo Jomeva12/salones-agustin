@@ -424,6 +424,16 @@
   "sha256": "38a5931f6f805f4ac33c4dea2a53037a3491518d10241896300caa025423b1c8"
  },
  {
+  "cortesia": "escalera_presentacion",
+  "salon": "norma",
+  "titulo": "Escalera de presentación arreglada",
+  "pistas": "escalera, escalera de presentacion",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/5e7b7bfb-5413-4694-8b82-2cc215b02432/norma-cortesia-escalera-presentacion.jpg",
+  "archivo_uuid": "5e7b7bfb-5413-4694-8b82-2cc215b02432",
+  "nombre": "k02.jpeg",
+  "sha256": "19d0376e2904f07277a1f591e2ef491778c83d9acb7f7e7536aea688b0d74957"
+ },
+ {
   "cortesia": "espejo_bienvenida",
   "salon": "norma",
   "titulo": "Espejo de Bienvenida",
@@ -444,6 +454,16 @@
   "sha256": "f2f7f4e9a28028648e3d192b932fa7fc82aebced13797f840383cc61e500c21d"
  },
  {
+  "cortesia": "mesa_principal",
+  "salon": "norma",
+  "titulo": "Mesa principal arreglada",
+  "pistas": "mesa principal, mesa de honor",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/e6eea319-2b5e-4a7d-97e1-93609db04828/norma-cortesia-mesa-principal.jpg",
+  "archivo_uuid": "e6eea319-2b5e-4a7d-97e1-93609db04828",
+  "nombre": "k08.jpeg",
+  "sha256": "e392d6ea434c5c87022a41c7ea0a7719379e5b109cef98c4fa1f0de686814a14"
+ },
+ {
   "cortesia": "presentacion_elite",
   "salon": "norma",
   "titulo": "Presentación Elite",
@@ -452,5 +472,15 @@
   "archivo_uuid": "c2a1a6f2-8456-4cbf-9973-44627de070fa",
   "nombre": "k03.jpeg",
   "sha256": "297a260f3a880fe108cab6190c547ddbc6e7828f2b79ba36e551950bcb94bcea"
+ },
+ {
+  "cortesia": "vestido",
+  "salon": "norma",
+  "titulo": "Uso del vestido de XV o de novia",
+  "pistas": "vestido, prestan el vestido, prestamo del vestido, vestido de novia, vestido de 15, vestido de xv",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/cc249ab9-278c-4760-bfc8-d58464691d1c/norma-cortesia-vestido.jpg",
+  "archivo_uuid": "cc249ab9-278c-4760-bfc8-d58464691d1c",
+  "nombre": "k10.jpeg",
+  "sha256": "296078066d8b289223cc1f75675921e991bf40f25d4388c3cc50bb3361727892"
  }
 ]

@@ -33,5 +33,26 @@
   "salon": "norma",
   "titulo": "Arreglos de mesa en préstamo",
   "pistas": "arreglos de mesa, arreglo de mesa, centros de mesa, centro de mesa"
+ },
+ {
+  "archivo": "k10.jpeg",
+  "cortesia": "vestido",
+  "salon": "norma",
+  "titulo": "Uso del vestido de XV o de novia",
+  "pistas": "vestido, prestan el vestido, prestamo del vestido, vestido de novia, vestido de 15, vestido de xv"
+ },
+ {
+  "archivo": "k02.jpeg",
+  "cortesia": "escalera_presentacion",
+  "salon": "norma",
+  "titulo": "Escalera de presentación arreglada",
+  "pistas": "escalera, escalera de presentacion"
+ },
+ {
+  "archivo": "k08.jpeg",
+  "cortesia": "mesa_principal",
+  "salon": "norma",
+  "titulo": "Mesa principal arreglada",
+  "pistas": "mesa principal, mesa de honor"
  }
 ]

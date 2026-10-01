@@ -42,7 +42,7 @@ que escribió el cliente, no el paquete.
 
 | Salón | Láminas | Cortesías |
 |---|---|---|
-| Norma | 12 ✅ | 5 de 8 |
+| Norma | 12 ✅ | 8 ✅ |
 | Esmeralda | 12 ✅ | 8 ✅ |
 | Santa Cruz | 12 ✅ | — |
 | Quetzal | — | — |
@@ -52,9 +52,6 @@ que escribió el cliente, no el paquete.
 - **Quetzal**, sus 12 láminas. No calca a los otros: sus paquetes se llaman
   distinto (*Plata Boda y XV*, *Onix Boda y XV*, *Bronce Boda y XV*) y además
   tiene *Aniversarios / Cumpleaños*, que solo existe ahí.
-- **Tres cortesías de Norma**: uso del vestido, arreglo de la escalera de
-  presentación y arreglo de la mesa principal. Esmeralda sí las tiene, así que
-  son exactamente estas tres las que hay que pedirle al cliente.
 - **Las cortesías de Santa Cruz y Quetzal.** Cada salón tiene las suyas.
 La regla de prioridad ya está hecha: **cotizando gana siempre la lámina del
 paquete**, y la foto de una cortesía sale cuando el cliente pregunta por una
@@ -80,7 +77,12 @@ De las nueve fotos que llegaron para Norma, cuatro no entraron y conviene
 recordar por qué:
 
 - el cartón de Tecate Light es **contenido del paquete**, no cortesía;
-- Mariachi, Ballet, Batucada y Payasos son **servicios que se venden aparte**;
-- dos son **material de ambiente del salón**, con botón de agendar visita.
+- Mariachi, Ballet, Batucada y Payasos son **servicios que se venden aparte**.
 
-Ninguna de las tres categorías tiene todavía su cajón.
+Ninguna de las dos categorías tiene todavía su cajón.
+
+Y una advertencia por si llega una tanda nueva: dos fotos de Norma las leí al
+principio como material de ambiente porque llevaban el botón de «Agenda tu
+visita», cuando el tema de cada una era una cortesía concreta —la escalera
+iluminada y la mesa principal—. **El botón no dice de qué es la foto.** Mira
+lo que se ve, no el pie.

@@ -32,4 +32,5 @@ para-subir/
 imagenes/**/*.jpeg
 imagenes/**/*.jpg
 imagenes/**/*.png
+imagenes/**/*.zip
 imagenes/*.zip

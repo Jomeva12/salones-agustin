@@ -992,6 +992,29 @@ const rutas = {
     };
   },
 
+  /**
+   * Todas las láminas, con su paquete y su salón.
+   *
+   * Existe porque quien elige la imagen es un nodo Code de n8n, y un Code no
+   * puede leer un nodo conectado como herramienta: `cotizar` le devuelve la
+   * lámina al agente, pero el código que arma el envío no la alcanza. Son 40
+   * renglones, así que se traen todos y el cruce se hace ahí.
+   */
+  'GET /api/imagenes': () => ({
+    // Van TODOS los salones, tengan lámina o no. Quien elige la imagen
+    // necesita reconocer el nombre de un salón para descartarlo: si solo
+    // conociera los que ya tienen foto, al cotizar Santa Cruz sin lámina
+    // subida le mandaría al cliente la de Norma.
+    salones: db.prepare('SELECT clave, nombre FROM salon WHERE activo = 1 ORDER BY id').all(),
+    laminas: db.prepare(
+      `SELECT p.nombre AS paquete, s.clave AS salon, s.nombre AS salon_nombre,
+              i.etiqueta, i.url
+         FROM paquete_imagen i
+         JOIN paquete p ON p.id = i.paquete_id
+         JOIN salon   s ON s.id = i.salon_id
+        ORDER BY s.id, p.nombre, i.etiqueta`).all(),
+  }),
+
   // Rango de fechas para pintar el calendario del frontend.
   // El detalle de un día en un salón: lo que hay y, sobre todo, dónde quedan
   // los huecos. Es lo que abre el panel lateral al tocar un día.

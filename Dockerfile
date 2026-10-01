@@ -8,6 +8,10 @@ WORKDIR /app
 COPY package.json ./
 COPY backend ./backend
 COPY frontend ./frontend
+# El manifiesto de las laminas, que es lo que aplicar_imagenes.mjs lee para
+# meter sus URLs en la base del servidor. Solo el JSON: los archivos de
+# imagen no entran, pesan y ya viven en el Drive de Kommo.
+COPY imagenes/laminas.json ./imagenes/laminas.json
 
 # Dentro del contenedor hay que escuchar en TODAS las interfaces. 127.0.0.1
 # sirve cuando el proxy vive en la misma maquina, pero el de Easypanel esta

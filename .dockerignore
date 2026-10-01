@@ -20,3 +20,10 @@ despliegue/
 # El intermediario es otro servicio, con su propia imagen y su propio
 # Dockerfile. No tiene nada que hacer dentro de la imagen del panel.
 intermediario/
+
+# De la carpeta de imagenes solo entra el manifiesto, que se copia por su
+# nombre en el Dockerfile. El arte pesa y su sitio es el Drive de Kommo.
+imagenes/**/*.jpeg
+imagenes/**/*.jpg
+imagenes/**/*.png
+imagenes/*.zip

@@ -1886,7 +1886,19 @@ main.lienzo a.accion-salon:hover{border-color:var(--coral);color:var(--coral-alt
 .vis-titulo b{display:block;font-size:14px}
 .vis-titulo span{font-size:12px;color:#A9A7A2}
 .vis-acciones{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.vis-acciones .btn{text-decoration:none}
+/* Los botones del panel están hechos para fondo claro: un `button` sin clase
+   trae fondo blanco y hereda el color del pie, que aquí es casi blanco, así
+   que quedaba invisible. Sobre el visor van en su propia versión oscura. */
+.vis-btn{
+  display:inline-block;padding:9px 16px;border-radius:var(--r-s);
+  border:1px solid rgba(255,255,255,.35);color:#F2F1EE;text-decoration:none;
+  font-weight:550;font-size:14px;line-height:1.2;
+  transition:background .15s var(--ease),border-color .15s var(--ease);
+}
+.vis-btn:hover{background:rgba(255,255,255,.12);border-color:rgba(255,255,255,.6)}
+.vis-btn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.vis-acciones button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.vis-acciones button:disabled{opacity:.6;cursor:default}
 .vis-aviso{font-size:12px;color:#A9A7A2}
 .vis-aviso.mal{color:#F0A38E}
 .vis-cerrar{

@@ -28,14 +28,14 @@ function verImagen(pieza, alCambiar) {
   ]);
 
   const acciones = el('div', { class: 'vis-acciones' });
-  acciones.appendChild(el('a', { class: 'btn fantasma', href: pieza.url,
+  acciones.appendChild(el('a', { class: 'vis-btn', href: pieza.url,
     download: '', target: '_blank', rel: 'noopener', text: 'Descargar' }));
 
   let entrada = null;
   if (puede('precios')) {
     entrada = el('input', { type: 'file', accept: 'image/jpeg,image/png,image/webp', hidden: '' });
     const aviso = el('span', { class: 'vis-aviso' });
-    const boton = el('button', { class: 'btn', text: 'Reemplazar',
+    const boton = el('button', { class: 'primario', text: 'Reemplazar',
       onclick: () => entrada.click() });
     entrada.addEventListener('change', async () => {
       const f = entrada.files?.[0];

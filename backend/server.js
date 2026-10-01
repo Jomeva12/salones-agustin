@@ -1008,11 +1008,17 @@ const rutas = {
     salones: db.prepare('SELECT clave, nombre FROM salon WHERE activo = 1 ORDER BY id').all(),
     laminas: db.prepare(
       `SELECT p.nombre AS paquete, s.clave AS salon, s.nombre AS salon_nombre,
-              i.etiqueta, i.url
+              i.etiqueta, i.url, i.subida_at
          FROM paquete_imagen i
          JOIN paquete p ON p.id = i.paquete_id
          JOIN salon   s ON s.id = i.salon_id
         ORDER BY s.id, p.nombre, i.etiqueta`).all(),
+    cortesias: db.prepare(
+      `SELECT c.clave, c.titulo, s.clave AS salon, s.nombre AS salon_nombre,
+              c.url, c.subida_at
+         FROM cortesia_imagen c
+         JOIN salon s ON s.id = c.salon_id
+        ORDER BY s.id, c.clave`).all(),
   }),
 
   // Rango de fechas para pintar el calendario del frontend.

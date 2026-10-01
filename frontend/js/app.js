@@ -12,6 +12,7 @@ import { configuracion } from './configuracion.js';
 import { paqueteNuevo } from './paquete_nuevo.js';
 import { salones } from './salones.js';
 import { politicas } from './politicas.js';
+import { laminas } from './laminas.js';
 
 const VISTAS = {
   '/hoy': hoy,
@@ -23,6 +24,7 @@ const VISTAS = {
   '/pendientes': pendientes,
   '/politicas': politicas,
   '/salones': salones,
+  '/imagenes': laminas,
   '/configuracion': configuracion,
   // Cuelga de Paquetes, no del menú: se usa dos veces al año y un ítem más
   // en la barra estorba todos los días.

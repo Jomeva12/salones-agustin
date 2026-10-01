@@ -1818,3 +1818,42 @@ main.lienzo a.accion-salon:hover{border-color:var(--coral);color:var(--coral-alt
 .cobro-cambio.ojo{background:var(--ocupada-bg);color:var(--ocupada)}
 .cobro-cambio b{font-weight:700}
 .cobro-cambio .extra{margin-top:7px;padding-top:7px;border-top:1px solid currentColor;opacity:.92}
+
+/* ── Imágenes: láminas de paquete y fotos de cortesías ───────────────────── */
+.laminas-pag{animation:entra .4s var(--ease) both}
+.lam-cab{margin-bottom:22px}
+.lam-cab h1{margin:0 0 6px;font-size:22px;letter-spacing:-.01em}
+.lam-sub{margin:0;color:var(--tinta-2);max-width:66ch;font-size:13.5px;line-height:1.55}
+
+.lam-salon-cab{
+  display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+  border-bottom:1px solid var(--linea);padding-bottom:7px;margin:26px 0 14px;
+}
+.lam-salon-cab h2{margin:0;font-size:15px;letter-spacing:-.01em}
+.lam-cuenta{font-size:12px;color:var(--tinta-3);font-variant-numeric:tabular-nums}
+.lam-cuenta.falta{color:var(--coral,#C8553D)}
+.lam-vacio{margin:0;color:var(--tinta-3);font-size:13px}
+
+/* Cada ficha conserva la proporción de la lámina para que la rejilla no baile
+   mientras cargan: vienen en 9:16 y en cuadrado, y sin alto reservado el
+   contenido salta al terminar cada descarga. */
+.lam-rejilla{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+.lam-pieza{margin:0;min-width:0}
+.lam-foto{
+  display:block;border:1px solid var(--linea);border-radius:4px;overflow:hidden;
+  background:var(--panel-2);transition:border-color .15s var(--ease),transform .15s var(--ease);
+}
+.lam-foto:hover{border-color:var(--linea-2);transform:translateY(-2px)}
+.lam-foto:focus-visible{outline:2px solid var(--acento);outline-offset:2px}
+.lam-foto img{display:block;width:100%;height:auto;max-width:100%}
+.lam-pieza figcaption{margin-top:6px;font-size:12.5px;line-height:1.4;color:var(--tinta-3)}
+.lam-pieza figcaption b{display:block;color:var(--tinta);font-weight:600}
+.lam-etq{display:block}
+.lam-marca{
+  display:inline-block;margin-top:2px;font-size:10.5px;letter-spacing:.07em;
+  text-transform:uppercase;color:var(--acento-claro);
+}
+.lam-nota{
+  margin:30px 0 0;padding-top:14px;border-top:1px solid var(--linea);
+  color:var(--tinta-3);font-size:12.5px;max-width:66ch;line-height:1.55;
+}

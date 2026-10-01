@@ -8,7 +8,7 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "db5bb1f3-8b4a-4bfa-94b3-7e4ab656afcf",
+      "id": "67cddce8-9813-421a-a866-8d1c048d7fe4",
       "name": "new_message",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
@@ -16,7 +16,7 @@
         -600,
         0
       ],
-      "webhookId": "d5f50fcc-270c-4887-9e8d-528b785d0b02"
+      "webhookId": "4ed8d544-f235-42da-a318-2fbdda8c1512"
     },
     {
       "parameters": {
@@ -29,7 +29,7 @@
           },
           "conditions": [
             {
-              "id": "ad4f2f15-10fe-471b-ad94-aa81b901c509",
+              "id": "f72e05e2-c4b7-44cf-b0e5-86e534fbfac4",
               "leftValue": "={{ $json.body['message[add][0][type]'] }}",
               "rightValue": "incoming",
               "operator": {
@@ -43,7 +43,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "72ad72fb-bf37-49d4-98bf-79059024547d",
+      "id": "840729e1-6b34-42a5-a1e2-3f7be187c37e",
       "name": "es_mensaje_entrante",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -56,7 +56,7 @@
       "parameters": {
         "jsCode": "// Traduce el payload de Kommo a campos limpios.\nconst b = $input.first().json.body ?? {};\nconst g = (k) => b['message[add][0][' + k + ']'] ?? null;\nconst epoch = Number(g('created_at'));\nreturn [{ json: {\n  msg_id: g('id'),\n  lead_id: g('entity_id') ?? g('element_id'),\n  contacto_id: g('contact_id'),\n  chat_id: g('chat_id'),\n  talk_id: g('talk_id'),\n  texto: g('text') ?? '',\n  // telegram en pruebas, whatsapp en produccion: sirve para dejar fuera de\n  // los reportes el trafico que nos mandamos nosotros.\n  origen: g('origin'),\n  autor: b['message[add][0][author][name]'] ?? null,\n  adjunto_tipo: b['message[add][0][attachment][type]'] ?? null,\n  adjunto_url: b['message[add][0][attachment][link]'] ?? b['message[add][0][attachment][url]'] ?? null,\n  creado_at: Number.isFinite(epoch) ? new Date(epoch * 1000).toISOString() : null,\n}}];"
       },
-      "id": "7761bd0b-f1f4-4765-8550-6b438a4e243e",
+      "id": "51025df8-635f-4d14-8bc8-02007764d372",
       "name": "formatear",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -73,7 +73,7 @@
           "queryReplacement": "={{ [$json.lead_id, $json.msg_id, $json.texto] }}"
         }
       },
-      "id": "5c1dc101-cfda-4fe7-b87f-e85393fe7a50",
+      "id": "6269215e-1d20-4edf-b1c9-e03a74f168e4",
       "name": "guardar_en_buffer",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -92,7 +92,7 @@
       "parameters": {
         "amount": 15
       },
-      "id": "e574b2e9-889d-4510-963a-34ee8c24380d",
+      "id": "0c9fa3d5-560e-4ed9-bc4b-d68b8c81e393",
       "name": "esperar_rafaga",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -100,7 +100,7 @@
         200,
         0
       ],
-      "webhookId": "618a7e53-3400-4e3a-9e19-8a2cf1f5f363"
+      "webhookId": "75cb0d62-8968-4004-947f-72603c2ea7f0"
     },
     {
       "parameters": {
@@ -110,7 +110,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id, $('formatear').first().json.msg_id] }}"
         }
       },
-      "id": "d6a308fe-8247-43c5-9bc5-cd173986ada4",
+      "id": "8225a545-3826-461f-8808-f75854a5949e",
       "name": "leer_rafaga",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -136,7 +136,7 @@
           },
           "conditions": [
             {
-              "id": "dee482ef-3d6d-44f9-a447-5fb4ac013861",
+              "id": "aa70cecd-3f4c-42e8-971b-96deba18a8a3",
               "leftValue": "={{ $json.mas_nuevos }}",
               "rightValue": "0",
               "operator": {
@@ -150,7 +150,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "de200977-5547-44ac-87da-42dfc7d874e4",
+      "id": "b8a1d28b-2a29-4ac7-84da-dde5ba87630c",
       "name": "soy_el_ultimo",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -167,7 +167,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id] }}"
         }
       },
-      "id": "5b72d7c6-5c71-4297-b92f-76d7b3e61e52",
+      "id": "cef36a83-7b46-4741-974f-7b210e65ccaa",
       "name": "marcar_consumidos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -195,7 +195,7 @@
           }
         }
       },
-      "id": "ac894187-142d-47d0-9224-f69d13981403",
+      "id": "8e9d213a-12ac-4a83-9cea-bc331e5c23c3",
       "name": "traer_lead",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -214,7 +214,7 @@
       "parameters": {
         "jsCode": "// Aplana los campos personalizados de Kommo a algo legible.\nconst crudo = $input.first().json ?? {};\nconst l = crudo.data ?? crudo;\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nconst msg = $('formatear').first().json;\nconst rafaga = $('leer_rafaga').first().json;\nreturn [{ json: {\n  lead_id: String(l.id ?? msg.lead_id),\n  etapa_id: l.status_id ?? null,\n  responsable_id: l.responsible_user_id ?? null,\n  presupuesto: l.price ?? 0,\n  campos,\n  // Todo lo que el cliente dijo en la rafaga, ya junto en un solo texto.\n  chats: rafaga.chats ?? msg.texto,\n  cuantos_mensajes: Number(rafaga.cuantos ?? 1),\n  origen: msg.origen,\n  autor: msg.autor,\n  adjunto_tipo: msg.adjunto_tipo,\n  adjunto_url: msg.adjunto_url,\n}}];"
       },
-      "id": "36a324cf-efd5-43bb-b292-91509f1931a3",
+      "id": "8ee7f61d-f473-4ae8-97e0-71c614f87373",
       "name": "formatLead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -234,7 +234,7 @@
           },
           "conditions": [
             {
-              "id": "55b442de-659b-45b8-aaed-179204ddfede",
+              "id": "c0c74657-1747-44a0-85f4-5879d4f83481",
               "leftValue": "={{ String($json.campos['IA activa']) }}",
               "rightValue": "false",
               "operator": {
@@ -248,7 +248,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "9673f211-894d-4488-a073-3e43203dc2f9",
+      "id": "428e2564-e924-4b8d-b8e1-6155178342c7",
       "name": "ia_activa",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -265,7 +265,7 @@
           "systemMessage": "Eres el Director de Salones Agustín Barrón. Clasificas y enrutas.\n**Nunca le hablas al cliente.**\n\nTu única salida es este JSON, sin texto antes ni después y sin cercos de código:\n\n```\n{\"agente\":\"ventas\",\"razon\":\"media frase\",\"datos\":{\"salon\":null,\"tipo_evento\":null,\"fecha_evento\":null,\"invitados\":null}}\n```\n\n## A quién enrutas\n\nMira **primero la etapa del lead**, no el contenido del mensaje.\n\n**cliente** — el lead ya contrató (etapa *Contratado — pagando*, o ganado).\nQuien ya pagó escribe por abonos, fechas de liquidación o detalles de su\nevento. A esa persona no se le vende.\n\n**seguimiento** — solo cuando el sistema lo dispara porque el cliente dejó de\ncontestar. Nunca lo elijas por lo que dice el mensaje.\n\n**ventas** — todo lo demás. Un prospecto que pregunta, cotiza o quiere\nvisitar. Es el caso común: **ante la duda, ventas.**\n\n## Los datos\n\nEn `datos` pones solo lo que el cliente dijo **en este mensaje o en el\nhistorial**, ya normalizado. Lo que no aparezca va en `null`. No deduzcas, no\nrellenes, no arrastres de otra conversación.\n\n- `salon`: `norma`, `esmeralda`, `santacruz` o `quetzal`\n- `tipo_evento`: `xv`, `boda`, `graduacion`, `posada`, `cumpleanos`, `babyshower`\n- `fecha_evento`: `AAAA-MM-DD`. **Sin día exacto, va `null`.** «diciembre de\n  2027» es `null`, **no** `2027-12-01`. Inventar el día 1 hace que se cotice\n  un miércoles cuando el cliente quería sábado, y el precio cambia\n- `invitados`: número\n\n## Lo que no haces\n\n- No respondes al cliente. Ni un saludo.\n- No usas herramientas. No tienes.\n- No inventas datos para rellenar el JSON.\n"
         }
       },
-      "id": "56bc6e8d-6120-421b-97f9-23c2b54e2e44",
+      "id": "03aaeb0e-d09e-4f99-8ad7-e3bf75c14ee5",
       "name": "director",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -284,7 +284,7 @@
         },
         "options": {}
       },
-      "id": "b0f443fd-04ca-42c4-b8e9-0cafe2ffcc90",
+      "id": "b83620f8-1d2b-4fa7-8727-398d1cef8df0",
       "name": "modelo_director",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -305,7 +305,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-director-v6",
         "contextWindowLength": 30
       },
-      "id": "6fa75141-5da1-4b06-9036-facf4fef3202",
+      "id": "ffe42dc5-8242-467c-b473-6b93784b59ab",
       "name": "memoria_director",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -324,7 +324,7 @@
       "parameters": {
         "jsCode": "// Convierte lo que entendio el Director en el PATCH de campos de Kommo.\n//\n// Solo el Director escribe en Kommo. Si cada agente parchara el mismo lead se\n// pisarian entre ellos y no habria forma de saber quien puso que.\n//\n// Regla de oro: solo se escribe lo que el cliente DIJO. Un campo que el\n// Director no pudo determinar se queda como esta. Sobrescribir con null\n// borraria lo que una encargada capturo a mano.\n\nconst CAMPO = {\n  salon: 352870,\n  tipo_evento: 352872,\n  fecha_evento: 352874,\n  invitados: 352876,\n  ia_activa: 352882,\n};\n\n// Los select de Kommo guardan enum_id, no texto.\nconst ENUM_SALON = {\n  norma: 281622, esmeralda: 281624, santacruz: 281626, quetzal: 281628,\n};\nconst ENUM_TIPO = {\n  xv: 281630, boda: 281632, graduacion: 281634,\n  posada: 281636, cumpleanos: 281638, babyshower: 281640,\n};\n\n// Del JSON del Director, aunque venga envuelto en cercos de codigo.\nlet salida = $json.output ?? '';\nif (typeof salida === 'string') {\n  salida = salida.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\n  try { salida = JSON.parse(salida); } catch (e) { salida = {}; }\n}\nconst datos = (salida && salida.datos) || {};\n\nconst valores = [];\nconst anotado = {};\n\nif (ENUM_SALON[datos.salon]) {\n  valores.push({ field_id: CAMPO.salon, values: [{ enum_id: ENUM_SALON[datos.salon] }] });\n  anotado.salon = datos.salon;\n}\nif (ENUM_TIPO[datos.tipo_evento]) {\n  valores.push({ field_id: CAMPO.tipo_evento, values: [{ enum_id: ENUM_TIPO[datos.tipo_evento] }] });\n  anotado.tipo_evento = datos.tipo_evento;\n}\n// El modelo inventa el dia cuando el cliente solo dijo el mes: «diciembre de\n// 2027» salio como 2027-12-01 y se escribio en Kommo. Por eso, ademas del\n// formato, se exige que el numero del dia aparezca en lo que el cliente\n// escribio. Si el dia venia arrastrado de un mensaje anterior, ese mensaje ya\n// lo escribio en su turno, asi que no se pierde nada.\nfunction dijoElDia(fecha, texto) {\n  const dia = Number(fecha.slice(8, 10));\n  const t = String(texto ?? '');\n  if (new RegExp('(^|[^0-9])0?' + dia + '([^0-9]|$)').test(t)) return true;\n  return dia === 1 && /\\bprimero\\b/i.test(t);\n}\n\nif (/^\\d{4}-\\d{2}-\\d{2}$/.test(datos.fecha_evento ?? '')\n    && dijoElDia(datos.fecha_evento, $('formatLead').first().json.chats)) {\n  // Kommo guarda las fechas como epoch. Se usa mediodia UTC a proposito: a\n  // las 00:00 UTC en Monterrey (UTC-6) todavia es el dia anterior, y la\n  // fecha del evento aparecería corrida un dia.\n  const epoch = Math.floor(Date.parse(datos.fecha_evento + 'T12:00:00Z') / 1000);\n  valores.push({ field_id: CAMPO.fecha_evento, values: [{ value: epoch }] });\n  anotado.fecha_evento = datos.fecha_evento;\n}\nconst invitados = Number(datos.invitados);\nif (Number.isFinite(invitados) && invitados > 0) {\n  valores.push({ field_id: CAMPO.invitados, values: [{ value: invitados }] });\n  anotado.invitados = invitados;\n}\n\n// Kommo NO devuelve los checkbox sin marcar: los omite del lead. Por eso un\n// lead nuevo llega sin «IA activa» y el interruptor no puede distinguir\n// «nadie lo ha tocado» de «la encargada lo apago».\n//\n// Se resuelve marcandolo en el primer contacto. A partir de ahi el campo\n// existe y dice la verdad: si la encargada lo desmarca, llega en false y el\n// flujo se detiene. Y no se vuelve a marcar solo, porque ya no esta ausente.\nconst campos = $('formatLead').first().json.campos ?? {};\nconst primeraVez = campos['IA activa'] === undefined || campos['IA activa'] === null;\nif (primeraVez) {\n  valores.push({ field_id: CAMPO.ia_activa, values: [{ value: true }] });\n  anotado.ia_activa = true;\n}\n\nreturn [{\n  json: {\n    hay_datos: valores.length > 0,\n    lead_id: $('formatLead').first().json.lead_id,\n    anotado,\n    cuerpo: { custom_fields_values: valores },\n  },\n}];\n"
       },
-      "id": "146a5929-2e5f-40e4-8b64-46a5b2fbffc2",
+      "id": "8eed60db-a963-41cf-9b86-9ce8fe52607f",
       "name": "armar_patch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -344,7 +344,7 @@
           },
           "conditions": [
             {
-              "id": "b6ab1cbc-0c52-46a2-b238-35786c7fc46c",
+              "id": "de8d5349-2920-4156-849a-543b44f47def",
               "leftValue": "={{ $json.hay_datos }}",
               "rightValue": "true",
               "operator": {
@@ -358,7 +358,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "63befdd3-181d-4fc9-b4a2-633caa40204c",
+      "id": "d2a1f534-8bc2-462c-a016-cfac29f0b46d",
       "name": "hay_datos",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -384,7 +384,7 @@
           }
         }
       },
-      "id": "164b11cd-aef5-488a-99e9-936365eabf96",
+      "id": "aac0a42b-0513-424f-9855-6313973e5c14",
       "name": "guardar_en_kommo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -413,7 +413,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "15bd5e6c-d0dc-40a5-a2f3-6f59b22b470d",
+                    "id": "68761827-c591-4df9-ae4c-792f3d45d4fe",
                     "leftValue": "={{ JSON.stringify($('director').first().json.output) }}",
                     "rightValue": "ventas",
                     "operator": {
@@ -437,7 +437,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "bc783a4c-a375-4e02-b76f-75639235aa50",
+                    "id": "a2c2d630-3586-4d82-8487-c0cf01e331d2",
                     "leftValue": "={{ JSON.stringify($('director').first().json.output) }}",
                     "rightValue": "cliente",
                     "operator": {
@@ -461,7 +461,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "09970f5b-a7bc-4905-b7f8-7ade284c07db",
+                    "id": "ad38af91-f7cc-4eeb-bfb4-1ff71aa50446",
                     "leftValue": "={{ JSON.stringify($('director').first().json.output) }}",
                     "rightValue": "seguimiento",
                     "operator": {
@@ -481,7 +481,7 @@
           "fallbackOutput": 0
         }
       },
-      "id": "228acbcf-4460-4a93-ba50-5845b61576c3",
+      "id": "6a490a1e-91a8-491b-8735-bb90416c2f46",
       "name": "enrutar",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -498,7 +498,7 @@
           "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón: cuatro salones de eventos en Guadalupe, Nuevo León.\n\nEscribes por WhatsApp. Tuteas, eres cálida y breve. Nada de listas largas ni\nde lenguaje de folleto.\n\n## Tu objetivo es la visita, no la venta\n\nLa venta se cierra en el salón, no por mensaje. Todos los que contratan\nvisitan primero. Así que **cada cotización termina invitando a visitarnos,\nmencionando que ahí descubren cómo obtener más cortesías.**\n\nSi alguien ya conoce el salón y quiere contratar por transferencia, no lo\natiendes tú: avisas a la encargada.\n\n## El árbol: qué hacer según lo que te dicen\n\nEsta tabla manda sobre el resto del documento. Cada renglón tiene dos partes\n—lo que haces y con qué cierras— y las dos importan: **ninguna conversación\nse queda sin siguiente paso.**\n\n| Si el prospecto dice… | Haces… | Y cierras… |\n|---|---|---|\n| «Quiero informes» | Preguntar **tipo de evento** | Pedir fecha e invitados |\n| «¿Cuánto cuesta?» | Explicar que depende del evento, los invitados y la fecha | Recabar los tres antes de orientar |\n| Te da evento, fecha e invitados | **Confirmar lo entendido** | Preguntar qué es lo que más le importa, y orientar |\n| «¿Tienen disponible?» | Reconocer que va en serio | **Pasarlo a la encargada** para que valide la agenda |\n| «Quiero ir a ver el salón» | Pedir o confirmar el día que le acomoda | Pasarlo a la encargada para agendar |\n| «¿Cuánto se da para apartar?» | Darle la cifra y marcar que va en serio | **Pasarlo a la encargada** |\n| «Está caro» | Preguntar **con qué lo compara** y qué busca cuidar | Pasarlo si hay que ajustar o negociar |\n| «Estoy viendo más opciones» | Preguntar qué criterios está comparando | Reforzar el valor y proponer la visita |\n| «Luego les aviso» | Pedirle permiso y **acordar una fecha** para buscarlo | Dejarlo dicho con día concreto |\n| Se queja | **No debatir ni vender** | Pasarlo a la encargada |\n\n### Confirmar lo entendido, siempre\n\nCuando ya tengas los tres datos, **repíteselos antes de dar el precio**:\n\n> «Claro que sí: unos XV años para el **sábado 15 de septiembre de 2027**,\n> para 200 invitados.»\n\nAsí el cliente alcanza a corregirte si se equivocó de fecha o de número, y\nnadie cotiza sobre algo que no era. El día de la semana **lo dices tal como\nte lo devolvió la herramienta**, nunca como tú lo calcules.\n\n## Antes de cotizar: tres datos\n\n**Tipo de evento, fecha e invitados.** Sin los tres, cualquier precio es\nfalso. Pregúntalos en ese orden —primero el tipo de evento—, uno o dos a la\nvez, nunca como formulario.\n\nCon los tres, llama a `cotizar`. **Nunca antes.**\n\nLa fecha es **día exacto**, no un mes. Si dice «en diciembre» o «para marzo»,\n**pregunta qué día** antes de cotizar. Nunca supongas uno: el precio y la\ndisponibilidad cambian según el día de la semana, y cotizarías un miércoles\ncuando quería sábado. Si no sabe el día pero sí que es sábado, pregúntale cuál\nde los sábados de ese mes.\n\n## Cómo cotizar\n\n`cotizar` devuelve las opciones **ya ordenadas**. Tu trabajo:\n\n1. **Ofrece la primera y solo la primera.** Con su precio y qué incluye.\n2. Si dice que se le sale del presupuesto, ofrece la siguiente. Una a la vez.\n3. **Nunca listes todos los paquetes.** Abruma y no es como se vende aquí.\n\nEl precio que devuelve la herramienta **es el precio final**. Si viene un\nrecargo, ya está sumado: **no lo menciones, no lo desgloses, no lo expliques.**\nSe cotiza el total y punto.\n\n**Tú no eliges el paquete y tú no calculas fechas.** Cuál paquete aplica lo\ndecide la fecha, y eso lo resuelve la herramienta: te devuelve solo los que\nexisten para ese plazo. Si pregunta por un mes o por un día de la semana\n—«¿qué sábados hay en diciembre?»— llama a `dias_disponibles`. Nunca deduzcas\nen qué fecha cae un sábado: ya pasó que se dio por sábado un domingo y se\ncotizó ese día. Si una herramienta te devuelve `dia_semana`, ese es el\nverdadero aunque no coincida con lo que creías.\n\nEl número de invitados **no cambia lo que incluye el paquete**, solo el\nprecio. Para 100 o para 300 el paquete es exactamente el mismo.\n\nAntes de dar por buena una fecha, consulta `disponibilidad`. Si está ocupada:\ndilo, y **ofrece de inmediato esa misma fecha en los otros salones**. Si\ntampoco, busca un día parecido — si pidió sábado, otro sábado.\n\nCuando la fecha esté ocupada, **cotiza la alternativa sin preguntar primero.**\nNo digas «¿quieres que te cotice Santa Cruz?» — di que Norma está ocupado y\npásale ya el precio de Santa Cruz. Preguntar antes de cotizar es un paso de\nmás donde se pierde la conversación.\n\nCapacidades: Norma, Esmeralda y Santa Cruz de 100 a 300 invitados. Quetzal de\n50 a 150.\n\n### Consultar la agenda sí; prometerla no\n\nConsultas `disponibilidad` siempre que la necesites para cotizar: sin eso\ncotizarías días ocupados.\n\nLo que **no** haces es cerrar tú la disponibilidad. Cuando el cliente\n**pregunta directamente** si hay lugar en una fecha, eso es intención alta:\nle dices lo que ves, aclaras que **la encargada se lo confirma**, y lo pasas\ncon ella. La agenda la valida una persona, no tú.\n\n### `no_confirmada` no es libre\n\nUn salón en `no_confirmada` (o en la lista `por_confirmar`) **no se ofrece ni\nse cotiza**. Significa que la encargada todavía no ha revisado su libreta\nhasta esa fecha, así que nadie puede prometer que esté libre.\n\nSi el cliente pregunta justo por ese salón, dile que **lo confirmas y le\navisas**, y pásalo a la encargada. Si hay otros salones libres ese día,\nofrécele esos.\n\nY **nunca le expliques el motivo**. «Su agenda está menos actualizada» es un\nasunto interno: al cliente solo le dices que lo confirmas.\n\n## Las reglas no te las sabes: las consultas\n\nPara anticipos, formas de pago, cancelación, cambio de fecha, horarios o qué\nincluye un paquete, llama a `politicas`. **Si no devuelve nada, no\nimprovises**: di que lo confirmas y avisa a la encargada.\n\nDos que conviene tener claras porque salen mucho:\n\n- Se aparta con **$500** (la fecha se bloquea 7 días) y se contrata con\n  **$1,500**. Se lo dices, y acto seguido **lo pasas con la encargada**: tú\n  nunca confirmas una fecha como apartada.\n- Si preguntan por pagar con tarjeta: **de momento no contamos con terminal**.\n  Dilo así, sin más explicación. Se acepta efectivo, transferencia, depósito\n  y cheque.\n\n## Cuando dice que lo va a pensar\n\n«Luego les aviso» no se deja en el aire. Pídele permiso para buscarlo y\n**acuerda un día concreto**: «¿te parece si te escribo el jueves?». Si te da\nuna fecha, esa vale — no lo busques antes.\n\n## Cuándo dejas de contestar tú\n\nPasas con la encargada y no sigues cuando el cliente:\n\n- pregunta directamente por disponibilidad de una fecha\n- quiere ir a ver el salón\n- pregunta cuánto se da para apartar\n- pide descuento, o hay que ajustar o negociar\n- se queja, reclama o pregunta por devoluciones\n- quiere firmar contrato o ya va a pagar\n- pregunta algo que las herramientas no responden\n- pide hablar con una persona\n\nAnte una queja: **no debatas y no vendas.** Escuchas, no discutes el fondo, y\nla pasas.\n\nSi pregunta a dónde lo estás pasando: **al departamento de atención a\nclientes.**\n\n## Nunca\n\n- Inventar precios, paquetes, direcciones o fechas. Si no lo devolvió una\n  herramienta, no existe.\n- Ofrecer descuentos.\n- Prometer servicios que no aparecen en una consulta.\n- Decir «no tengo ese dato». Di que lo confirmas y avisa a la encargada.\n- Dejar una conversación sin siguiente paso.\n"
         }
       },
-      "id": "0bc27cca-76b5-4008-9bee-1e7f9a9d20cd",
+      "id": "0e411ca9-43a0-417e-8ce0-d22ccbdba8cf",
       "name": "ventas",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -517,7 +517,7 @@
         },
         "options": {}
       },
-      "id": "0dbd2a44-893f-497e-ad10-341fd086d1bb",
+      "id": "ac82fbcf-32fc-432a-91f9-393ae23e45dc",
       "name": "modelo_ventas",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -538,7 +538,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas-v6",
         "contextWindowLength": 30
       },
-      "id": "f417f35b-14e2-4074-b4e6-a8a18d338f22",
+      "id": "cf310912-ba3d-4a9b-a9ea-30b9b45ab5a4",
       "name": "memoria_ventas",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -561,7 +561,7 @@
           "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón. Atiendes a quien **ya contrató** su evento.\n\nEscribes por WhatsApp. Tuteas, cálida y breve.\n\n## Esta persona ya te compró\n\n**No le vendes nada.** No le ofreces paquetes ni le cotizas. Ya pasó por eso.\nLo que necesita es que le resuelvan: cuánto debe, cuándo liquida, qué\nllevar, a qué hora abren.\n\n## Si manda un comprobante de pago\n\nAcusas recibo y avisas a la encargada. **Nunca confirmas que el pago quedó\naplicado.**\n\nTú no ves la cuenta bancaria. Si dices «listo, ya quedó registrado» y la\ntransferencia no entró o venía de menos, creaste un problema de dinero.\n\nAlgo así:\n\n> Recibí tu comprobante, ¡gracias! Se lo paso a la encargada para que lo\n> registre y te confirme.\n\n## Lo que sí puedes consultar\n\nCon `politicas`: fechas límite de liquidación, plan de mensualidades, qué\nincluye lo que contrató, horarios, reglas del evento.\n\nSi la consulta no devuelve nada, **no improvises**: dices que lo confirmas y\navisas a la encargada.\n\n## Cuándo avisas a la encargada y dejas de contestar\n\n- Pide devolución, cancelar, o reclama por dinero — **este no lo contestas\n  tú en absoluto**, avisas de inmediato\n- Quiere cambiar la fecha de su evento\n- Pregunta por su saldo exacto o por un pago concreto\n- Pide hablar con una persona\n\nSi pregunta a dónde lo estás pasando: **al departamento de atención a\nclientes.**\n"
         }
       },
-      "id": "3badaf05-98cb-48a8-bffb-1d8b7bb40021",
+      "id": "0d3837fd-cf4e-4ff7-b8af-a1633b2d9e32",
       "name": "cliente",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -580,7 +580,7 @@
         },
         "options": {}
       },
-      "id": "b19c7084-84ca-438f-b631-21c01f51b4b4",
+      "id": "580fee10-8e83-4849-851e-8ff97e370550",
       "name": "modelo_cliente",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -601,7 +601,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-cliente-v6",
         "contextWindowLength": 30
       },
-      "id": "c08be953-bc9e-4640-9f7a-244321488293",
+      "id": "5584ff75-36c3-4789-8484-42b6614bbd64",
       "name": "memoria_cliente",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -624,7 +624,7 @@
           "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón. Le escribes a alguien que **dejó de contestar**.\n\n## Un solo mensaje, corto\n\nRetomas por donde se quedó la conversación, sin reprochar y sin repetir todo\nlo que ya le dijiste. Si estaba a punto de dar un dato, se lo vuelves a pedir.\nSi ya tenía cotización, le recuerdas que puede venir a conocer el salón.\n\nDos o tres líneas. Nada de volver a listar precios.\n\n## Nunca\n\n- Escribir como si fuera la primera vez.\n- Insistir con urgencia o presión. Si no contesta, no contesta.\n- Ofrecer un descuento para reenganchar. No existen.\n- Inventar una promoción o una fecha límite que nadie te dijo.\n\nSi el cliente responde, la conversación vuelve a ventas: tú no cotizas.\n"
         }
       },
-      "id": "1bee1243-10a8-4127-921c-3d5ed9448e7e",
+      "id": "2a94b4c3-458c-43f5-ad20-0d453ea3c219",
       "name": "seguimiento",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -643,7 +643,7 @@
         },
         "options": {}
       },
-      "id": "a6877c9a-8b66-468b-82e4-fa9e86930685",
+      "id": "ff1766e0-84ab-4d24-9a5d-9742e3b4e2bc",
       "name": "modelo_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -664,7 +664,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas-v6",
         "contextWindowLength": 30
       },
-      "id": "fe83e613-3556-4b2a-b304-e63ad4edef2a",
+      "id": "f99b06cf-e015-4ee6-b38d-5675bfedfd29",
       "name": "memoria_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -681,9 +681,9 @@
     },
     {
       "parameters": {
-        "jsCode": "// Parte la respuesta del agente en las piezas que espera enviar_mensaje_salones.\n//\n// Se hace con codigo y no con otro agente a proposito: partir en frontera de\n// parrafo es una regla, no un juicio. Un modelo haciendo esto cuesta, tarda, y\n// algun dia devuelve algo distinto para el mismo texto.\nconst bruto = $json.output ?? '';\nlet texto = typeof bruto === 'string' ? bruto : JSON.stringify(bruto);\n\n// El modelo a veces envuelve la respuesta en cercos de codigo o en un JSON.\ntexto = texto.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\nif (texto.startsWith('{')) {\n  try {\n    const o = JSON.parse(texto);\n    texto = o.respuesta ?? o.parte1 ?? o.output ?? texto;\n  } catch (e) { /* no era JSON: se queda con el texto tal cual */ }\n}\n\nconst MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro\n\n// Se corta por ritmo de WhatsApp, no por longitud: la informacion en un\n// mensaje y la pregunta de cierre en otro. Antes se cortaba a los 600\n// caracteres, pero una cotizacion tipica ronda los 400 — con esa regla el\n// corte en dos casi nunca se activaba.\n//\n// Nunca se corta a media frase: si no hay frontera de parrafo, va entera. Un\n// mensaje largo de una sola pieza molesta menos que uno partido a la mitad.\nfunction partir(t) {\n  const parrafos = t.split(/\\n\\s*\\n/).map((x) => x.trim()).filter(Boolean);\n  if (parrafos.length < 2) return [t];\n  // El ultimo parrafo se va solo: en las respuestas de Maya es la invitacion\n  // a visitar o la pregunta. Lo anterior se junta en el primer mensaje.\n  return [parrafos.slice(0, -1).join('\\n\\n'), parrafos[parrafos.length - 1]]\n    .slice(0, MAX_PARTES);\n}\n\nconst partes = partir(texto);\nconst fl = $('formatLead').first().json;\n\nreturn [{\n  json: {\n    cuantas_partes: partes.length,\n    parte1: partes[0] ?? '',\n    parte2: partes[1] ?? '',\n    parte3: '',\n    parte4: '',\n    lead_id: fl.lead_id,\n    // El subflujo solo acepta imagenes del dominio de Kommo. Sin imagen por ahora.\n    imagen_url: '',\n    mensaje_cliente: fl.chats,\n    // Declarados en el subflujo pero sin usar en su codigo: van en cero para\n    // no mover ninguna etapa por accidente.\n    proximo_paso: 0,\n    status_id: 0,\n    // Que agente redacto. Se guarda aqui porque despues de este nodo\n    // $prevNode.name ya seria 'formatear_respuesta'.\n    agente: $prevNode.name,\n    texto_completo: texto,\n  },\n}];\n"
+        "jsCode": "// Parte la respuesta del agente en las piezas que espera enviar_mensaje_salones.\n//\n// Se hace con codigo y no con otro agente a proposito: partir en frontera de\n// parrafo es una regla, no un juicio. Un modelo haciendo esto cuesta, tarda, y\n// algun dia devuelve algo distinto para el mismo texto.\nconst bruto = $json.output ?? '';\nlet texto = typeof bruto === 'string' ? bruto : JSON.stringify(bruto);\n\n// El modelo a veces envuelve la respuesta en cercos de codigo o en un JSON.\ntexto = texto.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\nif (texto.startsWith('{')) {\n  try {\n    const o = JSON.parse(texto);\n    texto = o.respuesta ?? o.parte1 ?? o.output ?? texto;\n  } catch (e) { /* no era JSON: se queda con el texto tal cual */ }\n}\n\nconst MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro\n\n// Se corta por ritmo de WhatsApp, no por longitud: la informacion en un\n// mensaje y la pregunta de cierre en otro. Antes se cortaba a los 600\n// caracteres, pero una cotizacion tipica ronda los 400 — con esa regla el\n// corte en dos casi nunca se activaba.\n//\n// Nunca se corta a media frase: si no hay frontera de parrafo, va entera. Un\n// mensaje largo de una sola pieza molesta menos que uno partido a la mitad.\nfunction partir(t) {\n  const parrafos = t.split(/\\n\\s*\\n/).map((x) => x.trim()).filter(Boolean);\n  if (parrafos.length < 2) return [t];\n  // El ultimo parrafo se va solo: en las respuestas de Maya es la invitacion\n  // a visitar o la pregunta. Lo anterior se junta en el primer mensaje.\n  return [parrafos.slice(0, -1).join('\\n\\n'), parrafos[parrafos.length - 1]]\n    .slice(0, MAX_PARTES);\n}\n\nconst partes = partir(texto);\nconst fl = $('formatLead').first().json;\n\n// ── la lamina del paquete cotizado ────────────────────────────────────────\n//\n// La URL no pasa nunca por el modelo. Si tuviera que copiar 80 caracteres,\n// tarde o temprano se le cae uno — y una URL rota no da error: el mensaje\n// sale sin foto y la ejecucion queda en verde. Asi que la elige este codigo,\n// cruzando lo que Maya escribio con lo que devolvio `cotizar`.\nconst limpiar = (s) => String(s ?? '').toLowerCase()\n  .normalize('NFD').replace(/[̀-ͯ]/g, '');\n\nfunction elegirLamina(textoAgente, dijoElCliente) {\n  let corridas = [];\n  // En el flujo de recuperacion no existe el nodo `cotizar`; sin imagen y ya.\n  try { corridas = $('cotizar').all(); } catch (e) { return ''; }\n\n  const t = limpiar(textoAgente);\n  const candidatos = new Map();\n\n  for (const c of corridas) {\n    const salones = c.json?.salones ?? [];\n    // Un salon ocupado se nombra para decir que NO se puede, y aun asi su\n    // nombre queda en el texto: «Norma esta ocupado, pero en Santa Cruz...».\n    // Si no se descartara, esa frase daria dos candidatos y ninguna imagen.\n    const vendibles = salones.filter(\n      (s) => s.se_puede_ofrecer !== false && s.disponibilidad !== 'ocupada');\n    const mirar = vendibles.length ? vendibles : salones;\n\n    for (const sal of mirar) {\n      // Si solo queda un salon vendible no hace falta que Maya lo nombre; si\n      // quedan varios, si: es lo unico que distingue el Plata de Norma del de\n      // Santa Cruz, que son laminas distintas.\n      const nombre = limpiar(sal.salon_nombre || sal.salon).replace(/\\s*eventos\\s*$/, '').trim();\n      const donde = nombre ? t.indexOf(nombre) : -1;\n      if (mirar.length > 1 && donde < 0) continue;\n\n      for (const o of (sal.opciones ?? [])) {\n        const imgs = o.imagenes ?? [];\n        if (!imgs.length) continue;\n        const paq = limpiar(o.paquete).replace(/^paquete\\s+/, '').trim();\n        const aqui = paq ? t.indexOf(paq) : -1;\n        if (aqui < 0) continue;\n        // Cuando quedan varios candidatos gana el salon nombrado mas cerca del\n        // paquete: en «en Santa Cruz el Paquete Plata» van pegados, y en la\n        // mencion de pasada a otro salon no.\n        const cerca = donde < 0 ? 0 : Math.abs(aqui - donde);\n        const ya = candidatos.get(imgs[0].url);\n        if (!ya || cerca < ya.cerca) candidatos.set(imgs[0].url, { imgs, cerca });\n      }\n    }\n  }\n\n  // Ante la duda, sin imagen. Mandar la lamina equivocada es peor que no\n  // mandar ninguna: el cliente la lee como la oferta.\n  if (!candidatos.size) return '';\n  const orden = [...candidatos.values()].sort((a, b) => a.cerca - b.cerca);\n  if (orden.length > 1 && orden[0].cerca === orden[1].cerca) return '';\n  const imgs = orden[0].imgs;\n  if (imgs.length === 1) return imgs[0].url;\n\n  // Varias laminas para un mismo paquete. Cual toca lo dice el cliente, no el\n  // paquete: «Baby Shower, Despedidas de Soltera y Bautizos» se cotiza igual\n  // para los tres, pero a quien va a bautizar no se le manda globos rosas.\n  const dicho = limpiar(dijoElCliente);\n  const PISTA = { bautizo: /bautiz/, despedida: /despedida/, babyshower: /baby ?shower/ };\n  for (const img of imgs) {\n    const re = PISTA[img.etiqueta];\n    if (re && re.test(dicho)) return img.url;\n  }\n  return '';\n}\n\nlet laminaUrl = '';\ntry { laminaUrl = elegirLamina(texto, fl.chats); } catch (e) { laminaUrl = ''; }\n\nreturn [{\n  json: {\n    cuantas_partes: partes.length,\n    parte1: partes[0] ?? '',\n    parte2: partes[1] ?? '',\n    parte3: '',\n    parte4: '',\n    lead_id: fl.lead_id,\n    // Solo viaja en la parte 1, que es la del precio. El subflujo descarta\n    // cualquier URL que no sea del Drive de esta cuenta de Kommo.\n    imagen_url: laminaUrl,\n    mensaje_cliente: fl.chats,\n    // Declarados en el subflujo pero sin usar en su codigo: van en cero para\n    // no mover ninguna etapa por accidente.\n    proximo_paso: 0,\n    status_id: 0,\n    // Que agente redacto. Se guarda aqui porque despues de este nodo\n    // $prevNode.name ya seria 'formatear_respuesta'.\n    agente: $prevNode.name,\n    texto_completo: texto,\n  },\n}];\n"
       },
-      "id": "fae68b4a-32b8-4960-909a-679f6255f170",
+      "id": "cf2bf20c-a8a8-4e7e-b7c3-095f315b3050",
       "name": "formatear_respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -700,7 +700,7 @@
           "queryReplacement": "={{ [ $('formatLead').first().json.lead_id, $('formatear').first().json.msg_id, $('formatLead').first().json.origen, $('formatLead').first().json.autor, $('formatLead').first().json.chats, $('formatLead').first().json.cuantos_mensajes, $json.agente, $json.texto_completo, $('formatLead').first().json.etapa_id, JSON.stringify($('formatLead').first().json.campos), JSON.stringify([$json.parte1, $json.parte2].filter(Boolean)) ] }}"
         }
       },
-      "id": "4dc7b994-f5e0-4e9a-aba0-8a901df89226",
+      "id": "7e72f7cf-a42c-4b6d-af1f-79b578eefd70",
       "name": "registrar_turno",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -728,7 +728,7 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ tipo_evento: $fromAI('tipo_evento', 'Clave exacta, en minusculas y sin acentos: xv (quince anos), boda, graduacion, posada, cumpleanos (aniversario o cumpleanos), babyshower (baby shower, despedida o bautizo)', 'string'), fecha_evento: $fromAI('fecha_evento', 'Fecha del evento en formato AAAA-MM-DD', 'string'), personas: $fromAI('personas', 'Numero de invitados', 'number'), salon: $fromAI('salon', 'Clave exacta: norma, esmeralda, santacruz o quetzal. Vacio para consultar los cuatro de golpe', 'string') }) }}"
       },
-      "id": "65e4c7b0-2e1d-4eac-a2f5-abda90a2b62f",
+      "id": "ff7eaf6e-c247-4dde-8bef-412f929fa5db",
       "name": "cotizar",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -753,7 +753,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "08e1da1f-37d9-45d1-9a35-341097c45cbe",
+      "id": "33385d0f-6549-433f-8a8d-7fcd3b5d2a6a",
       "name": "disponibilidad",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -778,7 +778,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "923e7bab-f888-494f-b4a4-937658463071",
+      "id": "f90f38e0-e62e-421d-a0a8-7934a2ddbbe4",
       "name": "politicas",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -803,7 +803,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "cbe91189-4921-4547-a75c-d7927dad18e8",
+      "id": "d06dbb02-5a1e-4862-8c63-d690a7f48bef",
       "name": "dias_disponibles",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -939,7 +939,7 @@
         },
         "options": {}
       },
-      "id": "54ed8517-87a0-4c47-a152-fac721d2c62b",
+      "id": "efc14415-c663-46d8-b6a3-ca40fa77e06a",
       "name": "enviar_mensaje",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -957,7 +957,7 @@
           "queryReplacement": "={{ [$('registrar_turno').first().json.id] }}"
         }
       },
-      "id": "b15350b6-769f-49ed-9208-ef6e23aa4b97",
+      "id": "e0ec3e04-bda4-464b-80a4-b57309c21ea1",
       "name": "marcar_enviada",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -974,7 +974,7 @@
     },
     {
       "parameters": {},
-      "id": "f8164061-83ca-4f1d-b5c6-826046b8f6e8",
+      "id": "3acfdb3a-6078-4dee-a33b-b2afb77f9cd7",
       "name": "enviar_respuesta",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -985,7 +985,7 @@
     },
     {
       "parameters": {},
-      "id": "a1b5a30c-acba-4cfc-a5c7-e9e0abeff3a7",
+      "id": "c7eb2cba-1b96-4c95-89bc-21114ea55124",
       "name": "sin_respuesta",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -1005,7 +1005,7 @@
           },
           "conditions": [
             {
-              "id": "1cea2e4a-c451-4275-8e94-11f6e084ea39",
+              "id": "fc4fd4c5-0062-4fd3-a476-efab3ae6e2af",
               "leftValue": "={{ ($json.chats ?? '').trim() }}",
               "rightValue": "/*",
               "operator": {
@@ -1019,7 +1019,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "cd5f3f4f-cba4-4371-84dd-855ef5cf8f28",
+      "id": "71c8ade0-30cd-4144-a397-559cbb1dcff7",
       "name": "es_reinicio",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -1036,7 +1036,7 @@
           "queryReplacement": "={{ [$('formatLead').first().json.lead_id + '-%'] }}"
         }
       },
-      "id": "4c8d9d50-1092-49ea-8723-3d3ee2adc7a0",
+      "id": "aaa3007f-16bb-450c-a5ae-4576952e5d3c",
       "name": "borrar_memoria",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -1057,7 +1057,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "39a052ef-a980-487c-9765-8025bb0c4abe",
+              "id": "820205ff-15ea-4a24-b648-65d0967082a9",
               "name": "output",
               "type": "string",
               "value": "Memoria borrada. Empezamos de cero."
@@ -1066,7 +1066,7 @@
         },
         "options": {}
       },
-      "id": "03c39314-4cfb-4378-b3d3-a0a6e441f62c",
+      "id": "1a565d2a-f673-4942-af0a-b2b92fe17e26",
       "name": "aviso_reinicio",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,

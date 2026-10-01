@@ -23,7 +23,7 @@
 //  enseñan globos de despedida.
 // ============================================================================
 import { DatabaseSync } from 'node:sqlite';
-import { readFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join, dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -148,3 +148,18 @@ for (const m of mapa) {
 console.log(`\n${subidas} subidas, ${saltadas} ya estaban igual, ${fallos} fallos.`);
 const total = db.prepare('SELECT COUNT(*) n FROM paquete_imagen').get().n;
 console.log(`${total} láminas registradas en total.`);
+
+// El manifiesto es lo que viaja a producción. Las láminas ya viven en el
+// Drive de Kommo —son las mismas para todos—, así que lo único que le falta
+// a la base de producción son estas filas. Subir el archivo de imagen otra
+// vez desde el servidor seria absurdo: no está ahí, y no hace falta.
+const manifiesto = db.prepare(`
+  SELECT p.nombre AS paquete, s.clave AS salon, i.etiqueta, i.url,
+         i.archivo_uuid, i.nombre, i.sha256
+    FROM paquete_imagen i
+    JOIN paquete p ON p.id = i.paquete_id
+    JOIN salon   s ON s.id = i.salon_id
+   ORDER BY s.clave, p.nombre, i.etiqueta`).all();
+const rutaManifiesto = join(RAIZ, 'imagenes', 'laminas.json');
+writeFileSync(rutaManifiesto, JSON.stringify(manifiesto, null, 1) + '\n', 'utf8');
+console.log(`Manifiesto escrito en ${rutaManifiesto}`);

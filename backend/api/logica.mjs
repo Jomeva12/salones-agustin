@@ -666,6 +666,23 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
       salonId: s.id, tipoEventoId: tipoRow.id, anio, personas, col,
     });
 
+    // La lámina de cada paquete en este salón, para que el agente la mande
+    // junto con el precio. Se adjunta DESPUÉS de armar las opciones para que
+    // también la lleven las que agrega bronceConRecargo.
+    //
+    // Va como lista y no como una sola URL porque un paquete puede tener
+    // varias: «Baby Shower, Despedidas de Soltera y Bautizos» es uno solo en
+    // precio y contenido, pero el arte lo parte en tres. Cuál de las tres toca
+    // lo decide quien sabe qué pidió el cliente, no la cotización.
+    const laminas = {};
+    for (const r of db.prepare(
+      `SELECT p.nombre, i.etiqueta, i.url
+         FROM paquete_imagen i JOIN paquete p ON p.id = i.paquete_id
+        WHERE i.salon_id = ?`).all(s.id)) {
+      (laminas[r.nombre] ??= []).push({ etiqueta: r.etiqueta, url: r.url });
+    }
+    for (const o of opciones) o.imagenes = laminas[o.paquete] ?? [];
+
     // ¿Y si el cliente se tarda en decidir? El escalón se mueve con el
     // calendario, así que la misma consulta el mes que entra puede dar otro
     // precio. Se calcula en vez de suponerlo: en 2026 no hay escalera en

@@ -1,6 +1,114 @@
 [
  {
   "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "esmeralda",
+  "etiqueta": "babyshower",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/37908d3c-a01c-45d6-8833-bd70f5a995fb/esmeralda-Paquete-Baby-Shower-Despedidas-de-Soltera-y-Bautizos-babyshower.jpg",
+  "archivo_uuid": "37908d3c-a01c-45d6-8833-bd70f5a995fb",
+  "nombre": "e11.jpeg",
+  "sha256": "d9b1b6ac460e27796ee359c51ccf7e366dbd6820b41bfbbc518b17d7a685b93d"
+ },
+ {
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "esmeralda",
+  "etiqueta": "bautizo",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/ba7c5e83-27a3-4e36-ab46-3039de08e0e1/esmeralda-Paquete-Baby-Shower-Despedidas-de-Soltera-y-Bautizos-bautizo.jpg",
+  "archivo_uuid": "ba7c5e83-27a3-4e36-ab46-3039de08e0e1",
+  "nombre": "e04.jpeg",
+  "sha256": "13422afbea3a2aedeab973a0c93209f0d641deb095889c0420ca2df674669927"
+ },
+ {
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "esmeralda",
+  "etiqueta": "despedida",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/0021ee32-cf58-4bfd-9937-1cf4af68b4b8/esmeralda-Paquete-Baby-Shower-Despedidas-de-Soltera-y-Bautizos-despedida.jpg",
+  "archivo_uuid": "0021ee32-cf58-4bfd-9937-1cf4af68b4b8",
+  "nombre": "e05.jpeg",
+  "sha256": "4b8940ccf4884c99b68c514841109ddf308ed18bce602b8a383a085eb17a2dc0"
+ },
+ {
+  "paquete": "Paquete Bronce",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/3d84716e-850f-4af0-afeb-307a2c32a5a9/esmeralda-Paquete-Bronce.jpg",
+  "archivo_uuid": "3d84716e-850f-4af0-afeb-307a2c32a5a9",
+  "nombre": "e03.jpeg",
+  "sha256": "76c344103228eb8d5adb1bd6f52976e837927a268f8810265ba0f24985714e8c"
+ },
+ {
+  "paquete": "Paquete Día de las Madres",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/043521ae-8313-4239-875a-7d365e5ea5bf/esmeralda-Paquete-Dia-de-las-Madres.jpg",
+  "archivo_uuid": "043521ae-8313-4239-875a-7d365e5ea5bf",
+  "nombre": "e12.jpeg",
+  "sha256": "8f098e16f0086b8590c9c81d23a3a49ac2e366dc6b03265d8848acab47bfdc6e"
+ },
+ {
+  "paquete": "Paquete Día del Maestro",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/49e9180c-4534-4864-89de-686d3ffb34e2/esmeralda-Paquete-Dia-del-Maestro.jpg",
+  "archivo_uuid": "49e9180c-4534-4864-89de-686d3ffb34e2",
+  "nombre": "e08.jpeg",
+  "sha256": "0f1088c8c96677a706f68bdb1685d4c64cd0a36f928cc082b3fbd0a587c4fae8"
+ },
+ {
+  "paquete": "Paquete Graduación",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/9021027c-33af-4972-a0c1-3ae5de4ec8a2/esmeralda-Paquete-Graduacion.jpg",
+  "archivo_uuid": "9021027c-33af-4972-a0c1-3ae5de4ec8a2",
+  "nombre": "e02.jpeg",
+  "sha256": "d17c2bdadd36dd04381e0ba6a5880a57e08f32240daf14bb0066c54ea0b96a03"
+ },
+ {
+  "paquete": "Paquete Onix",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/bdb3e919-801a-40e8-ade5-8d0a88bce6d1/esmeralda-Paquete-Onix.jpg",
+  "archivo_uuid": "bdb3e919-801a-40e8-ade5-8d0a88bce6d1",
+  "nombre": "e10.jpeg",
+  "sha256": "d2522f7d4720a25dee2431e40e2d2720ce1d78defd16532636b80477e7b75516"
+ },
+ {
+  "paquete": "Paquete Oro",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/9f1fc5b2-e010-4035-9fe5-f79874985474/esmeralda-Paquete-Oro.jpg",
+  "archivo_uuid": "9f1fc5b2-e010-4035-9fe5-f79874985474",
+  "nombre": "e09.jpeg",
+  "sha256": "a1411d94ee6cac90a03b06057e543510796234f4ca5b4f3e26e5d3cb76a5819e"
+ },
+ {
+  "paquete": "Paquete Plata",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/a7c39bce-8f9c-454f-ae2d-c2dcfeea7200/esmeralda-Paquete-Plata.jpg",
+  "archivo_uuid": "a7c39bce-8f9c-454f-ae2d-c2dcfeea7200",
+  "nombre": "e01.jpeg",
+  "sha256": "88561c635b424370c7357fe54e8bc69ddb1baf822690c15002289018a3991903"
+ },
+ {
+  "paquete": "Posada Basica",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/1baaf1c2-f5bb-47bc-be08-11c27615831f/esmeralda-Posada-Basica.jpg",
+  "archivo_uuid": "1baaf1c2-f5bb-47bc-be08-11c27615831f",
+  "nombre": "e06.jpeg",
+  "sha256": "08a27a8b17d45087cccdf37b54835ad6692d645c60e58fcc5d1d5353ce37906b"
+ },
+ {
+  "paquete": "Posada Deluxe",
+  "salon": "esmeralda",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/bf4929f4-8bd9-4769-81e8-10d3a5702e35/esmeralda-Posada-Deluxe.jpg",
+  "archivo_uuid": "bf4929f4-8bd9-4769-81e8-10d3a5702e35",
+  "nombre": "e07.jpeg",
+  "sha256": "0235e883fb1fc057b7fcdeff789c7bf6ea1769d88e6e717a13d8118230fbc70c"
+ },
+ {
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
   "salon": "norma",
   "etiqueta": "babyshower",
   "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/a16d6b0d-a19f-4ad1-94eb-51aaf3b8cabb/norma-Paquete-Baby-Shower-Despedidas-de-Soltera-y-Bautizos-babyshower.jpg",
@@ -106,5 +214,113 @@
   "archivo_uuid": "7bb19fa7-c9ba-477b-b0e1-bd2b1539e37b",
   "nombre": "n10.jpeg",
   "sha256": "be212ee933fd4ff17848b27b5cf8038ccb6dcbbe61ad795218c3eac4aae9ad1a"
+ },
+ {
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "santacruz",
+  "etiqueta": "babyshower",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/52379d41-cd63-4785-b5b9-89fe69e38649/santacruz-Paquete-Baby-Shower-Despedidas-de-Soltera-y-Bautizos-babyshower.jpg",
+  "archivo_uuid": "52379d41-cd63-4785-b5b9-89fe69e38649",
+  "nombre": "c01.jpeg",
+  "sha256": "f8965d307f9232f521ecc492e9856d0de0a5c6b0bfc244487eaecdb2668b9e48"
+ },
+ {
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "santacruz",
+  "etiqueta": "bautizo",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/e56f3b13-0067-4e8e-b3ef-864ec90710cc/santacruz-Paquete-Baby-Shower-Despedidas-de-Soltera-y-Bautizos-bautizo.jpg",
+  "archivo_uuid": "e56f3b13-0067-4e8e-b3ef-864ec90710cc",
+  "nombre": "c08.jpeg",
+  "sha256": "73ebe7df62d6ba0f12ea0487fec29bc0e1709053deb8c6c592d9c9b69f5249ff"
+ },
+ {
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "santacruz",
+  "etiqueta": "despedida",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/ee854d05-6556-4a0d-af3a-8ceb50844dec/santacruz-Paquete-Baby-Shower-Despedidas-de-Soltera-y-Bautizos-despedida.jpg",
+  "archivo_uuid": "ee854d05-6556-4a0d-af3a-8ceb50844dec",
+  "nombre": "c05.jpeg",
+  "sha256": "272c7760ba62db18fcf9d2384e277d5150faac717127ad5de2a382e10d295f6b"
+ },
+ {
+  "paquete": "Paquete Bronce",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/1629a0df-731a-44fd-9fc8-b6acdd4133f8/santacruz-Paquete-Bronce.jpg",
+  "archivo_uuid": "1629a0df-731a-44fd-9fc8-b6acdd4133f8",
+  "nombre": "c02.jpeg",
+  "sha256": "716a23216df0141047d037a4c112c464c187ea410ff98d2ee28394979ae4a7d9"
+ },
+ {
+  "paquete": "Paquete Día de las Madres",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/f16d3e1b-c460-4a40-91a7-fcdb18e2027d/santacruz-Paquete-Dia-de-las-Madres.jpg",
+  "archivo_uuid": "f16d3e1b-c460-4a40-91a7-fcdb18e2027d",
+  "nombre": "c03.jpeg",
+  "sha256": "e7c8b4798620cf534ccb7438b5308da34aebed866cd67f39e0e3842b188e086c"
+ },
+ {
+  "paquete": "Paquete Día del Maestro",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/b6b7d39b-f735-495d-a643-f1611ce2a186/santacruz-Paquete-Dia-del-Maestro.jpg",
+  "archivo_uuid": "b6b7d39b-f735-495d-a643-f1611ce2a186",
+  "nombre": "c12.jpeg",
+  "sha256": "cbc91c455906c32cf2165361b41cb96339443d67d5af1062bb841316e5f67fb1"
+ },
+ {
+  "paquete": "Paquete Graduación",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/c5d11007-7a09-4fe6-94ff-a04e8f518641/santacruz-Paquete-Graduacion.jpg",
+  "archivo_uuid": "c5d11007-7a09-4fe6-94ff-a04e8f518641",
+  "nombre": "c06.jpeg",
+  "sha256": "9e4b7663ab407a9e261420d623aa8a12c4fda80d9d2d1e7a0c38940795bdca58"
+ },
+ {
+  "paquete": "Paquete Onix",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/f7ca0b30-4354-4157-ad05-cd541ce1548a/santacruz-Paquete-Onix.jpg",
+  "archivo_uuid": "f7ca0b30-4354-4157-ad05-cd541ce1548a",
+  "nombre": "c09.jpeg",
+  "sha256": "0db7c9667d386d67780c45ff2f0627401aa49991dc2a2739eee8b9bdc4cc278a"
+ },
+ {
+  "paquete": "Paquete Oro",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/9873c62f-0f58-4521-bbdd-2c2e9e12c3fd/santacruz-Paquete-Oro.jpg",
+  "archivo_uuid": "9873c62f-0f58-4521-bbdd-2c2e9e12c3fd",
+  "nombre": "c04.jpeg",
+  "sha256": "9d212963e8af60b272876d8a3f23517b7cba2f8e5d3213d808fb220a614a3d96"
+ },
+ {
+  "paquete": "Paquete Plata",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/317bc0d6-6347-4e57-b3ab-846588e69f7c/santacruz-Paquete-Plata.jpg",
+  "archivo_uuid": "317bc0d6-6347-4e57-b3ab-846588e69f7c",
+  "nombre": "c07.jpeg",
+  "sha256": "53ef208d7f8d7eb0792953c75ec64e1f7526ba6dd6056c207e634a735f2d5113"
+ },
+ {
+  "paquete": "Posada Basica",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/8b46e508-f6cc-4082-8f4f-4ad860c5b9f8/santacruz-Posada-Basica.jpg",
+  "archivo_uuid": "8b46e508-f6cc-4082-8f4f-4ad860c5b9f8",
+  "nombre": "c10.jpeg",
+  "sha256": "0b248610e6d9e3d6212c445f8d316f95d004867dba7e3a650cd7c7a66f105d41"
+ },
+ {
+  "paquete": "Posada Deluxe",
+  "salon": "santacruz",
+  "etiqueta": null,
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/3a428ba2-dfbe-43b3-b4c3-b6127c280083/santacruz-Posada-Deluxe.jpg",
+  "archivo_uuid": "3a428ba2-dfbe-43b3-b4c3-b6127c280083",
+  "nombre": "c11.jpeg",
+  "sha256": "d6d0b6d424127a0670cb92aa39a7ee7aa828ff11d9aa8443a557b17728ba93c6"
  }
 ]

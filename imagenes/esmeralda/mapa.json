@@ -1,0 +1,74 @@
+[
+ {
+  "archivo": "e01.jpeg",
+  "paquete": "Paquete Plata",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e02.jpeg",
+  "paquete": "Paquete Graduación",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e03.jpeg",
+  "paquete": "Paquete Bronce",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e04.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "esmeralda",
+  "etiqueta": "bautizo"
+ },
+ {
+  "archivo": "e05.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "esmeralda",
+  "etiqueta": "despedida"
+ },
+ {
+  "archivo": "e06.jpeg",
+  "paquete": "Posada Basica",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e07.jpeg",
+  "paquete": "Posada Deluxe",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e08.jpeg",
+  "paquete": "Paquete Día del Maestro",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e09.jpeg",
+  "paquete": "Paquete Oro",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e10.jpeg",
+  "paquete": "Paquete Onix",
+  "salon": "esmeralda",
+  "etiqueta": null
+ },
+ {
+  "archivo": "e11.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "esmeralda",
+  "etiqueta": "babyshower"
+ },
+ {
+  "archivo": "e12.jpeg",
+  "paquete": "Paquete Día de las Madres",
+  "salon": "esmeralda",
+  "etiqueta": null
+ }
+]

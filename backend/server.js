@@ -1086,7 +1086,7 @@ const rutas = {
          JOIN salon   s ON s.id = i.salon_id
         ORDER BY s.id, p.nombre, i.etiqueta`).all(),
     cortesias: db.prepare(
-      `SELECT c.id, c.clave, c.titulo, s.clave AS salon, s.nombre AS salon_nombre,
+      `SELECT c.id, c.clave, c.titulo, c.pistas, s.clave AS salon, s.nombre AS salon_nombre,
               c.url, c.subida_at
          FROM cortesia_imagen c
          JOIN salon s ON s.id = c.salon_id

@@ -58,6 +58,16 @@ db.exec(`
     ON cortesia_imagen (clave, salon_id);
 `);
 
+// La columna `pistas` se agrega sobre la marcha: las bases que ya existen no
+// la tienen y no hay sistema de migraciones. Es lo que deja reconocer que el
+// cliente pregunta por esa cortesia aunque no la nombre completa.
+function asegurarPistas(db) {
+  const hay = db.prepare("PRAGMA table_info(cortesia_imagen)").all()
+    .some((c) => c.name === 'pistas');
+  if (!hay) db.exec('ALTER TABLE cortesia_imagen ADD COLUMN pistas TEXT');
+}
+asegurarPistas(db);
+
 const filas = JSON.parse(readFileSync(MANIFIESTO, 'utf8'));
 let nuevas = 0, cambiadas = 0, iguales = 0, fallos = 0;
 

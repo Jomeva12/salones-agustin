@@ -62,6 +62,20 @@ que escribió el cliente, no el paquete.
   del paquete**: Maya nombra las cortesías dentro de la cotización, y sin esa
   regla cotizar el Plata podría acabar mandando la foto del aro iluminado.
 
+## De qué salón se habla
+
+Lo decide **la fuente del lead**: cada salón tiene su propio WhatsApp, así que
+a quien escribe al de Norma se le da información de Norma. Si ese día no hay
+disponibilidad se avisa, pero no se cambia de salón por cuenta propia.
+
+Eso **todavía no está implementado**. Hoy el salón sale de lo que el cliente
+nombra en el mensaje o del campo Salón del lead, y cuando varios están libres
+el agente toma el primero que devuelve el panel — que es el orden de alta, sin
+ninguna justificación comercial.
+
+Importa también para las imágenes: sin saber el salón no se manda ninguna, y
+hoy esa es la razón más común de que no vaya foto.
+
 ## Lo que no son cortesías
 
 De las nueve fotos que llegaron para Norma, cuatro no entraron y conviene

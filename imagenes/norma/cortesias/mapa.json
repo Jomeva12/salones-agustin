@@ -3,30 +3,35 @@
   "archivo": "k07.jpeg",
   "cortesia": "espejo_bienvenida",
   "salon": "norma",
-  "titulo": "Espejo de Bienvenida"
+  "titulo": "Espejo de Bienvenida",
+  "pistas": "espejo"
  },
  {
   "archivo": "k09.jpeg",
   "cortesia": "marco_digital",
   "salon": "norma",
-  "titulo": "Marco Digital"
+  "titulo": "Marco Digital",
+  "pistas": "marco digital, marco magico, marco de fotos"
  },
  {
   "archivo": "k01.jpeg",
   "cortesia": "aro_iluminado",
   "salon": "norma",
-  "titulo": "Aro iluminado"
+  "titulo": "Aro iluminado",
+  "pistas": "aro iluminado, aro de flores, arco de flores, aro"
  },
  {
   "archivo": "k03.jpeg",
   "cortesia": "presentacion_elite",
   "salon": "norma",
-  "titulo": "Presentación Elite"
+  "titulo": "Presentación Elite",
+  "pistas": "presentacion elite, vals en las nubes, lluvia de mariposas, lluvia de burbujas, chisperos, pirotecnia, laser"
  },
  {
   "archivo": "k05.jpeg",
   "cortesia": "arreglos_mesa",
   "salon": "norma",
-  "titulo": "Arreglos de mesa en préstamo"
+  "titulo": "Arreglos de mesa en préstamo",
+  "pistas": "arreglos de mesa, arreglo de mesa, centros de mesa, centro de mesa"
  }
 ]

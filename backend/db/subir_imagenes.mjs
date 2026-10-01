@@ -79,6 +79,16 @@ db.exec(`
 
 // El host del Drive es distinto en cada cuenta de Kommo: se pregunta, no se
 // adivina. Dar por bueno el de otra cuenta es lo que tenía rota la función.
+// La columna `pistas` se agrega sobre la marcha: las bases que ya existen no
+// la tienen y no hay sistema de migraciones. Es lo que deja reconocer que el
+// cliente pregunta por esa cortesia aunque no la nombre completa.
+function asegurarPistas(db) {
+  const hay = db.prepare("PRAGMA table_info(cortesia_imagen)").all()
+    .some((c) => c.name === 'pistas');
+  if (!hay) db.exec('ALTER TABLE cortesia_imagen ADD COLUMN pistas TEXT');
+}
+asegurarPistas(db);
+
 const cuenta = await (await fetch(
   'https://administracioneventos6.kommo.com/api/v4/account?with=drive_url',
   { headers: { Authorization: 'Bearer ' + TOKEN } })).json();
@@ -146,7 +156,15 @@ for (const m of mapa) {
     : db.prepare(
     'SELECT id, sha256 FROM paquete_imagen WHERE paquete_id = ? AND salon_id = ? AND COALESCE(etiqueta,\'\') = ?')
       .get(paq.id, sal.id, etq ?? '');
-  if (ya && ya.sha256 === sha) { console.log(`  igual    ${donde}`); saltadas++; continue; }
+  if (ya && ya.sha256 === sha) {
+    // El archivo no cambio, pero el titulo y las pistas son metadatos del
+    // mapa y pueden haberse corregido sin tocar la imagen.
+    if (esCortesia) {
+      db.prepare('UPDATE cortesia_imagen SET titulo = ?, pistas = ? WHERE id = ?')
+        .run(m.titulo ?? null, m.pistas ?? null, ya.id);
+    }
+    console.log(`  igual    ${donde}`); saltadas++; continue;
+  }
 
   try {
     const nombreEnKommo = esCortesia
@@ -159,8 +177,8 @@ for (const m of mapa) {
         .run(url, uuid, m.archivo, sha, ya.id);
       console.log(`  CAMBIADA ${donde}`);
     } else if (esCortesia) {
-      db.prepare('INSERT INTO cortesia_imagen (clave, salon_id, titulo, url, archivo_uuid, nombre, sha256) VALUES (?,?,?,?,?,?,?)')
-        .run(m.cortesia, sal.id, m.titulo ?? null, url, uuid, m.archivo, sha);
+      db.prepare('INSERT INTO cortesia_imagen (clave, salon_id, titulo, pistas, url, archivo_uuid, nombre, sha256) VALUES (?,?,?,?,?,?,?,?)')
+        .run(m.cortesia, sal.id, m.titulo ?? null, m.pistas ?? null, url, uuid, m.archivo, sha);
       console.log(`  SUBIDA   ${donde}`);
     } else {
       db.prepare('INSERT INTO paquete_imagen (paquete_id, salon_id, etiqueta, url, archivo_uuid, nombre, sha256) VALUES (?,?,?,?,?,?,?)')
@@ -190,7 +208,7 @@ const manifiesto = db.prepare(`
     JOIN salon   s ON s.id = i.salon_id
    ORDER BY s.clave, p.nombre, i.etiqueta`).all();
 const manifiestoCortesias = db.prepare(`
-  SELECT c.clave AS cortesia, s.clave AS salon, c.titulo, c.url,
+  SELECT c.clave AS cortesia, s.clave AS salon, c.titulo, c.pistas, c.url,
          c.archivo_uuid, c.nombre, c.sha256
     FROM cortesia_imagen c
     JOIN salon s ON s.id = c.salon_id

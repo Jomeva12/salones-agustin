@@ -325,6 +325,86 @@
  },
  {
   "cortesia": "aro_iluminado",
+  "salon": "esmeralda",
+  "titulo": "Aro iluminado",
+  "pistas": "aro iluminado, aro de flores, arco de flores, aro",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/e59f5be6-15e5-402e-8888-641e6ceffdaa/esmeralda-cortesia-aro-iluminado.jpg",
+  "archivo_uuid": "e59f5be6-15e5-402e-8888-641e6ceffdaa",
+  "nombre": "m03.jpeg",
+  "sha256": "88ed7f409f6946deaf1fea6804d140e597a2aef63e11f463162fae52288327ad"
+ },
+ {
+  "cortesia": "arreglos_mesa",
+  "salon": "esmeralda",
+  "titulo": "Arreglos de mesa en préstamo",
+  "pistas": "arreglos de mesa, arreglo de mesa, centros de mesa, centro de mesa",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/186489bf-5ad6-4fb2-9b07-2129a88a5d1e/esmeralda-cortesia-arreglos-mesa.jpg",
+  "archivo_uuid": "186489bf-5ad6-4fb2-9b07-2129a88a5d1e",
+  "nombre": "m05.jpeg",
+  "sha256": "2ef0959e7d7afe6aa56fb134fef44515fc7588aa91c965c33038eaabb9b753be"
+ },
+ {
+  "cortesia": "escalera_presentacion",
+  "salon": "esmeralda",
+  "titulo": "Escalera de presentación arreglada",
+  "pistas": "escalera, escalera de presentacion",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/d35d5036-0333-4bed-9b74-028bdccf569d/esmeralda-cortesia-escalera-presentacion.jpg",
+  "archivo_uuid": "d35d5036-0333-4bed-9b74-028bdccf569d",
+  "nombre": "m01.jpeg",
+  "sha256": "ec12196387b68f71d8c024f626bee74d6fdc3f174d598fdeadf99b8c2d4adeeb"
+ },
+ {
+  "cortesia": "espejo_bienvenida",
+  "salon": "esmeralda",
+  "titulo": "Espejo de Bienvenida",
+  "pistas": "espejo",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/d02b75bf-8807-4cb2-b435-22c6664aadb7/esmeralda-cortesia-espejo-bienvenida.jpg",
+  "archivo_uuid": "d02b75bf-8807-4cb2-b435-22c6664aadb7",
+  "nombre": "m07.jpeg",
+  "sha256": "29e5194bcee40964588bcfaed2dadef4735562be3eab05d158aac2604cf0ceee"
+ },
+ {
+  "cortesia": "marco_digital",
+  "salon": "esmeralda",
+  "titulo": "Marco Digital",
+  "pistas": "marco digital, marco magico, marco de fotos",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/13dcfd33-82eb-4d63-83e4-35ac471fbf3e/esmeralda-cortesia-marco-digital.jpg",
+  "archivo_uuid": "13dcfd33-82eb-4d63-83e4-35ac471fbf3e",
+  "nombre": "m09.jpeg",
+  "sha256": "93a3c92c2270b26db5365c2422e96e7c8b5e554df0d22c1707f185009430a14c"
+ },
+ {
+  "cortesia": "mesa_principal",
+  "salon": "esmeralda",
+  "titulo": "Mesa principal arreglada",
+  "pistas": "mesa principal, mesa de honor",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/b60406a6-aa75-4644-8860-1a910770d8b3/esmeralda-cortesia-mesa-principal.jpg",
+  "archivo_uuid": "b60406a6-aa75-4644-8860-1a910770d8b3",
+  "nombre": "m02.jpeg",
+  "sha256": "a85ceefd7aca9b954dfad913021e00a7aa5cd0d61c5ea4b45ffe177ae487daac"
+ },
+ {
+  "cortesia": "presentacion_elite",
+  "salon": "esmeralda",
+  "titulo": "Presentación Elite",
+  "pistas": "presentacion elite, vals en las nubes, lluvia de mariposas, lluvia de burbujas, chisperos, pirotecnia, laser, rayo para vals",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/a1e02c7c-e2f5-4721-861d-41ee12942b1f/esmeralda-cortesia-presentacion-elite.jpg",
+  "archivo_uuid": "a1e02c7c-e2f5-4721-861d-41ee12942b1f",
+  "nombre": "m08.jpeg",
+  "sha256": "fd2a1fd7e3501ed8f35045657a5a2462080ef4be1e86eae720d01d3156f245f3"
+ },
+ {
+  "cortesia": "vestido",
+  "salon": "esmeralda",
+  "titulo": "Uso del vestido de XV o de novia",
+  "pistas": "vestido, prestan el vestido, prestamo del vestido, vestido de novia, vestido de 15, vestido de xv",
+  "url": "https://drive-c.kommo.com/download/02704fdb-421e-54b9-8128-5333d42c6686/7741b9a6-338d-49a3-ac5c-e25fd275a9eb/esmeralda-cortesia-vestido.jpg",
+  "archivo_uuid": "7741b9a6-338d-49a3-ac5c-e25fd275a9eb",
+  "nombre": "m06.jpeg",
+  "sha256": "a16f2af57260671560fd944ea709aee920b9290dc56646986ee53d8ea9327e59"
+ },
+ {
+  "cortesia": "aro_iluminado",
   "salon": "norma",
   "titulo": "Aro iluminado",
   "pistas": "aro iluminado, aro de flores, arco de flores, aro",

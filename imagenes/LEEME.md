@@ -43,7 +43,7 @@ que escribió el cliente, no el paquete.
 | Salón | Láminas | Cortesías |
 |---|---|---|
 | Norma | 12 ✅ | 5 de 8 |
-| Esmeralda | 12 ✅ | — |
+| Esmeralda | 12 ✅ | 8 ✅ |
 | Santa Cruz | 12 ✅ | — |
 | Quetzal | — | — |
 
@@ -53,14 +53,12 @@ que escribió el cliente, no el paquete.
   distinto (*Plata Boda y XV*, *Onix Boda y XV*, *Bronce Boda y XV*) y además
   tiene *Aniversarios / Cumpleaños*, que solo existe ahí.
 - **Tres cortesías de Norma**: uso del vestido, arreglo de la escalera de
-  presentación y arreglo de la mesa principal.
-- **Las cortesías de los otros tres salones.** Cada salón tiene las suyas; las
-  está generando el cliente.
-- **La regla de cuándo se manda una cortesía.** Hoy el selector solo mira
-  láminas de paquete, así que las fotos de cortesías están cargadas pero no se
-  envían. Falta decidir —y escribir— que **cotizando gana siempre la lámina
-  del paquete**: Maya nombra las cortesías dentro de la cotización, y sin esa
-  regla cotizar el Plata podría acabar mandando la foto del aro iluminado.
+  presentación y arreglo de la mesa principal. Esmeralda sí las tiene, así que
+  son exactamente estas tres las que hay que pedirle al cliente.
+- **Las cortesías de Santa Cruz y Quetzal.** Cada salón tiene las suyas.
+La regla de prioridad ya está hecha: **cotizando gana siempre la lámina del
+paquete**, y la foto de una cortesía sale cuando el cliente pregunta por una
+cosa concreta sin estar cotizando.
 
 ## De qué salón se habla
 

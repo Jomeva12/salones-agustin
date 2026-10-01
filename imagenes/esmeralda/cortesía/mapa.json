@@ -1,0 +1,58 @@
+[
+ {
+  "archivo": "m07.jpeg",
+  "cortesia": "espejo_bienvenida",
+  "salon": "esmeralda",
+  "titulo": "Espejo de Bienvenida",
+  "pistas": "espejo"
+ },
+ {
+  "archivo": "m09.jpeg",
+  "cortesia": "marco_digital",
+  "salon": "esmeralda",
+  "titulo": "Marco Digital",
+  "pistas": "marco digital, marco magico, marco de fotos"
+ },
+ {
+  "archivo": "m03.jpeg",
+  "cortesia": "aro_iluminado",
+  "salon": "esmeralda",
+  "titulo": "Aro iluminado",
+  "pistas": "aro iluminado, aro de flores, arco de flores, aro"
+ },
+ {
+  "archivo": "m08.jpeg",
+  "cortesia": "presentacion_elite",
+  "salon": "esmeralda",
+  "titulo": "Presentación Elite",
+  "pistas": "presentacion elite, vals en las nubes, lluvia de mariposas, lluvia de burbujas, chisperos, pirotecnia, laser, rayo para vals"
+ },
+ {
+  "archivo": "m05.jpeg",
+  "cortesia": "arreglos_mesa",
+  "salon": "esmeralda",
+  "titulo": "Arreglos de mesa en préstamo",
+  "pistas": "arreglos de mesa, arreglo de mesa, centros de mesa, centro de mesa"
+ },
+ {
+  "archivo": "m06.jpeg",
+  "cortesia": "vestido",
+  "salon": "esmeralda",
+  "titulo": "Uso del vestido de XV o de novia",
+  "pistas": "vestido, prestan el vestido, prestamo del vestido, vestido de novia, vestido de 15, vestido de xv"
+ },
+ {
+  "archivo": "m01.jpeg",
+  "cortesia": "escalera_presentacion",
+  "salon": "esmeralda",
+  "titulo": "Escalera de presentación arreglada",
+  "pistas": "escalera, escalera de presentacion"
+ },
+ {
+  "archivo": "m02.jpeg",
+  "cortesia": "mesa_principal",
+  "salon": "esmeralda",
+  "titulo": "Mesa principal arreglada",
+  "pistas": "mesa principal, mesa de honor"
+ }
+]

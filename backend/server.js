@@ -80,7 +80,17 @@ const SEGURIDAD = {
     "default-src 'self'",
     "script-src 'self'",
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data:",
+    // Las láminas de los paquetes viven en el Drive de Kommo: ahí las exige
+    // el adjunto del salesbot, así que el panel solo puede mostrarlas desde
+    // allá. El comodín de kommo.com es por el host del Drive, que cambia
+    // según la cuenta (esta es drive-c).
+    //
+    // Y hace falta storage.googleapis.com porque el Drive no sirve el archivo:
+    // responde con una redirección a una URL firmada de Google Cloud, y la CSP
+    // se aplica al destino final, no al enlace que uno escribió.
+    //
+    // Las dos se abren SOLO para imágenes. El resto de la política no cambia.
+    "img-src 'self' data: https://*.kommo.com https://storage.googleapis.com",
     "font-src 'self'",
     "connect-src 'self'",
     "object-src 'none'",

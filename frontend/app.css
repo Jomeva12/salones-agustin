@@ -1834,10 +1834,13 @@ main.lienzo a.accion-salon:hover{border-color:var(--coral);color:var(--coral-alt
 .lam-cuenta.falta{color:var(--coral,#C8553D)}
 .lam-vacio{margin:0;color:var(--tinta-3);font-size:13px}
 
-/* Cada ficha conserva la proporción de la lámina para que la rejilla no baile
-   mientras cargan: vienen en 9:16 y en cuadrado, y sin alto reservado el
-   contenido salta al terminar cada descarga. */
-.lam-rejilla{display:grid;gap:14px;grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}
+/* Las fichas no se estiran al alto de la fila: las láminas vienen en 9:16 y
+   las cortesías en cuadrado, así que forzar una proporción común recortaría
+   unas u otras. Cada una conserva la suya y el pie va pegado a su imagen. */
+.lam-rejilla{
+  display:grid;gap:14px;align-items:start;
+  grid-template-columns:repeat(auto-fill,minmax(160px,1fr));
+}
 .lam-pieza{margin:0;min-width:0}
 .lam-foto{
   display:block;border:1px solid var(--linea);border-radius:4px;overflow:hidden;

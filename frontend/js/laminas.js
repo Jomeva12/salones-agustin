@@ -33,7 +33,7 @@ export async function laminas(raiz) {
 
   let d;
   try {
-    d = await api('/api/imagenes');
+    d = await api.imagenes();
   } catch {
     limpiar(raiz);
     raiz.appendChild(error('No se pudieron leer las imágenes.'));

@@ -25,6 +25,7 @@ export const api = {
   salud:        ()      => pedir('/api/salud'),
   hoy:      (salon)     => pedir(`/api/hoy?${q({ salon })}`),
   salones:      ()      => pedir('/api/salones'),
+  imagenes:     ()      => pedir('/api/imagenes'),
   catalogo:     ()      => pedir('/api/catalogo'),
   agenda:       (d, h)  => pedir(`/api/agenda?${q({ desde: d, hasta: h })}`),
   dia:       (f, salon) => pedir(`/api/dia?${q({ fecha: f, salon })}`),

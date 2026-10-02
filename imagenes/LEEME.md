@@ -31,12 +31,22 @@ público. Lo que sí se versiona es cada `mapa.json` y el `laminas.json`.
    en el Drive —son las mismas para toda la cuenta—, así que al contenedor no
    hay que subirle ningún archivo.
 
-## El caso del baby shower
+## Un paquete, varias láminas
 
-«Baby Shower, Despedidas de Soltera y Bautizos» es **un solo paquete** en
-precio y contenido, pero el arte lo parte en **tres** láminas. Por eso existe
-`etiqueta`: `babyshower`, `despedida`, `bautizo`. Cuál se manda lo decide lo
-que escribió el cliente, no el paquete.
+Pasa dos veces, y por eso existe `etiqueta`:
+
+- «Baby Shower, Despedidas de Soltera y Bautizos» es **un solo paquete** en
+  precio y contenido, pero el arte lo parte en **tres**: `babyshower`,
+  `despedida`, `bautizo`.
+- «Aniversarios / Cumpleaños», que solo existe en Quetzal, se parte en **dos**:
+  `aniversario`, `cumpleanos`.
+
+Cuál se manda lo decide **lo que escribió el cliente**, no el paquete. Las
+palabras que lo delatan están escritas en `elegir_lamina.js`; si aparece otro
+paquete partido, hay que agregarlas ahí.
+
+Quetzal además nombra distinto sus paquetes grandes: *Plata Boda y XV*, *Onix
+Boda y XV*, *Bronce Boda y XV*.
 
 ## Qué hay cargado
 
@@ -45,14 +55,13 @@ que escribió el cliente, no el paquete.
 | Norma | 12 ✅ | 8 ✅ |
 | Esmeralda | 12 ✅ | 8 ✅ |
 | Santa Cruz | 12 ✅ | — |
-| Quetzal | — | — |
+| Quetzal | 13 ✅ | — |
 
 ## Qué falta
 
-- **Quetzal**, sus 12 láminas. No calca a los otros: sus paquetes se llaman
-  distinto (*Plata Boda y XV*, *Onix Boda y XV*, *Bronce Boda y XV*) y además
-  tiene *Aniversarios / Cumpleaños*, que solo existe ahí.
-- **Las cortesías de Santa Cruz y Quetzal.** Cada salón tiene las suyas.
+- **Las cortesías de Santa Cruz y Quetzal.** Cada salón tiene las suyas, y
+  son las únicas imágenes que faltan.
+
 La regla de prioridad ya está hecha: **cotizando gana siempre la lámina del
 paquete**, y la foto de una cortesía sale cuando el cliente pregunta por una
 cosa concreta sin estar cotizando.

@@ -1,0 +1,80 @@
+[
+ {
+  "archivo": "q01.jpeg",
+  "paquete": "Paquete Plata Boda y XV",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q02.jpeg",
+  "paquete": "Paquete Onix Boda y XV",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q04.jpeg",
+  "paquete": "Paquete Bronce Boda y XV",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q03.jpeg",
+  "paquete": "Paquete Día de las Madres",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q07.jpeg",
+  "paquete": "Paquete Día del Maestro",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q08.jpeg",
+  "paquete": "Paquete Graduación",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q09.jpeg",
+  "paquete": "Posada Basica",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q10.jpeg",
+  "paquete": "Posada Deluxe",
+  "salon": "quetzal",
+  "etiqueta": null
+ },
+ {
+  "archivo": "q05.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "quetzal",
+  "etiqueta": "babyshower"
+ },
+ {
+  "archivo": "q06.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "quetzal",
+  "etiqueta": "despedida"
+ },
+ {
+  "archivo": "q11.jpeg",
+  "paquete": "Paquete Baby Shower, Despedidas de Soltera y Bautizos",
+  "salon": "quetzal",
+  "etiqueta": "bautizo"
+ },
+ {
+  "archivo": "q12.jpeg",
+  "paquete": "Paquete Aniversarios / Cumpleaños",
+  "salon": "quetzal",
+  "etiqueta": "aniversario"
+ },
+ {
+  "archivo": "q13.jpeg",
+  "paquete": "Paquete Aniversarios / Cumpleaños",
+  "salon": "quetzal",
+  "etiqueta": "cumpleanos"
+ }
+]

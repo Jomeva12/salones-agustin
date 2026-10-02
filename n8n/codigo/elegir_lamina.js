@@ -101,7 +101,17 @@ function elegir() {
   // Varias láminas del mismo paquete: cuál toca lo dice el cliente, no el
   // paquete. A quien va a bautizar no se le mandan globos de despedida.
   const dicho = limpiar(fl.chats);
-  const PISTA = { bautizo: /bautiz/, despedida: /despedida/, babyshower: /baby ?shower/ };
+  // El arte parte dos paquetes en varias laminas: «Baby Shower, Despedidas de
+  // Soltera y Bautizos» en tres, y «Aniversarios / Cumpleanos» en dos. El
+  // precio y el contenido son los mismos; lo que cambia es a quien se le
+  // enseña, asi que lo decide lo que escribio el cliente.
+  const PISTA = {
+    bautizo:     /bautiz/,
+    despedida:   /despedida/,
+    babyshower:  /baby ?shower/,
+    aniversario: /aniversario|bodas? de (plata|oro|plomo)/,
+    cumpleanos:  /cumplea|cumple/,
+  };
   for (const img of imgs) {
     const re = PISTA[img.etiqueta];
     if (re && re.test(dicho)) return img.url;

@@ -9,6 +9,10 @@ Si ya tenía cotización, le recuerdas que puede venir a conocer el salón.
 
 Dos o tres líneas. Nada de volver a listar precios.
 
+Un emoji como mucho, y solo si el tono lo pide. Aquí menos que en
+cualquier otro momento: le estás escribiendo a alguien que dejó de
+contestar, y una carita de más se lee como insistencia alegre.
+
 ## Nunca
 
 - Escribir como si fuera la primera vez.

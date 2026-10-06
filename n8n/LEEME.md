@@ -59,7 +59,7 @@ provisional, porque primero se prueba que el mensaje recorra todo el camino.
 ```
 new_message -> es_mensaje_entrante -> formatear
   -> guardar_en_buffer -> esperar_rafaga (15 s) -> leer_rafaga -> soy_el_ultimo
-  -> marcar_consumidos -> traer_lead -> formatLead -> ia_activa
+  -> marcar_consumidos -> traer_lead -> formatLead -> ia_encendida
   -> director -> enrutar -> {ventas | cliente | seguimiento}
   -> registrar_turno -> enviar_respuesta
 ```
@@ -120,11 +120,13 @@ Hay una API key en `.n8n_key` (fuera del repositorio). Los comandos la leen
 sin que el valor quede escrito:
 
 ```bash
-curl -H "X-N8N-API-KEY: $(tr -d '
+curl -H "X-N8N-API-KEY: $(tr -d '
+
 ' < .n8n_key)"   https://automatizaciones-n8n.hpzji3.easypanel.host/api/v1/workflows
 
 # Actualizar salones_principal desde el archivo versionado
-curl -X PUT ".../api/v1/workflows/eXHsmGJcQ2VNgvEs"   -H "X-N8N-API-KEY: $(tr -d '
+curl -X PUT ".../api/v1/workflows/eXHsmGJcQ2VNgvEs"   -H "X-N8N-API-KEY: $(tr -d '
+
 ' < .n8n_key)"   -H "content-type: application/json" --data-binary @put.json
 ```
 
@@ -185,5 +187,5 @@ IDs de los campos, por si hay que tocarlos:
 | Fecha del evento | 352874 | fecha (epoch) |
 | Invitados | 352876 | numero |
 | Paquete cotizado | 352880 | Plata 281642, Onix 281644, Bronce 281646, Oro 281648 |
-| IA activa | 352882 | casilla |
+| Stop IA | 352882 | casilla · marcada = la IA no contesta |
 | Estado de contacto | 352884 | Activo 281650, En frio 281652 |

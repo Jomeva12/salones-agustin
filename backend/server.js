@@ -1137,6 +1137,79 @@ const rutas = {
     return { ok: true, url: subida.url };
   },
 
+  // ════════════════════════════ avisos ═══════════════════════════
+  //
+  // La regla del Lic. Barron: el agente NUNCA deja al cliente sin informacion.
+  // Si no tiene un dato, no se apaga — avisa y sigue conversando. Aqui queda
+  // el aviso, como fila que se ve, para que ninguno se pierda entre los
+  // mensajes del grupo.
+
+  'GET /api/avisos': (u) => {
+    const estado = u.searchParams.get('estado');
+    const clave = u.searchParams.get('salon');
+    const filas = db.prepare(
+      `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada
+         FROM aviso a LEFT JOIN salon s ON s.id = a.salon_id
+        WHERE (? IS NULL OR a.estado = ?)
+          AND (? IS NULL OR s.clave = ?)
+        ORDER BY a.estado = 'pendiente' DESC, a.creado_en DESC
+        LIMIT 300`).all(estado || null, estado || null, clave || null, clave || null);
+    const pendientes = db.prepare(
+      "SELECT COUNT(*) n FROM aviso WHERE estado = 'pendiente'").get().n;
+    return { pendientes, avisos: filas };
+  },
+
+  'POST /api/avisos': (_u, c) => {
+    const motivo = String(c?.motivo ?? '').trim();
+    const texto = String(c?.texto ?? '').trim();
+    if (!motivo) return { error: 'falta el motivo' };
+    if (texto.length < 5) return { error: 'falta el texto', detalle: 'Di qué necesitas de la encargada.' };
+    // El salón puede venir como clave («norma») o como lo guarda el lead en
+    // Kommo («Norma Eventos»). Quien llama es el agente, y lo que tiene a la
+    // mano es lo segundo.
+    const s = c?.salon
+      ? db.prepare('SELECT id FROM salon WHERE clave = ? OR nombre = ?').get(c.salon, c.salon)
+      : null;
+    const lead = (c?.lead_id ?? '').toString().trim() || null;
+
+    // Un mismo lead preguntando lo mismo no genera dos avisos. Sin esto, cada
+    // mensaje del cliente mientras espera crearia uno nuevo y la encargada
+    // veria la misma pregunta cinco veces.
+    if (lead) {
+      const ya = db.prepare(
+        "SELECT id FROM aviso WHERE lead_id = ? AND motivo = ? AND estado = 'pendiente'")
+        .get(lead, motivo);
+      if (ya) return { ok: true, id: ya.id, repetido: true };
+    }
+
+    const r = db.prepare(
+      `INSERT INTO aviso (salon_id, lead_id, motivo, texto) VALUES (?,?,?,?)`)
+      .run(s?.id ?? null, lead, motivo, texto);
+    anotar('aviso', Number(r.lastInsertRowid), 'alta', c._autor ?? 'agente', motivo);
+    return { ok: true, id: Number(r.lastInsertRowid), repetido: false };
+  },
+
+  'PUT /api/avisos': (_u, c) => {
+    const id = entero(c?.id);
+    const a = db.prepare('SELECT id FROM aviso WHERE id = ?').get(id);
+    if (!a) return { error: 'ese aviso no existe' };
+
+    if (c.estado === 'atendido') {
+      db.prepare(`UPDATE aviso SET estado='atendido', atendido_en=datetime('now'),
+                  atendido_por=? WHERE id=?`).run(c._autor ?? null, id);
+      anotar('aviso', id, 'cambio', c._autor, 'atendido');
+      return { ok: true };
+    }
+    // Lo usa el motor de recordatorios: deja constancia de que volvio a
+    // insistir, sin tocar el estado.
+    if (c.recordado) {
+      db.prepare(`UPDATE aviso SET ultimo_aviso_en=datetime('now'),
+                  recordatorios = recordatorios + 1 WHERE id=?`).run(id);
+      return { ok: true };
+    }
+    return { error: 'nada que cambiar' };
+  },
+
   // ════════════════════════════ citas ════════════════════════════
   //
   // El agente NUNCA confirma una cita: la pide, y queda en 'solicitada'.
@@ -1969,6 +2042,8 @@ const AREA = {
   'POST /api/usuarios/desbloquear': 'usuarios',
   'PUT /api/servicios': 'servicios',
   'POST /api/cotizar': 'agenda',        // no escribe nada; cotizar es parte del día a día
+  'POST /api/avisos': 'agenda',
+  'PUT /api/avisos': 'agenda',
   'POST /api/citas': 'agenda',
   'PUT /api/citas': 'agenda',
 };

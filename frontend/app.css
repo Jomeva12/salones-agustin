@@ -1968,3 +1968,32 @@ button.lam-foto{padding:0;cursor:zoom-in;width:100%;font:inherit;text-align:inhe
   .cit-fila{grid-template-columns:64px 1fr;row-gap:8px}
   .cit-estado,.cit-acciones{grid-column:1 / -1}
 }
+
+/* ── Avisos: lo que el agente no pudo resolver ───────────────────────────── */
+.avisos-pag{animation:entra .4s var(--ease) both}
+.avi-cab h1{margin:0 0 6px;font-size:22px;letter-spacing:-.01em}
+.avi-sub{margin:0 0 14px;color:var(--tinta-2);max-width:68ch;font-size:13.5px;line-height:1.55}
+.avi-controles{margin-bottom:18px}
+.avi-vacio{color:var(--tinta-3);font-size:13.5px}
+.avi-lista{display:flex;flex-direction:column;gap:10px}
+.avi-tarjeta{
+  border:1px solid var(--linea);border-left:3px solid var(--coral,#C8553D);
+  border-radius:4px;background:var(--panel);padding:14px 16px;
+}
+/* Lo atendido se apaga: sigue ahí para consultarlo, pero deja de pedir
+   atención. Un aviso resuelto con el mismo peso visual que uno pendiente hace
+   que la lista deje de leerse. */
+.avi-tarjeta.hecho{border-left-color:var(--linea-2);opacity:.62}
+.avi-arriba{display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.avi-arriba b{font-size:14px}
+.avi-donde,.avi-cuando{font-size:12px;color:var(--tinta-3)}
+.avi-texto{margin:0 0 8px;font-size:13.5px;line-height:1.5;max-width:70ch}
+.avi-insiste,.avi-hecho-por{display:block;font-size:11.5px;color:var(--tinta-3);margin-bottom:8px}
+.avi-insiste{color:var(--coral,#C8553D)}
+.avi-acciones{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.avi-acciones button{padding:6px 12px;font-size:12.5px}
+.avi-enlace{
+  display:inline-block;padding:6px 12px;font-size:12.5px;text-decoration:none;
+  border:1px solid var(--linea-2);border-radius:var(--r-s);color:var(--tinta-2);
+}
+.avi-enlace:hover{background:var(--panel-2)}

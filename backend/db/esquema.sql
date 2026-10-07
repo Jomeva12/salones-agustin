@@ -496,3 +496,30 @@ CREATE TABLE cita (
 CREATE INDEX cita_dia    ON cita (salon_id, fecha, hora);
 CREATE INDEX cita_estado ON cita (estado, fecha);
 CREATE INDEX cita_lead   ON cita (lead_id);
+
+-- Lo que el agente no pudo resolver y le toca a una persona.
+--
+-- Existe porque la regla del Lic. Barron es que NUNCA se deje al cliente sin
+-- informacion: si el agente no tiene un dato, no se apaga — avisa y sigue
+-- conversando. Ese aviso tiene que ser una fila que se ve, y no solo un
+-- mensaje en el grupo de WhatsApp, porque un mensaje a las 2 de la madrugada
+-- se pierde entre los demas y nadie sabe cuales quedaron sin atender.
+--
+-- `recordatorios` y `ultimo_aviso_en` son del motor que insiste: el primer
+-- aviso sale a cualquier hora, los recordatorios solo en horario laboral.
+CREATE TABLE aviso (
+  id             INTEGER PRIMARY KEY,
+  salon_id       INTEGER REFERENCES salon(id),
+  lead_id        TEXT,
+  motivo         TEXT NOT NULL,
+  texto          TEXT NOT NULL,
+  estado         TEXT NOT NULL DEFAULT 'pendiente'
+                 CHECK (estado IN ('pendiente','atendido')),
+  creado_en      TEXT NOT NULL DEFAULT (datetime('now')),
+  ultimo_aviso_en TEXT,
+  recordatorios  INTEGER NOT NULL DEFAULT 0,
+  atendido_en    TEXT,
+  atendido_por   TEXT
+);
+CREATE INDEX aviso_pendientes ON aviso (estado, creado_en);
+CREATE INDEX aviso_lead       ON aviso (lead_id);

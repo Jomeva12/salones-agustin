@@ -14,12 +14,14 @@ import { salones } from './salones.js';
 import { politicas } from './politicas.js';
 import { laminas } from './laminas.js';
 import { citas } from './citas.js';
+import { avisos } from './avisos.js';
 
 const VISTAS = {
   '/hoy': hoy,
   '/cotizar': cotizar,
   '/agenda': agenda,
   '/citas': citas,
+  '/avisos': avisos,
   '/paquetes': paquetes,
   '/servicios': servicios,
   '/respuestas': respuestas,

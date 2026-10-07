@@ -1,0 +1,173 @@
+{
+  "name": "salones_avisos",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "cronExpression",
+              "expression": "*/5 * * * *"
+            }
+          ]
+        }
+      },
+      "id": "804843ac-0699-46ee-99fd-11362e19f0ae",
+      "name": "cada_5_min",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "http://automatizaciones_salones-panel:4300/api/avisos?estado=pendiente",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "43ac45e9-c3e9-4b9a-928f-6780c2d64102",
+      "name": "traer_pendientes",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -200,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NmEwnWxyfdqJcNvw",
+          "name": "panel_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Cuales toca avisar ahora, y con que texto.\n//\n// El primer aviso sale a CUALQUIER hora: el Lic. dijo que si entra algo a las\n// 2 de la madrugada quiere verlo. Los recordatorios, en cambio, solo en\n// horario laboral — a nadie se le pica costillas mientras duerme.\n//\n// Miercoles a lunes de 12 a 20. El martes cierran, asi que ese dia no se\n// insiste ni una vez.\nconst RECORDAR_CADA_MIN = 30;\n\nconst ahora = $now;                 // ya viene en la zona del flujo (Monterrey)\nconst laboral = ahora.weekday !== 2 && ahora.hour >= 12 && ahora.hour < 20;\n\nconst MOTIVO = {\n  sin_dato: 'Falta un dato',\n  cita: 'Quiere agendar una visita',\n  disponibilidad: 'Pregunta por disponibilidad',\n  apartado: 'Quiere apartar la fecha',\n  descuento: 'Pide descuento',\n  contratar: 'Quiere contratar',\n  queja: 'Se queja o reclama',\n  humano: 'Pide hablar con una persona',\n};\n\nconst minutosDesde = (iso) => {\n  if (!iso) return null;\n  const t = Date.parse(iso.replace(' ', 'T') + 'Z');\n  return Number.isFinite(t) ? Math.round((Date.now() - t) / 60000) : null;\n};\n\nconst enPalabras = (min) => {\n  if (min === null) return '';\n  if (min < 60) return `${min} min`;\n  const h = Math.floor(min / 60);\n  return h < 24 ? `${h} h ${min % 60} min` : `${Math.floor(h / 24)} d`;\n};\n\nconst salida = [];\nfor (const a of ($input.first().json.avisos ?? [])) {\n  const primero = !a.ultimo_aviso_en;\n  const desdeUltimo = minutosDesde(a.ultimo_aviso_en);\n\n  if (!primero) {\n    if (!laboral) continue;\n    if (desdeUltimo === null || desdeUltimo < RECORDAR_CADA_MIN) continue;\n  }\n\n  const espera = enPalabras(minutosDesde(a.creado_en));\n  const encabezado = primero\n    ? `🔔 *${MOTIVO[a.motivo] ?? a.motivo}*`\n    : `⏰ *Sigue pendiente* — ${MOTIVO[a.motivo] ?? a.motivo}`;\n\n  const lineas = [\n    encabezado,\n    a.salon_nombre ? `_${a.salon_nombre}_${a.encargada ? ' · ' + a.encargada : ''}` : null,\n    '',\n    a.texto,\n    '',\n    primero ? null : `La clienta lleva ${espera} esperando.`,\n    a.lead_id\n      ? `https://administracioneventos6.kommo.com/leads/detail/${a.lead_id}`\n      : null,\n  ].filter((x) => x !== null);\n\n  salida.push({ json: { id: a.id, primero, texto: lineas.join('\\n') } });\n}\n\nreturn salida;"
+      },
+      "id": "d7f76f7e-fa47-47f5-a226-293641c255c2",
+      "name": "a_quien_toca",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        0,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "-5410906335",
+        "text": "={{ $json.texto }}",
+        "additionalFields": {
+          "parse_mode": "Markdown",
+          "appendAttribution": false
+        }
+      },
+      "id": "e99aeead-b15d-4001-b81d-c904b3f47921",
+      "name": "mandar_al_grupo",
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        200,
+        0
+      ],
+      "credentials": {
+        "telegramApi": {
+          "id": "GDSbyhs4W4QvYa4P",
+          "name": "salones_bot"
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://automatizaciones_salones-panel:4300/api/avisos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ id: $('a_quien_toca').item.json.id, recordado: true }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "51ea46f4-65b9-4273-a3ce-b8a1eaebb8e7",
+      "name": "marcar_avisado",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NmEwnWxyfdqJcNvw",
+          "name": "panel_salones"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "cada_5_min": {
+      "main": [
+        [
+          {
+            "node": "traer_pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "traer_pendientes": {
+      "main": [
+        [
+          {
+            "node": "a_quien_toca",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "a_quien_toca": {
+      "main": [
+        [
+          {
+            "node": "mandar_al_grupo",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "mandar_al_grupo": {
+      "main": [
+        [
+          {
+            "node": "marcar_avisado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Monterrey"
+  }
+}

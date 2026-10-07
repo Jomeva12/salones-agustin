@@ -189,3 +189,35 @@ IDs de los campos, por si hay que tocarlos:
 | Paquete cotizado | 352880 | Plata 281642, Onix 281644, Bronce 281646, Oro 281648 |
 | Stop IA | 352882 | casilla · marcada = la IA no contesta |
 | Estado de contacto | 352884 | Activo 281650, En frio 281652 |
+
+## salones_avisos
+
+Lo que el agente no pudo resolver se queda en la tabla `aviso` del panel. Este
+flujo es el que lo saca de ahi y lo pone donde alguien lo vea.
+
+```
+cada_5_min -> traer_pendientes -> a_quien_toca -> mandar_al_grupo
+                                                       |
+                                                   se_entrego -> marcar_avisado
+```
+
+**El primer aviso y el recordatorio son el mismo flujo.** La diferencia entre
+"primero" y "van N veces" es una columna de la fila (`ultimo_aviso_en`), no un
+cronograma aparte. Dos crones contra la misma tabla serian dos formas de
+equivocarse.
+
+**Cada 5 minutos, no cada 30.** El primer aviso sale a cualquier hora: el Lic.
+dijo que si entra algo a las 2 de la madrugada quiere verlo. Los que insisten
+solo salen de 12 a 20 y nunca en martes, que es cuando cierran.
+
+**`se_entrego` es un seguro, no un adorno.** El nodo de Telegram esta en
+`continueRegularOutput` para que un aviso caido no tumbe la tanda entera. Pero
+sin el IF, ese fallo seguia derecho a `marcar_avisado` y el aviso quedaba
+marcado como entregado sin que nadie lo hubiera leido: la clienta esperando y
+el tablero diciendo que ya se atendio. Telegram contesta `ok: true` cuando de
+verdad entrego; cuando falla, el item trae `error` y no trae `ok`. La salida
+falsa del IF no va a ningun lado a proposito — el aviso se queda pendiente y
+vuelve a intentarse en la siguiente vuelta.
+
+**Un solo grupo, por ahora.** `-5410906335`. El Lic. tiene cuatro oficinas y
+cada una deberia recibir lo suyo; falta que nos pase los otros tres ids.

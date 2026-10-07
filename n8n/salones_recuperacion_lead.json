@@ -11,7 +11,7 @@
           ]
         }
       },
-      "id": "9f71f7fc-cbd9-4f9b-acd3-4bb3ff7d8e37",
+      "id": "43a0484a-21ce-4528-b31b-db143db86997",
       "name": "inicio",
       "type": "n8n-nodes-base.executeWorkflowTrigger",
       "typeVersion": 1.1,
@@ -33,7 +33,7 @@
           }
         }
       },
-      "id": "2145a0e4-774b-4502-bd04-0922fae207da",
+      "id": "52d643c3-06d7-4d7c-9b5e-6ee8c552be0a",
       "name": "traer_lead",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -52,7 +52,7 @@
       "parameters": {
         "jsCode": "// Mismo aplanado que el flujo principal, sin la parte del mensaje: aqui no\n// hay mensaje del cliente, justamente porque dejo de escribir.\nconst crudo = $input.first().json ?? {};\nconst l = crudo.data ?? crudo;\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nreturn [{ json: {\n  lead_id: String(l.id ?? $('inicio').first().json.lead_id),\n  etapa_id: l.status_id ?? null,\n  campos,\n  // Lo que el agente vera como \"lo que dijo el cliente\". No es un mensaje:\n  // es la instruccion de por que se le esta escribiendo.\n  chats: '',\n}}];"
       },
-      "id": "9978f94a-beb8-41b3-aaa8-0e97492c2456",
+      "id": "47bf02bc-cc5e-46b8-a54e-5d4edcbbe0ef",
       "name": "formatLead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -72,8 +72,8 @@
           },
           "conditions": [
             {
-              "id": "5ad7e433-e1c0-439e-bb86-b0318fa51e72",
-              "leftValue": "={{ [112261047, 112261051, 112261055, 142, 143].includes($json.etapa_id) === false && String($json.campos['Stop IA']) !== 'true' }}",
+              "id": "aee05f2c-044c-4c00-aa8e-76d5231004d7",
+              "leftValue": "={{ [112261039, 112261047, 112261051, 112261055, 142, 143].includes($json.etapa_id) === false && String($json.campos['Stop IA']) !== 'true' }}",
               "rightValue": "true",
               "operator": {
                 "type": "boolean",
@@ -86,7 +86,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "1833c8d3-e7cf-4260-816d-4ec7e5dac0d3",
+      "id": "1d860c84-1ef4-44fd-ae7d-92d1f9ec7d54",
       "name": "se_puede",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -100,10 +100,10 @@
         "promptType": "define",
         "text": "=Han pasado 24 horas sin respuesta de este cliente. Escribele un mensaje breve para retomar la conversacion donde se quedo.",
         "options": {
-          "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón. Le escribes a alguien que **dejó de contestar**.\n\n## Un solo mensaje, corto\n\nRetomas por donde se quedó la conversación, sin reprochar y sin repetir todo\nlo que ya le dijiste. Si estaba a punto de dar un dato, se lo vuelves a pedir.\nSi ya tenía cotización, le recuerdas que puede venir a conocer el salón.\n\nDos o tres líneas. Nada de volver a listar precios.\n\nUn emoji como mucho, y solo si el tono lo pide. Aquí menos que en\ncualquier otro momento: le estás escribiendo a alguien que dejó de\ncontestar, y una carita de más se lee como insistencia alegre.\n\n## Nunca\n\n- Escribir como si fuera la primera vez.\n- Insistir con urgencia o presión. Si no contesta, no contesta.\n- Ofrecer un descuento para reenganchar. No existen.\n- Inventar una promoción o una fecha límite que nadie te dijo.\n\nSi el cliente responde, la conversación vuelve a ventas: tú no cotizas.\n"
+          "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón. Le escribes a alguien que **dejó de contestar**.\n\n## Un solo mensaje, corto\n\nRetomas por donde se quedó la conversación, sin reprochar y sin repetir todo\nlo que ya le dijiste. Si estaba a punto de dar un dato, se lo vuelves a pedir.\nSi ya tenía cotización, le recuerdas que puede venir a conocer el salón.\n\nDos o tres líneas. Nada de volver a listar precios.\n\nEspañol de México, no neutro: «qué padre» y no «qué lindo», «con gusto»,\n«ahorita», «platícame». Nada de «vale» ni «genial».\n\nY el evento es **suyo**: «tu boda», «tus XV», «tu fecha» — nunca «el evento».\nOfrece en condicional («¿te gustaría…?», «podríamos»), pero los precios y las\nfechas van en firme.\n\nUn emoji como mucho, y solo si el tono lo pide. Aquí menos que en\ncualquier otro momento: le estás escribiendo a alguien que dejó de\ncontestar, y una carita de más se lee como insistencia alegre.\n\n## Nunca\n\n- Escribir como si fuera la primera vez.\n- Insistir con urgencia o presión. Si no contesta, no contesta.\n- Ofrecer un descuento para reenganchar. No existen.\n- Inventar una promoción o una fecha límite que nadie te dijo.\n\nSi el cliente responde, la conversación vuelve a ventas: tú no cotizas.\n"
         }
       },
-      "id": "f2fbbd05-81a0-4a00-b7ac-a13dd7998eba",
+      "id": "f238218f-438d-4e3a-af9e-60304857ee4e",
       "name": "seguimiento",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -122,7 +122,7 @@
         },
         "options": {}
       },
-      "id": "cd92cc08-85f8-4eee-b144-0ff51a387518",
+      "id": "c6dddb30-1e88-4d01-bb39-b961703e2ce3",
       "name": "modelo_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -143,7 +143,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas-v6",
         "contextWindowLength": 30
       },
-      "id": "c18f6ba1-a12a-41e8-9055-f519593a515f",
+      "id": "8a061bc8-90d6-4ac1-8138-7142d8569047",
       "name": "memoria_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -162,7 +162,7 @@
       "parameters": {
         "jsCode": "// Parte la respuesta del agente en las piezas que espera enviar_mensaje_salones.\n//\n// Se hace con codigo y no con otro agente a proposito: partir en frontera de\n// parrafo es una regla, no un juicio. Un modelo haciendo esto cuesta, tarda, y\n// algun dia devuelve algo distinto para el mismo texto.\nconst bruto = $json.output ?? '';\nlet texto = typeof bruto === 'string' ? bruto : JSON.stringify(bruto);\n\n// El modelo a veces envuelve la respuesta en cercos de codigo o en un JSON.\ntexto = texto.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\nif (texto.startsWith('{')) {\n  try {\n    const o = JSON.parse(texto);\n    texto = o.respuesta ?? o.parte1 ?? o.output ?? texto;\n  } catch (e) { /* no era JSON: se queda con el texto tal cual */ }\n}\n\nconst MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro\n\n// Se corta por ritmo de WhatsApp, no por longitud: la informacion en un\n// mensaje y la pregunta de cierre en otro. Antes se cortaba a los 600\n// caracteres, pero una cotizacion tipica ronda los 400 — con esa regla el\n// corte en dos casi nunca se activaba.\n//\n// Nunca se corta a media frase: si no hay frontera de parrafo, va entera. Un\n// mensaje largo de una sola pieza molesta menos que uno partido a la mitad.\nfunction partir(t) {\n  const parrafos = t.split(/\\n\\s*\\n/).map((x) => x.trim()).filter(Boolean);\n  if (parrafos.length < 2) return [t];\n  // El ultimo parrafo se va solo: en las respuestas de Maya es la invitacion\n  // a visitar o la pregunta. Lo anterior se junta en el primer mensaje.\n  return [parrafos.slice(0, -1).join('\\n\\n'), parrafos[parrafos.length - 1]]\n    .slice(0, MAX_PARTES);\n}\n\nconst partes = partir(texto);\nconst fl = $('formatLead').first().json;\n\n\nreturn [{\n  json: {\n    cuantas_partes: partes.length,\n    parte1: partes[0] ?? '',\n    parte2: partes[1] ?? '',\n    parte3: '',\n    parte4: '',\n    lead_id: fl.lead_id,\n    // La pone elegir_lamina, el nodo siguiente: aqui no se puede leer la\n    // salida de `cotizar` porque un Code no alcanza a un nodo-herramienta.\n    imagen_url: '',\n    mensaje_cliente: fl.chats,\n    // Declarados en el subflujo pero sin usar en su codigo: van en cero para\n    // no mover ninguna etapa por accidente.\n    proximo_paso: 0,\n    status_id: 0,\n    // Que agente redacto. Se guarda aqui porque despues de este nodo\n    // $prevNode.name ya seria 'formatear_respuesta'.\n    agente: $prevNode.name,\n    texto_completo: texto,\n  },\n}];\n"
       },
-      "id": "be799798-fe4b-4982-8915-d803ba7c9d8c",
+      "id": "0af43c3e-7435-43e4-9d98-80ea4f639fdb",
       "name": "formatear_respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -179,7 +179,7 @@
           "queryReplacement": "={{ [ $('formatLead').first().json.lead_id, null, 'recuperacion', 'sistema', null, 0, $json.agente, $json.texto_completo, $('formatLead').first().json.etapa_id, JSON.stringify($('formatLead').first().json.campos), JSON.stringify([$json.parte1, $json.parte2].filter(Boolean)) ] }}"
         }
       },
-      "id": "dc50739b-a27c-448e-a319-a8571e21663f",
+      "id": "7d4e5f5f-4143-40a9-ae96-a96581bc86ec",
       "name": "registrar_turno",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -315,7 +315,7 @@
         },
         "options": {}
       },
-      "id": "cc8e9993-eef5-4f4b-9c44-8a6f128fc3e5",
+      "id": "e03d0cec-4cac-4e9b-9318-11973e2e0d08",
       "name": "enviar_mensaje",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -333,7 +333,7 @@
           "queryReplacement": "={{ [$('registrar_turno').first().json.id] }}"
         }
       },
-      "id": "c8262123-9667-4613-b719-2b760264630b",
+      "id": "64c6e09f-fd84-406e-9a9c-4691b86199f9",
       "name": "marcar_enviada",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -365,7 +365,7 @@
           }
         }
       },
-      "id": "48c823f5-9034-4bbb-afdb-a0fce42914db",
+      "id": "052e5da1-af9d-4b27-873b-6fd3fd601c13",
       "name": "marcar_en_frio",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -382,7 +382,7 @@
     },
     {
       "parameters": {},
-      "id": "3a265eb9-4e67-4b17-b96c-c68b313aa50e",
+      "id": "61825a04-e752-49ff-92a5-a8619d411073",
       "name": "no_aplica",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,

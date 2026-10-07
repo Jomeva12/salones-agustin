@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "c35fd6aa-4bdc-4882-a37a-e6d7798916e8",
+      "id": "ca8c7b8e-4f41-42aa-8448-2669840128d3",
       "name": "cada_hora",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -27,7 +27,7 @@
         "query": "WITH ultimo AS (\n  SELECT DISTINCT ON (lead_id) lead_id, agente, enviada, creado_en\n    FROM conversacion_turnos\n   ORDER BY lead_id, creado_en DESC\n)\nSELECT lead_id\n  FROM ultimo\n WHERE enviada\n   AND agente NOT IN ('seguimiento', 'aviso_reinicio')\n   AND creado_en < now() - interval '24 hours'\n   AND creado_en > now() - interval '7 days'\n ORDER BY creado_en\n LIMIT 10;",
         "options": {}
       },
-      "id": "c423450b-f352-43c5-9c4e-8e6618f21cda",
+      "id": "ecfae3dd-fd86-42ce-86e9-a39b5a19322c",
       "name": "buscar_callados",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -75,7 +75,7 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "750caa67-cbe3-42a9-8f0b-4c946147fa4d",
+      "id": "acd3c0c5-4ff4-42ee-92e0-1f3389df5e02",
       "name": "uno_por_uno",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,

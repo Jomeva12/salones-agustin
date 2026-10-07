@@ -21,9 +21,19 @@ KOMMO = "https://administracioneventos6.kommo.com/api/v4"
 ENVIAR = "znqsX6lvLCqIQ2LB"          # enviar_mensaje_salones
 MEMORIA_V = "v6"
 
-# Etapas donde NO se recupera. Las tres primeras porque ya hay una persona o
-# un pago de por medio; las dos ultimas porque el lead esta cerrado.
-SIN_RECUPERAR = [112261047, 112261051, 112261055, 142, 143]
+# Etapas donde NO se recupera.
+#
+#   112261039  Cita agendada      ya viene; perseguirlo es de mas. Lo que toca
+#                                 ahi es RECORDARLE la cita, que es otro flujo.
+#   112261047  Con la encargada   hay una persona atendiendolo
+#   112261051  Fecha apartada     hay dinero de por medio
+#   112261055  Contratado         el agente ya termino su trabajo
+#   142 / 143  Realizado, Perdido el lead esta cerrado
+#
+# «Visito el salon» NO esta en la lista, y es a proposito: el Lic. Barron pidio
+# justo que ahi siguiera. Son los que van, dicen «dejame pensarlo» y se bajan
+# —y a esos, segun el, las encargadas no les dan seguimiento—.
+SIN_RECUPERAR = [112261039, 112261047, 112261051, 112261055, 142, 143]
 
 CAMPO_ESTADO = 352884
 EN_FRIO = 281652
@@ -154,11 +164,11 @@ return [{ json: {
 b.add("formatLead", "n8n-nodes-base.code", 2, {"jsCode": FORMATLEAD}, [-200, 0])
 
 SE_PUEDE = ("={{ " + str(SIN_RECUPERAR) + ".includes($json.etapa_id) === false"
-            " && String($json.campos['IA activa']) !== 'false' }}")
+            " && String($json.campos['Stop IA']) !== 'true' }}")
 b.add("se_puede", "n8n-nodes-base.if", 2.3,
-      # Las dos guardas juntas: ni etapa cerrada ni IA apagada. La segunda
-      # importa mas aqui que en el flujo principal — si la encargada apago la
-      # IA para hablar ella, un recordatorio automatico la pisaria.
+      # Las dos guardas juntas: ni etapa cerrada ni «Stop IA» marcado. La
+      # segunda importa mas aqui que en el flujo principal — si la encargada
+      # detuvo la IA para hablar ella, un recordatorio automatico la pisaria.
       {"conditions": cond(SE_PUEDE, "true", tipo="boolean"),
        "looseTypeValidation": True, "options": {}}, [0, 0])
 

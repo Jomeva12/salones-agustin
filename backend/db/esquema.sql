@@ -464,3 +464,35 @@ CREATE TABLE cortesia_imagen (
   subida_at     TEXT NOT NULL DEFAULT (datetime('now'))
 );
 CREATE UNIQUE INDEX cortesia_imagen_unica ON cortesia_imagen (clave, salon_id);
+
+-- Las citas de visita y los ensayos, juntos.
+--
+-- Van en la misma tabla porque ocupan el mismo recurso: el tiempo de la
+-- encargada en ese salon. Lo que cambia es que la visita trae un lead de Kommo
+-- detras y el ensayo no — el ensayo es con alguien que YA contrato, un mes
+-- antes de su evento, para repasar la logistica.
+--
+-- `estado` arranca en 'solicitada' a proposito: el agente nunca confirma una
+-- cita, solo la pide. Quien confirma es la encargada, y por eso la solicitud
+-- queda como una fila que se ve y no como un mensaje que se pierde en el chat.
+CREATE TABLE cita (
+  id           INTEGER PRIMARY KEY,
+  salon_id     INTEGER NOT NULL REFERENCES salon(id) ON DELETE CASCADE,
+  tipo         TEXT NOT NULL DEFAULT 'visita' CHECK (tipo IN ('visita','ensayo')),
+  fecha        TEXT NOT NULL,
+  hora         TEXT NOT NULL,
+  minutos      INTEGER NOT NULL DEFAULT 60,
+  -- El lead de Kommo, para poder devolverle la hora confirmada al CRM.
+  lead_id      TEXT,
+  nombre       TEXT,
+  telefono     TEXT,
+  estado       TEXT NOT NULL DEFAULT 'solicitada'
+               CHECK (estado IN ('solicitada','confirmada','asistio','no_asistio','cancelada')),
+  notas        TEXT,
+  creada_por   TEXT,
+  creada_at    TEXT NOT NULL DEFAULT (datetime('now')),
+  confirmada_at TEXT
+);
+CREATE INDEX cita_dia    ON cita (salon_id, fecha, hora);
+CREATE INDEX cita_estado ON cita (estado, fecha);
+CREATE INDEX cita_lead   ON cita (lead_id);

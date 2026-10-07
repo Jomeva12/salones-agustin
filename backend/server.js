@@ -1137,6 +1137,99 @@ const rutas = {
     return { ok: true, url: subida.url };
   },
 
+  // ════════════════════════════ citas ════════════════════════════
+  //
+  // El agente NUNCA confirma una cita: la pide, y queda en 'solicitada'.
+  // Quien confirma es la encargada, desde el panel. Por eso la solicitud es
+  // una fila que se ve y no un mensaje que se pierde en el chat del grupo.
+
+  /** Las horas en que todavia cabe una visita ese dia en ese salon. */
+  'GET /api/citas/huecos': (u) => {
+    const clave = u.searchParams.get('salon');
+    const s = db.prepare('SELECT id, clave, nombre FROM salon WHERE clave = ?').get(clave);
+    if (!s) return { error: 'salón desconocido' };
+    return { salon: s.clave, salon_nombre: s.nombre,
+             ...L.huecosCita(db, s.id, u.searchParams.get('fecha')) };
+  },
+
+  /** La agenda de visitas y ensayos de un rango. Es lo que pinta la pantalla. */
+  'GET /api/citas': (u) => {
+    const desde = u.searchParams.get('desde'), hasta = u.searchParams.get('hasta');
+    if (!L.esFechaValida(desde) || !L.esFechaValida(hasta)) return { error: 'desde/hasta inválidos' };
+    const clave = u.searchParams.get('salon');
+    const filas = db.prepare(
+      `SELECT c.*, s.clave AS salon, s.nombre AS salon_nombre
+         FROM cita c JOIN salon s ON s.id = c.salon_id
+        WHERE c.fecha BETWEEN ? AND ?
+          AND (? IS NULL OR s.clave = ?)
+        ORDER BY c.fecha, c.hora`).all(desde, hasta, clave || null, clave || null);
+    return { desde, hasta, salon: clave || null, citas: filas };
+  },
+
+  'POST /api/citas': (_u, c, ctx) => {
+    const s = db.prepare('SELECT id FROM salon WHERE clave = ?').get(c?.salon);
+    if (!s) return { error: 'salón desconocido' };
+    if (!L.esFechaValida(c?.fecha)) return { error: 'fecha inválida' };
+    if (!/^\d{2}:\d{2}$/.test(c?.hora ?? '')) return { error: 'hora inválida', detalle: 'Usa HH:MM.' };
+    const tipo = c.tipo === 'ensayo' ? 'ensayo' : 'visita';
+    const minutos = entero(c.minutos) ?? 60;
+
+    // La encargada SI puede agendar fuera de la ventana o en martes — «si una
+    // clienta solo puede el martes, se le pregunta». Lo que no se hace es
+    // empalmar: eso se avisa y se deja que decida.
+    const hueco = L.huecosCita(db, s.id, c.fecha, 30, minutos);
+    const libre = (hueco.horas ?? []).includes(c.hora);
+    // Decir «se empalma» cuando en realidad el salón cierra ese día es una
+    // pista falsa: manda a la encargada a buscar una cita que no existe.
+    const aviso = libre ? null
+      : !hueco.abierto ? hueco.motivo
+      : 'Esa hora se empalma con algo ya agendado o cae fuera de la ventana de citas.';
+
+    const r = db.prepare(
+      `INSERT INTO cita (salon_id, tipo, fecha, hora, minutos, lead_id, nombre,
+                         telefono, estado, notas, creada_por)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?)`)
+      .run(s.id, tipo, c.fecha, c.hora, minutos, c.lead_id ?? null,
+           (c.nombre ?? '').trim() || null, (c.telefono ?? '').trim() || null,
+           c.estado === 'confirmada' ? 'confirmada' : 'solicitada',
+           (c.notas ?? '').trim() || null, c._autor ?? null);
+    anotar('cita', Number(r.lastInsertRowid), 'alta', c._autor,
+           `${tipo} ${c.fecha} ${c.hora} en ${c.salon}`);
+    return { ok: true, id: Number(r.lastInsertRowid), libre, aviso };
+  },
+
+  'PUT /api/citas': (_u, c, ctx) => {
+    const id = entero(c?.id);
+    const antes = db.prepare('SELECT * FROM cita WHERE id = ?').get(id);
+    if (!antes) return { error: 'esa cita no existe' };
+
+    const campos = [], valores = [];
+    const poner = (col, v) => { campos.push(`${col} = ?`); valores.push(v); };
+    if (c.fecha !== undefined) {
+      if (!L.esFechaValida(c.fecha)) return { error: 'fecha inválida' };
+      poner('fecha', c.fecha);
+    }
+    if (c.hora !== undefined) {
+      if (!/^\d{2}:\d{2}$/.test(c.hora)) return { error: 'hora inválida' };
+      poner('hora', c.hora);
+    }
+    if (c.minutos !== undefined) poner('minutos', entero(c.minutos) ?? 60);
+    if (c.nombre !== undefined) poner('nombre', (c.nombre ?? '').trim() || null);
+    if (c.telefono !== undefined) poner('telefono', (c.telefono ?? '').trim() || null);
+    if (c.notas !== undefined) poner('notas', (c.notas ?? '').trim() || null);
+    if (c.estado !== undefined) {
+      const ok = ['solicitada', 'confirmada', 'asistio', 'no_asistio', 'cancelada'];
+      if (!ok.includes(c.estado)) return { error: 'estado desconocido' };
+      poner('estado', c.estado);
+      if (c.estado === 'confirmada') poner('confirmada_at', new Date().toISOString());
+    }
+    if (!campos.length) return { error: 'nada que cambiar' };
+    valores.push(id);
+    db.prepare(`UPDATE cita SET ${campos.join(', ')} WHERE id = ?`).run(...valores);
+    anotar('cita', id, 'cambio', c._autor, campos.map((x) => x.split(' ')[0]).join(', '));
+    return { ok: true };
+  },
+
   // Rango de fechas para pintar el calendario del frontend.
   // El detalle de un día en un salón: lo que hay y, sobre todo, dónde quedan
   // los huecos. Es lo que abre el panel lateral al tocar un día.
@@ -1876,6 +1969,8 @@ const AREA = {
   'POST /api/usuarios/desbloquear': 'usuarios',
   'PUT /api/servicios': 'servicios',
   'POST /api/cotizar': 'agenda',        // no escribe nada; cotizar es parte del día a día
+  'POST /api/citas': 'agenda',
+  'PUT /api/citas': 'agenda',
 };
 
 const CODIGO = { 'sin sesión': 401, 'sin permiso': 403, 'no coincide': 401, bloqueado: 429 };

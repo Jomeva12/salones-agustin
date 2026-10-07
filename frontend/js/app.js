@@ -13,11 +13,13 @@ import { paqueteNuevo } from './paquete_nuevo.js';
 import { salones } from './salones.js';
 import { politicas } from './politicas.js';
 import { laminas } from './laminas.js';
+import { citas } from './citas.js';
 
 const VISTAS = {
   '/hoy': hoy,
   '/cotizar': cotizar,
   '/agenda': agenda,
+  '/citas': citas,
   '/paquetes': paquetes,
   '/servicios': servicios,
   '/respuestas': respuestas,

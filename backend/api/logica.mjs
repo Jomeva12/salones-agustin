@@ -976,3 +976,78 @@ export function cortesiasSueltas(texto) {
     .map((p) => p.trim().replace(/^(el|la|los|las)\s+/i, '').trim())
     .filter(Boolean);
 }
+
+// ─────────────────────────── citas de visita ────────────────────────────────
+
+/**
+ * La ventana en que se agendan visitas, confirmada por el Lic. Barron.
+ *
+ * Es mas estrecha que el horario de atencion al publico (12:00 a 20:00) a
+ * proposito: no se cita a nadie a la hora de abrir ni a la de cerrar. Quien
+ * llega sin avisar si puede hacerlo en todo el horario de atencion.
+ */
+export const CITAS = {
+  desde: '13:00',
+  hasta: '19:00',
+  // Minimo entre una cita y la siguiente en el mismo salon. No es la duracion
+  // de la visita: es el respiro que necesita la encargada para atender bien a
+  // una antes de recibir a la otra.
+  separacionMin: 60,
+  // 2 = martes, el dia que cierran. No se OFRECE, pero la encargada si puede
+  // agendar uno a mano: «si una clienta solo puede el martes, se le pregunta».
+  cerrado: [2],
+};
+
+const aMinutos = (hhmm) => {
+  const [h, m] = String(hhmm ?? '').split(':').map(Number);
+  return Number.isFinite(h) && Number.isFinite(m) ? h * 60 + m : null;
+};
+const aHora = (min) =>
+  String(Math.floor(min / 60)).padStart(2, '0') + ':' + String(min % 60).padStart(2, '0');
+
+/**
+ * Las horas en que todavia cabe una visita ese dia en ese salon.
+ *
+ * Ocupan hueco tanto las visitas como los ensayos, y por eso viven en la misma
+ * tabla: los dos son tiempo de la encargada. Lo cancelado no estorba.
+ */
+export function huecosCita(db, salonId, fecha, paso = 30, dura = 60) {
+  if (!esFechaValida(fecha)) return { error: 'fecha invalida' };
+  const dow = diaSemana(fecha);
+  const abierto = !CITAS.cerrado.includes(dow);
+
+  const tomadas = db.prepare(
+    `SELECT hora, minutos, tipo FROM cita
+      WHERE salon_id = ? AND fecha = ? AND estado <> 'cancelada'
+      ORDER BY hora`).all(salonId, fecha);
+
+  const ini = aMinutos(CITAS.desde), fin = aMinutos(CITAS.hasta);
+  const libres = [];
+  for (let t = ini; t <= fin; t += paso) {
+    // Dos citas chocan si entre el final de una y el inicio de la otra queda
+    // menos que la separacion. Se comparan los dos tramos enteros, no solo las
+    // horas de inicio: una visita de una hora a las 15:00 ocupa hasta las
+    // 16:00, y con una hora de respiro la siguiente no puede ser antes de las
+    // 17:00 ni la anterior terminar despues de las 14:00.
+    const choca = tomadas.some((c) => {
+      const o = aMinutos(c.hora);
+      if (o === null) return false;
+      return t < o + c.minutos + CITAS.separacionMin
+          && o < t + dura + CITAS.separacionMin;
+    });
+    if (!choca) libres.push(aHora(t));
+  }
+
+  return {
+    fecha,
+    dia_semana: ['domingo','lunes','martes','miercoles','jueves','viernes','sabado'][dow],
+    abierto,
+    ventana: [CITAS.desde, CITAS.hasta],
+    // Un dia cerrado no ofrece horas, pero se dice por que: la encargada
+    // puede abrir un martes si la clienta no puede otro dia.
+    horas: abierto ? libres : [],
+    motivo: abierto ? null
+      : 'Los martes el salon cierra. Si el cliente solo puede ese dia, hay que preguntarle a la encargada.',
+    ocupadas: tomadas.map((c) => ({ hora: c.hora, minutos: c.minutos, tipo: c.tipo })),
+  };
+}

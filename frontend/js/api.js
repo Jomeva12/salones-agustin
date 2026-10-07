@@ -26,6 +26,10 @@ export const api = {
   hoy:      (salon)     => pedir(`/api/hoy?${q({ salon })}`),
   salones:      ()      => pedir('/api/salones'),
   imagenes:     ()      => pedir('/api/imagenes'),
+  citas: (desde, hasta, salon) => pedir(`/api/citas?${q({ desde, hasta, salon })}`),
+  huecosCita: (salon, fecha)   => pedir(`/api/citas/huecos?${q({ salon, fecha })}`),
+  crearCita:   (d) => pedir('/api/citas', { method: 'POST', body: JSON.stringify(d) }),
+  cambiarCita: (d) => pedir('/api/citas', { method: 'PUT',  body: JSON.stringify(d) }),
   // La imagen viaja como bytes y no como multipart: el panel es el unico
   // cliente y el servidor no tiene dependencias para parsear multipart.
   reemplazarImagen: (tipo, id, archivo) => pedir(

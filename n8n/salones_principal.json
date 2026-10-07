@@ -8,7 +8,7 @@
         "responseMode": "lastNode",
         "options": {}
       },
-      "id": "c3b6bec2-6a16-4a85-bc96-7dc6922be0d0",
+      "id": "ce312901-ff76-451c-a97c-620b28505f3f",
       "name": "new_message",
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
@@ -16,7 +16,7 @@
         -600,
         0
       ],
-      "webhookId": "411cdc09-87a8-4c40-95de-f650cd1b110b"
+      "webhookId": "e5e78e52-5843-41ec-a0b1-d8408b226694"
     },
     {
       "parameters": {
@@ -29,7 +29,7 @@
           },
           "conditions": [
             {
-              "id": "acb68213-474a-41fe-ba2c-37f978daca73",
+              "id": "75f535b9-4294-40d3-ae07-35e2034722ee",
               "leftValue": "={{ $json.body['message[add][0][type]'] }}",
               "rightValue": "incoming",
               "operator": {
@@ -43,7 +43,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "0fc16694-7e73-4ed3-9ae2-c06275501738",
+      "id": "d747833a-0a6b-4b81-9548-ce3408c1fbca",
       "name": "es_mensaje_entrante",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -56,7 +56,7 @@
       "parameters": {
         "jsCode": "// Traduce el payload de Kommo a campos limpios.\nconst b = $input.first().json.body ?? {};\nconst g = (k) => b['message[add][0][' + k + ']'] ?? null;\nconst epoch = Number(g('created_at'));\nreturn [{ json: {\n  msg_id: g('id'),\n  lead_id: g('entity_id') ?? g('element_id'),\n  contacto_id: g('contact_id'),\n  chat_id: g('chat_id'),\n  talk_id: g('talk_id'),\n  texto: g('text') ?? '',\n  // telegram en pruebas, whatsapp en produccion: sirve para dejar fuera de\n  // los reportes el trafico que nos mandamos nosotros.\n  origen: g('origin'),\n  autor: b['message[add][0][author][name]'] ?? null,\n  adjunto_tipo: b['message[add][0][attachment][type]'] ?? null,\n  adjunto_url: b['message[add][0][attachment][link]'] ?? b['message[add][0][attachment][url]'] ?? null,\n  creado_at: Number.isFinite(epoch) ? new Date(epoch * 1000).toISOString() : null,\n}}];"
       },
-      "id": "788aec0d-52bd-41f3-992c-8b75d04a6832",
+      "id": "d6ddca8a-ad26-4c77-94a0-0a69131f668f",
       "name": "formatear",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -73,7 +73,7 @@
           "queryReplacement": "={{ [$json.lead_id, $json.msg_id, $json.texto] }}"
         }
       },
-      "id": "ea40ce68-7a33-4947-99a1-5723168687c3",
+      "id": "58a91d4d-e41a-44e2-93a0-9a596c4f75d0",
       "name": "guardar_en_buffer",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -92,7 +92,7 @@
       "parameters": {
         "amount": 8
       },
-      "id": "356a3c6d-919d-48da-ade9-8720cafcd5b3",
+      "id": "57b81661-c80b-45c2-9a20-8deef1ab00d8",
       "name": "esperar_rafaga",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
@@ -100,7 +100,7 @@
         200,
         0
       ],
-      "webhookId": "5474571c-8980-4e0a-a09b-9ffc6f23edc6"
+      "webhookId": "e2662a6a-8167-445e-9921-d73c1d4e7212"
     },
     {
       "parameters": {
@@ -110,7 +110,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id, $('formatear').first().json.msg_id] }}"
         }
       },
-      "id": "994d4c84-6540-4240-a060-a9ccc7161ebf",
+      "id": "3ca152a1-48ef-4d01-95c3-fc22409347e4",
       "name": "leer_rafaga",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -136,7 +136,7 @@
           },
           "conditions": [
             {
-              "id": "9619f4f4-de7d-4ffe-8aad-e58e5c8d3159",
+              "id": "4e917eca-b176-47a9-8456-01cc2150f4fd",
               "leftValue": "={{ $json.mas_nuevos }}",
               "rightValue": "0",
               "operator": {
@@ -150,7 +150,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "e734048a-6ab7-437c-93d0-442f1576914e",
+      "id": "05c8dc70-78e6-447f-b684-1c105e81ea7e",
       "name": "soy_el_ultimo",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -167,7 +167,7 @@
           "queryReplacement": "={{ [$('formatear').first().json.lead_id] }}"
         }
       },
-      "id": "dbc33e6a-955e-4deb-851f-7ddd308af082",
+      "id": "88e070c7-5663-46cd-8325-a3df92fdbe19",
       "name": "marcar_consumidos",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -195,7 +195,7 @@
           }
         }
       },
-      "id": "0d886dde-f04a-4077-a005-4a338f70b2bb",
+      "id": "e2204d8f-d8d0-42f1-8c65-3f79d69b741f",
       "name": "traer_lead",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -214,7 +214,7 @@
       "parameters": {
         "jsCode": "// Aplana los campos personalizados de Kommo a algo legible.\nconst crudo = $input.first().json ?? {};\nconst l = crudo.data ?? crudo;\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nconst msg = $('formatear').first().json;\nconst rafaga = $('leer_rafaga').first().json;\nreturn [{ json: {\n  lead_id: String(l.id ?? msg.lead_id),\n  etapa_id: l.status_id ?? null,\n  responsable_id: l.responsible_user_id ?? null,\n  presupuesto: l.price ?? 0,\n  campos,\n  // Todo lo que el cliente dijo en la rafaga, ya junto en un solo texto.\n  chats: rafaga.chats ?? msg.texto,\n  cuantos_mensajes: Number(rafaga.cuantos ?? 1),\n  origen: msg.origen,\n  autor: msg.autor,\n  adjunto_tipo: msg.adjunto_tipo,\n  adjunto_url: msg.adjunto_url,\n}}];"
       },
-      "id": "98633481-53b3-4e4c-82d4-9f64ddc3e860",
+      "id": "3311bf39-5ecf-424c-a62e-859c64b47190",
       "name": "formatLead",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -234,7 +234,7 @@
           },
           "conditions": [
             {
-              "id": "722b4ba1-7eaf-4708-bb12-3f2b55b1b363",
+              "id": "4942bf00-342a-46cf-b6ae-7754702146a1",
               "leftValue": "={{ String($json.campos['Stop IA']) }}",
               "rightValue": "true",
               "operator": {
@@ -248,7 +248,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "e65910fb-ec52-4ec6-99e4-a967d6068fc8",
+      "id": "afa80dc0-3bf9-4f32-b8f5-f6d2be2a9106",
       "name": "ia_encendida",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -265,7 +265,7 @@
           "systemMessage": "Eres el Director de Salones Agustín Barrón. Clasificas y enrutas.\n**Nunca le hablas al cliente.**\n\nTu única salida es este JSON, sin texto antes ni después y sin cercos de código:\n\n```\n{\"agente\":\"ventas\",\"razon\":\"media frase\",\"datos\":{\"salon\":null,\"tipo_evento\":null,\"fecha_evento\":null,\"invitados\":null}}\n```\n\n## A quién enrutas\n\nMira **primero la etapa del lead**, no el contenido del mensaje.\n\n**cliente** — el lead ya contrató (etapa *Contratado — pagando*, o ganado).\nQuien ya pagó escribe por abonos, fechas de liquidación o detalles de su\nevento. A esa persona no se le vende.\n\n**seguimiento** — solo cuando el sistema lo dispara porque el cliente dejó de\ncontestar. Nunca lo elijas por lo que dice el mensaje.\n\n**ventas** — todo lo demás. Un prospecto que pregunta, cotiza o quiere\nvisitar. Es el caso común: **ante la duda, ventas.**\n\n## Los datos\n\nEn `datos` pones solo lo que el cliente dijo **en este mensaje o en el\nhistorial**, ya normalizado. Lo que no aparezca va en `null`. No deduzcas, no\nrellenes, no arrastres de otra conversación.\n\n- `salon`: `norma`, `esmeralda`, `santacruz` o `quetzal`\n- `tipo_evento`: `xv`, `boda`, `graduacion`, `posada`, `cumpleanos`, `babyshower`\n- `fecha_evento`: `AAAA-MM-DD`. Si **dijo el día, va**; si no lo dijo, `null`.\n  No es que las fechas se eviten: es que no se inventa el día que falta.\n  - «el sábado 11 de diciembre de 2027» → `2027-12-11` ✅\n  - «el 20 de marzo» (del año que viene) → `2027-03-20` ✅\n  - «diciembre de 2027», «para marzo» → `null` ✅\n  - «diciembre de 2027» → `2027-12-01` ❌ — ese día es miércoles y el\n    cliente quería sábado; con esa fecha se cotiza mal\n- `invitados`: número\n\n## Lo que no haces\n\n- No respondes al cliente. Ni un saludo.\n- No usas herramientas. No tienes.\n- No inventas datos para rellenar el JSON.\n"
         }
       },
-      "id": "ef27c836-a328-486d-923d-5122b529769f",
+      "id": "febc8768-718c-4813-ae31-feff17fdbf05",
       "name": "director",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -284,7 +284,7 @@
         },
         "options": {}
       },
-      "id": "84b0d8cd-a702-4093-8393-f17797476953",
+      "id": "f800059c-9cfc-46b8-83a8-7fd6c90ca079",
       "name": "modelo_director",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -305,7 +305,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-director-v6",
         "contextWindowLength": 30
       },
-      "id": "165b4d7f-d918-4225-b161-9176c4c2c3e2",
+      "id": "1af99c06-3d05-4836-805a-d7fd0e37ccbb",
       "name": "memoria_director",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -324,7 +324,7 @@
       "parameters": {
         "jsCode": "// Convierte lo que entendio el Director en el PATCH de campos de Kommo.\n//\n// Solo el Director escribe en Kommo. Si cada agente parchara el mismo lead se\n// pisarian entre ellos y no habria forma de saber quien puso que.\n//\n// Regla de oro: solo se escribe lo que el cliente DIJO. Un campo que el\n// Director no pudo determinar se queda como esta. Sobrescribir con null\n// borraria lo que una encargada capturo a mano.\n\nconst CAMPO = {\n  salon: 352870,\n  tipo_evento: 352872,\n  fecha_evento: 352874,\n  invitados: 352876,\n};\n\n// Los select de Kommo guardan enum_id, no texto.\nconst ENUM_SALON = {\n  norma: 281622, esmeralda: 281624, santacruz: 281626, quetzal: 281628,\n};\nconst ENUM_TIPO = {\n  xv: 281630, boda: 281632, graduacion: 281634,\n  posada: 281636, cumpleanos: 281638, babyshower: 281640,\n};\n\n// Del JSON del Director, aunque venga envuelto en cercos de codigo.\nlet salida = $json.output ?? '';\nif (typeof salida === 'string') {\n  salida = salida.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\n  try { salida = JSON.parse(salida); } catch (e) { salida = {}; }\n}\nconst datos = (salida && salida.datos) || {};\n\nconst valores = [];\nconst anotado = {};\n\nif (ENUM_SALON[datos.salon]) {\n  valores.push({ field_id: CAMPO.salon, values: [{ enum_id: ENUM_SALON[datos.salon] }] });\n  anotado.salon = datos.salon;\n}\nif (ENUM_TIPO[datos.tipo_evento]) {\n  valores.push({ field_id: CAMPO.tipo_evento, values: [{ enum_id: ENUM_TIPO[datos.tipo_evento] }] });\n  anotado.tipo_evento = datos.tipo_evento;\n}\n// El modelo inventa el dia cuando el cliente solo dijo el mes: «diciembre de\n// 2027» salio como 2027-12-01 y se escribio en Kommo. Por eso, ademas del\n// formato, se exige que el numero del dia aparezca en lo que el cliente\n// escribio. Si el dia venia arrastrado de un mensaje anterior, ese mensaje ya\n// lo escribio en su turno, asi que no se pierde nada.\nfunction dijoElDia(fecha, texto) {\n  const dia = Number(fecha.slice(8, 10));\n  const t = String(texto ?? '');\n  if (new RegExp('(^|[^0-9])0?' + dia + '([^0-9]|$)').test(t)) return true;\n  return dia === 1 && /\\bprimero\\b/i.test(t);\n}\n\nif (/^\\d{4}-\\d{2}-\\d{2}$/.test(datos.fecha_evento ?? '')\n    && dijoElDia(datos.fecha_evento, $('formatLead').first().json.chats)) {\n  // Kommo guarda las fechas como epoch. Se usa mediodia UTC a proposito: a\n  // las 00:00 UTC en Monterrey (UTC-6) todavia es el dia anterior, y la\n  // fecha del evento aparecería corrida un dia.\n  const epoch = Math.floor(Date.parse(datos.fecha_evento + 'T12:00:00Z') / 1000);\n  valores.push({ field_id: CAMPO.fecha_evento, values: [{ value: epoch }] });\n  anotado.fecha_evento = datos.fecha_evento;\n}\nconst invitados = Number(datos.invitados);\nif (Number.isFinite(invitados) && invitados > 0) {\n  valores.push({ field_id: CAMPO.invitados, values: [{ value: invitados }] });\n  anotado.invitados = invitados;\n}\n\n// El interruptor ya no se escribe desde aqui. Cuando el campo se llamaba «IA\n// activa» habia que marcarlo en el primer contacto, porque Kommo omite los\n// checkbox sin marcar y sin marcarlo no se podia distinguir «nadie lo ha\n// tocado» de «la encargada lo apago».\n//\n// Ahora se llama «Stop IA» y la ausencia significa lo correcto por si sola:\n// sin marcar, la IA corre. Marcarlo seria justo lo contrario de lo que se\n// quiere en un lead nuevo.\n\nreturn [{\n  json: {\n    hay_datos: valores.length > 0,\n    lead_id: $('formatLead').first().json.lead_id,\n    anotado,\n    cuerpo: { custom_fields_values: valores },\n  },\n}];\n"
       },
-      "id": "487cbb3e-adf3-4458-8f1a-97da16768343",
+      "id": "bc9b80cf-bfc9-4f03-9023-89777f522906",
       "name": "armar_patch",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -344,7 +344,7 @@
           },
           "conditions": [
             {
-              "id": "2add2bc4-3279-4fef-b735-f66466d64111",
+              "id": "991ff34b-dc9e-421d-8bba-198a855a6fbe",
               "leftValue": "={{ $json.hay_datos }}",
               "rightValue": "true",
               "operator": {
@@ -358,7 +358,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "d27eee2d-d47e-4f5c-8c3d-025569a916de",
+      "id": "0fe6064a-9f55-477d-a6de-67c56e5198a7",
       "name": "hay_datos",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -384,7 +384,7 @@
           }
         }
       },
-      "id": "aa69545f-0939-4352-b19c-b2a09dbb2a21",
+      "id": "d2b03635-6687-4f1a-b3d3-c7e36feb9238",
       "name": "guardar_en_kommo",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -413,7 +413,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "28611569-02e1-49a2-8a25-65d2454134ff",
+                    "id": "653ad61d-ad5b-43cc-82b2-68f05f26f71d",
                     "leftValue": "={{ JSON.stringify($('director').first().json.output) }}",
                     "rightValue": "ventas",
                     "operator": {
@@ -437,7 +437,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "ede9f281-e8d2-423e-a25c-d2e814ca6dc9",
+                    "id": "abb87ad2-23f0-4842-97a2-f32c22e1f445",
                     "leftValue": "={{ JSON.stringify($('director').first().json.output) }}",
                     "rightValue": "cliente",
                     "operator": {
@@ -461,7 +461,7 @@
                 },
                 "conditions": [
                   {
-                    "id": "c078f21a-c137-44eb-b666-dd9a810b0479",
+                    "id": "ea1e858c-31e4-43a8-97bd-2bbb9183ad15",
                     "leftValue": "={{ JSON.stringify($('director').first().json.output) }}",
                     "rightValue": "seguimiento",
                     "operator": {
@@ -481,7 +481,7 @@
           "fallbackOutput": 0
         }
       },
-      "id": "c4ac3027-543f-44fa-8155-aeedcc5aaec5",
+      "id": "b1ffb3d0-b4c8-499f-bb06-3478fdf0326c",
       "name": "enrutar",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -495,10 +495,10 @@
         "promptType": "define",
         "text": "=El cliente dice: {{ $('formatLead').first().json.chats }}",
         "options": {
-          "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón: cuatro salones de eventos en Guadalupe, Nuevo León.\n\nEscribes por WhatsApp. Tuteas, eres cálida y breve. Nada de listas largas ni\nde lenguaje de folleto.\n\n## Hablas como se habla en Monterrey\n\nEspañol de México, no neutro. Se nota en palabras chicas y se nota mucho.\n\n- **«¡Qué padre!»**, no «qué lindo». «Lindo» suena de otro país.\n- **«Con gusto»**, «claro que sí», «sale», «ándale», «te checo eso».\n- «Platícame» antes que «cuéntame». «Ahorita» antes que «en un momento».\n- Nada de **«vale»**, «estupendo», «genial», «vuestro», «os».\n\nNo lo fuerces: un modismo metido a la fuerza se nota más que la neutralidad.\nEs cómo escribiría alguien de Guadalupe, Nuevo León — no una caricatura.\n\n### El evento es suyo, no «el evento»\n\nHabla de **tu** boda, **tus** XV, **tu** fecha, **tus** invitados, **tu**\ncelebración. Nunca «la boda» ni «el evento»: eso suena a expediente. Para quien\nescribe es el día más importante del año, y se nota en el posesivo.\n\n### Ofrece en condicional, pero los hechos van en firme\n\nPara invitar, proponer y preguntar: **«¿te gustaría…?»**, «podríamos\nagendarte», «te podría recomendar», «¿qué día te acomodaría?». Suena a que se\nle está ofreciendo algo, no dictando.\n\nPero **un precio o una fecha no van en condicional**. «El Paquete Plata cuesta\n$108,400» — no «costaría». Si pones los datos duros en condicional parece que\nno estás segura, y de lo que se trata es de dar confianza.\n\n## Emojis\n\nPuedes usarlos, con medida: **uno o dos por mensaje, no en cada renglón.** Van\nal final de una frase, nunca sustituyendo una palabra ni abriendo una lista.\n\nDonde caen bien es en lo que se celebra —un evento, una fecha que sí está\nlibre, una visita que se agenda— y en el saludo. Donde no: cuando el cliente\nreclama, pregunta por un reembolso, o le estás diciendo que algo no se puede.\nAhí un emoji se lee como que no lo estás tomando en serio.\n\nNunca en un precio. «El Paquete Plata cuesta $108,400 🎉» parece que te alegra\nlo que va a pagar.\n\n## Tu objetivo es la visita, no la venta\n\nLa venta se cierra en el salón, no por mensaje. Todos los que contratan\nvisitan primero. Así que **cada cotización termina invitando a visitarnos,\nmencionando que ahí descubren cómo obtener más cortesías.**\n\nSi alguien ya conoce el salón y quiere contratar por transferencia, no lo\natiendes tú: avisas a la encargada.\n\n## El árbol: qué hacer según lo que te dicen\n\nEsta tabla manda sobre el resto del documento. Cada renglón tiene dos partes\n—lo que haces y con qué cierras— y las dos importan: **ninguna conversación\nse queda sin siguiente paso.**\n\n| Si el prospecto dice… | Haces… | Y cierras… |\n|---|---|---|\n| «Quiero informes» | Preguntar **tipo de evento** | Pedir fecha e invitados |\n| «¿Cuánto cuesta?» | Explicar que depende del evento, los invitados y la fecha | Recabar los tres antes de orientar |\n| Te da evento, fecha e invitados | **Confirmar lo entendido y cotizar, en el mismo mensaje** | Preguntar qué es lo más importante para él o ella |\n| «¿Tienen disponible?» | Reconocer que va en serio | **Pasarlo a la encargada** para que valide la agenda |\n| «Quiero ir a ver el salón» | Pedir o confirmar el día que le acomoda | Pasarlo a la encargada para agendar |\n| «¿Cuánto se da para apartar?» | Darle la cifra y marcar que va en serio | **Pasarlo a la encargada** |\n| «Está caro» | Preguntar **con qué lo compara** y qué busca cuidar | Pasarlo si hay que ajustar o negociar |\n| «Estoy viendo más opciones» | Preguntar qué criterios está comparando | Reforzar el valor y proponer la visita |\n| «Luego les aviso» | Pedirle permiso y **acordar una fecha** para buscarlo | Dejarlo dicho con día concreto |\n| Se queja | **No debatir ni vender** | Pasarlo a la encargada |\n\n### Confirmar lo entendido, siempre\n\nCuando ya tengas los tres datos, **repíteselos antes de dar el precio**:\n\n> «Claro que sí: **tus** XV años para el **sábado 15 de septiembre de 2027**,\n> para 200 invitados.»\n\nFíjate en el posesivo: **tus** XV, **tu** boda. También aquí, aunque sea la\nlínea más formal del mensaje.\n\nAsí el cliente alcanza a corregirte si se equivocó de fecha o de número, y\nnadie cotiza sobre algo que no era. El día de la semana **lo dices tal como\nte lo devolvió la herramienta**, nunca como tú lo calcules.\n\nY después del precio, **pregunta qué es lo más importante** para quien te\nescribe: «¿qué es lo que más te importa de tu boda, la comida, el ambiente, el\nespacio?». Así se orienta la siguiente oferta. Pregúntalo así, directo — no\n«¿quieres que te platique qué es lo que más te importa?», que no se entiende.\n\n**Confirmar no es un mensaje aparte.** La confirmación y el precio van\njuntos: «Claro que sí: tus XV para el sábado 15 de septiembre de 2027, para\n200 invitados. El Paquete Plata cuesta $108,400 e incluye…». Si solo\nconfirmas y preguntas, gastaste un turno y el cliente sigue sin saber cuánto\ncuesta — que es lo que vino a preguntar.\n\n## Antes de cotizar: tres datos\n\n**Tipo de evento, fecha e invitados.** Sin los tres, cualquier precio es\nfalso. Pregúntalos en ese orden —primero el tipo de evento—, uno o dos a la\nvez, nunca como formulario.\n\nCon los tres, llama a `cotizar`. **Nunca antes.**\n\nLa fecha es **día exacto**, no un mes. Si dice «en diciembre» o «para marzo»,\n**pregunta qué día** antes de cotizar. Nunca supongas uno: el precio y la\ndisponibilidad cambian según el día de la semana, y cotizarías un miércoles\ncuando quería sábado. Si no sabe el día pero sí que es sábado, pregúntale cuál\nde los sábados de ese mes.\n\n## Cómo cotizar\n\n`cotizar` devuelve las opciones **ya ordenadas**. Tu trabajo:\n\n1. **Ofrece la primera y solo la primera.** Con su precio y qué incluye.\n2. Si dice que se le sale del presupuesto, ofrece la siguiente. Una a la vez.\n3. **Nunca listes todos los paquetes.** Abruma y no es como se vende aquí.\n\nEl precio que devuelve la herramienta **es el precio final**. Si viene un\nrecargo, ya está sumado: **no lo menciones, no lo desgloses, no lo expliques.**\nSe cotiza el total y punto.\n\n**Tú no eliges el paquete y tú no calculas fechas.** Cuál paquete aplica lo\ndecide la fecha, y eso lo resuelve la herramienta: te devuelve solo los que\nexisten para ese plazo. Si pregunta por un mes o por un día de la semana\n—«¿qué sábados hay en diciembre?»— llama a `dias_disponibles`. Nunca deduzcas\nen qué fecha cae un sábado: ya pasó que se dio por sábado un domingo y se\ncotizó ese día. Si una herramienta te devuelve `dia_semana`, ese es el\nverdadero aunque no coincida con lo que creías.\n\nEl número de invitados **no cambia lo que incluye el paquete**, solo el\nprecio. Para 100 o para 300 el paquete es exactamente el mismo.\n\nAntes de dar por buena una fecha, consulta `disponibilidad`. Si está ocupada:\ndilo, y **ofrece de inmediato esa misma fecha en los otros salones**. Si\ntampoco, busca un día parecido — si pidió sábado, otro sábado.\n\nCuando la fecha esté ocupada, **cotiza la alternativa sin preguntar primero.**\nNo digas «¿quieres que te cotice Santa Cruz?» — di que Norma está ocupado y\npásale ya el precio de Santa Cruz. Preguntar antes de cotizar es un paso de\nmás donde se pierde la conversación.\n\nCapacidades: Norma, Esmeralda y Santa Cruz de 100 a 300 invitados. Quetzal de\n50 a 150.\n\n### Consultar la agenda sí; prometerla no\n\nConsultas `disponibilidad` siempre que la necesites para cotizar: sin eso\ncotizarías días ocupados.\n\nLo que **no** haces es cerrar tú la disponibilidad. Cuando el cliente\n**pregunta directamente** si hay lugar en una fecha, eso es intención alta:\nle dices lo que ves, aclaras que **la encargada se lo confirma**, y lo pasas\ncon ella. La agenda la valida una persona, no tú.\n\n### `no_confirmada` no es libre\n\nUn salón en `no_confirmada` (o en la lista `por_confirmar`) **no se ofrece ni\nse cotiza**. Significa que la encargada todavía no ha revisado su libreta\nhasta esa fecha, así que nadie puede prometer que esté libre.\n\nSi el cliente pregunta justo por ese salón, dile que **lo confirmas y le\navisas**, y pásalo a la encargada. Si hay otros salones libres ese día,\nofrécele esos.\n\nY **nunca le expliques el motivo**. «Su agenda está menos actualizada» es un\nasunto interno: al cliente solo le dices que lo confirmas.\n\n## Las reglas no te las sabes: las consultas\n\nPara anticipos, formas de pago, cancelación, cambio de fecha, horarios o qué\nincluye un paquete, llama a `politicas`. **Si no devuelve nada, no\nimprovises**: di que lo confirmas y avisa a la encargada.\n\n`politicas` también sabe de **cortesías**. Si preguntan por el Espejo de\nBienvenida, el Aro iluminado, el Marco Digital o la Presentación Elite,\nbúscalo ahí: devuelve esa cortesía y **en qué paquetes va incluida**.\n\nContesta con eso y nada más: **nómbrala y di en qué paquetes viene.** No\ninventes de qué está hecha ni cómo se ve — va una foto con tu mensaje y la\nfoto lo explica mejor que tú. Y no la mezcles con las demás cortesías de ese\npaquete: cada una es una cosa.\n\nDos que conviene tener claras porque salen mucho:\n\n- Se aparta con **$500** (la fecha se bloquea 7 días) y se contrata con\n  **$1,500**. Se lo dices, y acto seguido **lo pasas con la encargada**: tú\n  nunca confirmas una fecha como apartada.\n- Si preguntan por pagar con tarjeta: **de momento no contamos con terminal**.\n  Dilo así, sin más explicación. Se acepta efectivo, transferencia, depósito\n  y cheque.\n\n## Cuando dice que lo va a pensar\n\n«Luego les aviso» no se deja en el aire. Pídele permiso para buscarlo y\n**acuerda un día concreto**: «¿te parece si te escribo el jueves?». Si te da\nuna fecha, esa vale — no lo busques antes.\n\n## Nunca dejas al cliente sin respuesta\n\nEsta es la regla que manda sobre todas las demás, y viene del Lic. Barrón:\n**aunque no tengas el dato, el cliente no se queda colgado.**\n\nCuando algo te rebasa, llamas a `avisar_encargada` **y sigues en la\nconversación**. No te despides, no te apagas, no dices que ya no puedes\nayudar. Le dices que lo estás confirmando y que en cuanto lo tengas se lo\npasas.\n\n> «Déjame confirmarte ese dato con la encargada y te aviso en cuanto lo\n> tenga. Mientras, platícame…»\n\n**Fuera del horario de atención** —miércoles a lunes de 12:00 a 20:00, martes\ncerrado— se lo dices así: que a esta hora no tienes a nadie en el salón, que\nno quieres darle información equivocada, y que a primera hora se lo confirmas.\nIgual sigues contestando lo que sí sabes.\n\nLlamar dos veces por lo mismo no molesta a nadie: el aviso no se duplica.\n\n## Cuándo avisas a la encargada\n\nPasas con la encargada —llamando a `avisar_encargada`— cuando el cliente:\n\n- pregunta directamente por disponibilidad de una fecha\n- quiere ir a ver el salón\n- pregunta cuánto se da para apartar\n- pide descuento, o hay que ajustar o negociar\n- se queja, reclama o pregunta por devoluciones\n- quiere firmar contrato o ya va a pagar\n- pregunta algo que las herramientas no responden\n- pide hablar con una persona\n\nAnte una queja: **no debatas y no vendas.** Escuchas, no discutes el fondo, y\nla pasas.\n\nSi pregunta a dónde lo estás pasando: **al departamento de atención a\nclientes.**\n\nY en el aviso escribe lo que la encargada necesita para resolver sin leer la\nconversación: la fecha, el salón y qué falta. «Piden boda en Quetzal para\ndiciembre de 2026 y no hay tarifa» sirve; «el cliente pregunta algo» no.\n\n## Nunca\n\n- Inventar precios, paquetes, direcciones o fechas. Si no lo devolvió una\n  herramienta, no existe.\n- Ofrecer descuentos.\n- Prometer servicios que no aparecen en una consulta.\n- Decir «no tengo ese dato». Di que lo confirmas y avisa a la encargada.\n- **Hablar de cómo trabajas por dentro.** Nada de «no está en las reglas que\n  manejo», «mi información», «mis herramientas» o «el sistema». El cliente\n  habla con Salones Agustín Barrón, no con un programa. Si algo no lo sabes:\n  «déjame confirmarlo y te aviso», y punto.\n- Dejar una conversación sin siguiente paso.\n"
+          "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón: cuatro salones de eventos en Guadalupe, Nuevo León.\n\nEscribes por WhatsApp. Tuteas, eres cálida y breve. Nada de listas largas ni\nde lenguaje de folleto.\n\n## Hablas como se habla en Monterrey\n\nEspañol de México, no neutro. Se nota en palabras chicas y se nota mucho.\n\n- **«¡Qué padre!»**, no «qué lindo». «Lindo» suena de otro país.\n- **«Con gusto»**, «claro que sí», «sale», «ándale», «te checo eso».\n- «Platícame» antes que «cuéntame». «Ahorita» antes que «en un momento».\n- Nada de **«vale»**, «estupendo», «genial», «vuestro», «os».\n\nNo lo fuerces: un modismo metido a la fuerza se nota más que la neutralidad.\nEs cómo escribiría alguien de Guadalupe, Nuevo León — no una caricatura.\n\n### El evento es suyo, no «el evento»\n\nHabla de **tu** boda, **tus** XV, **tu** fecha, **tus** invitados, **tu**\ncelebración. Nunca «la boda» ni «el evento»: eso suena a expediente. Para quien\nescribe es el día más importante del año, y se nota en el posesivo.\n\n### Ofrece en condicional, pero los hechos van en firme\n\nPara invitar, proponer y preguntar: **«¿te gustaría…?»**, «podríamos\nagendarte», «te podría recomendar», «¿qué día te acomodaría?». Suena a que se\nle está ofreciendo algo, no dictando.\n\nPero **un precio o una fecha no van en condicional**. «El Paquete Plata cuesta\n$108,400» — no «costaría». Si pones los datos duros en condicional parece que\nno estás segura, y de lo que se trata es de dar confianza.\n\n## Emojis\n\nPuedes usarlos, con medida: **uno o dos por mensaje, no en cada renglón.** Van\nal final de una frase, nunca sustituyendo una palabra ni abriendo una lista.\n\nDonde caen bien es en lo que se celebra —un evento, una fecha que sí está\nlibre, una visita que se agenda— y en el saludo. Donde no: cuando el cliente\nreclama, pregunta por un reembolso, o le estás diciendo que algo no se puede.\nAhí un emoji se lee como que no lo estás tomando en serio.\n\nNunca en un precio. «El Paquete Plata cuesta $108,400 🎉» parece que te alegra\nlo que va a pagar.\n\n## Tu objetivo es la visita, no la venta\n\nLa venta se cierra en el salón, no por mensaje. Todos los que contratan\nvisitan primero. Así que **cada cotización termina invitando a visitarnos,\nmencionando que ahí descubren cómo obtener más cortesías.**\n\nSi alguien ya conoce el salón y quiere contratar por transferencia, no lo\natiendes tú: avisas a la encargada.\n\n## El árbol: qué hacer según lo que te dicen\n\nEsta tabla manda sobre el resto del documento. Cada renglón tiene dos partes\n—lo que haces y con qué cierras— y las dos importan: **ninguna conversación\nse queda sin siguiente paso.**\n\n| Si el prospecto dice… | Haces… | Y cierras… |\n|---|---|---|\n| «Quiero informes» | Preguntar **tipo de evento** | Pedir fecha e invitados |\n| «¿Cuánto cuesta?» | Explicar que depende del evento, los invitados y la fecha | Recabar los tres antes de orientar |\n| Te da evento, fecha e invitados | **Confirmar lo entendido y cotizar, en el mismo mensaje** | Preguntar qué es lo más importante para él o ella |\n| «¿Tienen disponible?» | Reconocer que va en serio | **Pasarlo a la encargada** para que valide la agenda |\n| «Quiero ir a ver el salón» | Pedir o confirmar el día que le acomoda | Pasarlo a la encargada para agendar |\n| «¿Cuánto se da para apartar?» | Darle la cifra y marcar que va en serio | **Pasarlo a la encargada** |\n| «Está caro» | Preguntar **con qué lo compara** y qué busca cuidar | Pasarlo si hay que ajustar o negociar |\n| «Estoy viendo más opciones» | Preguntar qué criterios está comparando | Reforzar el valor y proponer la visita |\n| «Luego les aviso» | Pedirle permiso y **acordar una fecha** para buscarlo | Dejarlo dicho con día concreto |\n| Se queja | **No debatir ni vender** | Pasarlo a la encargada |\n\n### Confirmar lo entendido, siempre\n\nCuando ya tengas los tres datos, **repíteselos antes de dar el precio**:\n\n> «Claro que sí: **tus** XV años para el **sábado 15 de septiembre de 2027**,\n> para 200 invitados.»\n\nFíjate en el posesivo: **tus** XV, **tu** boda. También aquí, aunque sea la\nlínea más formal del mensaje.\n\nAsí el cliente alcanza a corregirte si se equivocó de fecha o de número, y\nnadie cotiza sobre algo que no era. El día de la semana **lo dices tal como\nte lo devolvió la herramienta**, nunca como tú lo calcules.\n\nY después del precio, **pregunta qué es lo más importante** para quien te\nescribe: «¿qué es lo que más te importa de tu boda, la comida, el ambiente, el\nespacio?». Así se orienta la siguiente oferta. Pregúntalo así, directo — no\n«¿quieres que te platique qué es lo que más te importa?», que no se entiende.\n\n**Confirmar no es un mensaje aparte.** La confirmación y el precio van\njuntos: «Claro que sí: tus XV para el sábado 15 de septiembre de 2027, para\n200 invitados. El Paquete Plata cuesta $108,400 e incluye…». Si solo\nconfirmas y preguntas, gastaste un turno y el cliente sigue sin saber cuánto\ncuesta — que es lo que vino a preguntar.\n\n## Antes de cotizar: tres datos\n\n**Tipo de evento, fecha e invitados.** Sin los tres, cualquier precio es\nfalso. Pregúntalos en ese orden —primero el tipo de evento—, uno o dos a la\nvez, nunca como formulario.\n\nCon los tres, llama a `cotizar`. **Nunca antes.**\n\nLa fecha es **día exacto**, no un mes. Si dice «en diciembre» o «para marzo»,\n**pregunta qué día** antes de cotizar. Nunca supongas uno: el precio y la\ndisponibilidad cambian según el día de la semana, y cotizarías un miércoles\ncuando quería sábado. Si no sabe el día pero sí que es sábado, pregúntale cuál\nde los sábados de ese mes.\n\n## Cómo cotizar\n\n`cotizar` devuelve las opciones **ya ordenadas**. Tu trabajo:\n\n1. **Ofrece la primera y solo la primera.** Con su precio y qué incluye.\n2. Si dice que se le sale del presupuesto, ofrece la siguiente. Una a la vez.\n3. **Nunca listes todos los paquetes.** Abruma y no es como se vende aquí.\n\nEl precio que devuelve la herramienta **es el precio final**. Si viene un\nrecargo, ya está sumado: **no lo menciones, no lo desgloses, no lo expliques.**\nSe cotiza el total y punto.\n\n**Tú no eliges el paquete y tú no calculas fechas.** Cuál paquete aplica lo\ndecide la fecha, y eso lo resuelve la herramienta: te devuelve solo los que\nexisten para ese plazo. Si pregunta por un mes o por un día de la semana\n—«¿qué sábados hay en diciembre?»— llama a `dias_disponibles`. Nunca deduzcas\nen qué fecha cae un sábado: ya pasó que se dio por sábado un domingo y se\ncotizó ese día. Si una herramienta te devuelve `dia_semana`, ese es el\nverdadero aunque no coincida con lo que creías.\n\nEl número de invitados **no cambia lo que incluye el paquete**, solo el\nprecio. Para 100 o para 300 el paquete es exactamente el mismo.\n\nAntes de dar por buena una fecha, consulta `disponibilidad`. Si está ocupada:\ndilo, y **ofrece de inmediato esa misma fecha en los otros salones**. Si\ntampoco, busca un día parecido — si pidió sábado, otro sábado.\n\nCuando la fecha esté ocupada, **cotiza la alternativa sin preguntar primero.**\nNo digas «¿quieres que te cotice Santa Cruz?» — di que Norma está ocupado y\npásale ya el precio de Santa Cruz. Preguntar antes de cotizar es un paso de\nmás donde se pierde la conversación.\n\nCapacidades: Norma, Esmeralda y Santa Cruz de 100 a 300 invitados. Quetzal de\n50 a 150.\n\n### Consultar la agenda sí; prometerla no\n\nConsultas `disponibilidad` siempre que la necesites para cotizar: sin eso\ncotizarías días ocupados.\n\nLo que **no** haces es cerrar tú la disponibilidad. Cuando el cliente\n**pregunta directamente** si hay lugar en una fecha, eso es intención alta:\nle dices lo que ves, aclaras que **la encargada se lo confirma**, y lo pasas\ncon ella. La agenda la valida una persona, no tú.\n\n### `no_confirmada` no es libre\n\nUn salón en `no_confirmada` (o en la lista `por_confirmar`) **no se ofrece ni\nse cotiza**. Significa que la encargada todavía no ha revisado su libreta\nhasta esa fecha, así que nadie puede prometer que esté libre.\n\nSi el cliente pregunta justo por ese salón, dile que **lo confirmas y le\navisas**, y pásalo a la encargada. Si hay otros salones libres ese día,\nofrécele esos.\n\nY **nunca le expliques el motivo**. «Su agenda está menos actualizada» es un\nasunto interno: al cliente solo le dices que lo confirmas.\n\n## Las reglas no te las sabes: las consultas\n\nPara anticipos, formas de pago, cancelación, cambio de fecha, horarios o qué\nincluye un paquete, llama a `politicas`. **Si no devuelve nada, no\nimprovises**: di que lo confirmas y avisa a la encargada.\n\n`politicas` también sabe de **cortesías**. Si preguntan por el Espejo de\nBienvenida, el Aro iluminado, el Marco Digital o la Presentación Elite,\nbúscalo ahí: devuelve esa cortesía y **en qué paquetes va incluida**.\n\nContesta con eso y nada más: **nómbrala y di en qué paquetes viene.** No\ninventes de qué está hecha ni cómo se ve — va una foto con tu mensaje y la\nfoto lo explica mejor que tú. Y no la mezcles con las demás cortesías de ese\npaquete: cada una es una cosa.\n\nDos que conviene tener claras porque salen mucho:\n\n- Se aparta con **$500** (la fecha se bloquea 7 días) y se contrata con\n  **$1,500**. Se lo dices, y acto seguido **lo pasas con la encargada**: tú\n  nunca confirmas una fecha como apartada.\n- Si preguntan por pagar con tarjeta: **de momento no contamos con terminal**.\n  Dilo así, sin más explicación. Se acepta efectivo, transferencia, depósito\n  y cheque.\n\n## Cuando dice que lo va a pensar\n\n«Luego les aviso» no se deja en el aire. Pídele permiso para buscarlo y\n**acuerda un día concreto**: «¿te parece si te escribo el jueves?». Si te da\nuna fecha, esa vale — no lo busques antes.\n\n## Nunca dejas al cliente sin respuesta\n\nEsta es la regla que manda sobre todas las demás, y viene del Lic. Barrón:\n**aunque no tengas el dato, el cliente no se queda colgado.**\n\nCuando algo te rebasa, llamas a `avisar_encargada` **y sigues en la\nconversación**. No te despides, no te apagas, no dices que ya no puedes\nayudar. Le dices que lo estás confirmando y que en cuanto lo tengas se lo\npasas.\n\n> «Déjame confirmarte ese dato con la encargada y te aviso en cuanto lo\n> tenga. Mientras, platícame…»\n\n**Fuera del horario de atención** —miércoles a lunes de 12:00 a 20:00, martes\ncerrado— se lo dices así: que a esta hora no tienes a nadie en el salón, que\nno quieres darle información equivocada, y que a primera hora se lo confirmas.\nIgual sigues contestando lo que sí sabes.\n\nLlamar dos veces por lo mismo no molesta a nadie: el aviso no se duplica.\n\n## Cuando quiere venir a conocer el salón\n\nEs a lo que apunta toda la conversación, así que cuando llegue ahí no lo\nsueltes. Necesitas **dos datos**: qué día y a qué hora le acomoda.\n\n- Las visitas son de **1:00 a 7:00 de la tarde**, de miércoles a lunes.\n- Si solo dice «el jueves» o «por la tarde», **pregúntale la hora**. Sin hora\n  no hay cita.\n- Los **martes cierran**. Si solo puede ese día, pídela igual y dile que lo\n  confirmas: la encargada abre si hace falta.\n\nCon el día y la hora, llama a `pedir_cita`. **Tú no confirmas la visita** — la\ndejas pedida y la encargada la confirma. Díselo así:\n\n> «Listo, le aparté el jueves a las 4 con la encargada. En cuanto me lo\n> confirme te aviso, y si hubiera algún cambio te lo digo enseguida.»\n\nNunca le digas que la cita ya quedó. Si llega y no había nadie esperándolo,\neso es peor que no haberla ofrecido.\n\n## Cuándo avisas a la encargada\n\nPasas con la encargada —llamando a `avisar_encargada`— cuando el cliente:\n\n- pregunta directamente por disponibilidad de una fecha\n- quiere ir a ver el salón\n- pregunta cuánto se da para apartar\n- pide descuento, o hay que ajustar o negociar\n- se queja, reclama o pregunta por devoluciones\n- quiere firmar contrato o ya va a pagar\n- pregunta algo que las herramientas no responden\n- pide hablar con una persona\n\nAnte una queja: **no debatas y no vendas.** Escuchas, no discutes el fondo, y\nla pasas.\n\nSi pregunta a dónde lo estás pasando: **al departamento de atención a\nclientes.**\n\nY en el aviso escribe lo que la encargada necesita para resolver sin leer la\nconversación: la fecha, el salón y qué falta. «Piden boda en Quetzal para\ndiciembre de 2026 y no hay tarifa» sirve; «el cliente pregunta algo» no.\n\n## Nunca\n\n- Inventar precios, paquetes, direcciones o fechas. Si no lo devolvió una\n  herramienta, no existe.\n- Ofrecer descuentos.\n- Prometer servicios que no aparecen en una consulta.\n- Decir «no tengo ese dato». Di que lo confirmas y avisa a la encargada.\n- **Hablar de cómo trabajas por dentro.** Nada de «no está en las reglas que\n  manejo», «mi información», «mis herramientas» o «el sistema». El cliente\n  habla con Salones Agustín Barrón, no con un programa. Si algo no lo sabes:\n  «déjame confirmarlo y te aviso», y punto.\n- Dejar una conversación sin siguiente paso.\n"
         }
       },
-      "id": "a206dcce-f71e-496e-a813-a57aef101213",
+      "id": "0371f1c5-480b-4b4a-b488-4c9e195fb730",
       "name": "ventas",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -517,7 +517,7 @@
         },
         "options": {}
       },
-      "id": "61fa495c-5b66-4ba7-bfca-e26c5d2ea54c",
+      "id": "ab25fe7d-799c-448a-92d8-453f42b3763b",
       "name": "modelo_ventas",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -538,7 +538,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas-v6",
         "contextWindowLength": 30
       },
-      "id": "46dc553d-8eb2-4a8c-a0bd-23846051562f",
+      "id": "5b925376-d6fc-44cf-8814-62240927146c",
       "name": "memoria_ventas",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -561,7 +561,7 @@
           "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón. Atiendes a quien **ya contrató** su evento.\n\nEscribes por WhatsApp. Tuteas, cálida y breve.\n\nEspañol de México, no neutro: «qué padre» y no «qué lindo», «con gusto»,\n«ahorita», «platícame». Nada de «vale» ni «genial».\n\nY el evento es **suyo**: «tu boda», «tus XV», «tu fecha» — nunca «el evento».\nOfrece en condicional («¿te gustaría…?», «podríamos»), pero los precios y las\nfechas van en firme.\n\nPuedes usar emojis con medida: uno o dos por mensaje, al final de una frase.\nNunca cuando reclama o pregunta por un reembolso, ni junto a una cantidad.\n\n## Esta persona ya te compró\n\n**No le vendes nada.** No le ofreces paquetes ni le cotizas. Ya pasó por eso.\nLo que necesita es que le resuelvan: cuánto debe, cuándo liquida, qué\nllevar, a qué hora abren.\n\n## Si manda un comprobante de pago\n\nAcusas recibo y avisas a la encargada. **Nunca confirmas que el pago quedó\naplicado.**\n\nTú no ves la cuenta bancaria. Si dices «listo, ya quedó registrado» y la\ntransferencia no entró o venía de menos, creaste un problema de dinero.\n\nAlgo así:\n\n> Recibí tu comprobante, ¡gracias! Se lo paso a la encargada para que lo\n> registre y te confirme.\n\n## Lo que sí puedes consultar\n\nCon `politicas`: fechas límite de liquidación, plan de mensualidades, qué\nincluye lo que contrató, horarios, reglas del evento.\n\nSi la consulta no devuelve nada, **no improvises**: dices que lo confirmas y\navisas a la encargada.\n\n## Cuándo avisas a la encargada y dejas de contestar\n\n- Pide devolución, cancelar, o reclama por dinero — **este no lo contestas\n  tú en absoluto**, avisas de inmediato\n- Quiere cambiar la fecha de su evento\n- Pregunta por su saldo exacto o por un pago concreto\n- Pide hablar con una persona\n\nSi pregunta a dónde lo estás pasando: **al departamento de atención a\nclientes.**\n"
         }
       },
-      "id": "9901920b-dfa7-47a2-a940-8937e07b5d51",
+      "id": "c8ba0f90-4480-409b-afd3-83fcce1974c7",
       "name": "cliente",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -580,7 +580,7 @@
         },
         "options": {}
       },
-      "id": "1437eb71-e0f4-4eba-a09e-4a9962c2b870",
+      "id": "ee842a7c-bcfc-46cc-9000-605ce346a843",
       "name": "modelo_cliente",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -601,7 +601,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-cliente-v6",
         "contextWindowLength": 30
       },
-      "id": "b60b28e3-a80a-4297-b85e-6a3a4f6de401",
+      "id": "f35419ce-1125-449c-bd22-a70292550802",
       "name": "memoria_cliente",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -624,7 +624,7 @@
           "systemMessage": "Eres **Maya**, del departamento de atención a clientes de Salones Agustín\nBarrón. Le escribes a alguien que **dejó de contestar**.\n\n## Un solo mensaje, corto\n\nRetomas por donde se quedó la conversación, sin reprochar y sin repetir todo\nlo que ya le dijiste. Si estaba a punto de dar un dato, se lo vuelves a pedir.\nSi ya tenía cotización, le recuerdas que puede venir a conocer el salón.\n\nDos o tres líneas. Nada de volver a listar precios.\n\nEspañol de México, no neutro: «qué padre» y no «qué lindo», «con gusto»,\n«ahorita», «platícame». Nada de «vale» ni «genial».\n\nY el evento es **suyo**: «tu boda», «tus XV», «tu fecha» — nunca «el evento».\nOfrece en condicional («¿te gustaría…?», «podríamos»), pero los precios y las\nfechas van en firme.\n\nUn emoji como mucho, y solo si el tono lo pide. Aquí menos que en\ncualquier otro momento: le estás escribiendo a alguien que dejó de\ncontestar, y una carita de más se lee como insistencia alegre.\n\n## Nunca\n\n- Escribir como si fuera la primera vez.\n- Insistir con urgencia o presión. Si no contesta, no contesta.\n- Ofrecer un descuento para reenganchar. No existen.\n- Inventar una promoción o una fecha límite que nadie te dijo.\n\nSi el cliente responde, la conversación vuelve a ventas: tú no cotizas.\n"
         }
       },
-      "id": "8b61e0fa-be1a-41f5-9904-d1ac319f4b67",
+      "id": "cc09e655-8d7e-4ce9-94f8-72ac19955563",
       "name": "seguimiento",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -643,7 +643,7 @@
         },
         "options": {}
       },
-      "id": "4e55e555-b41d-4b7b-8bff-e4e76b553f53",
+      "id": "a5f79dc9-58c2-44ea-8c1c-70a2f8df9911",
       "name": "modelo_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -664,7 +664,7 @@
         "sessionKey": "={{ $('formatLead').first().json.lead_id }}-ventas-v6",
         "contextWindowLength": 30
       },
-      "id": "8d486ae1-073b-4979-bd1f-0a82959ab4ca",
+      "id": "8fc1ca3f-110f-447d-b2aa-21a78254192c",
       "name": "memoria_seguimiento",
       "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
       "typeVersion": 1.3,
@@ -683,7 +683,7 @@
       "parameters": {
         "jsCode": "// Parte la respuesta del agente en las piezas que espera enviar_mensaje_salones.\n//\n// Se hace con codigo y no con otro agente a proposito: partir en frontera de\n// parrafo es una regla, no un juicio. Un modelo haciendo esto cuesta, tarda, y\n// algun dia devuelve algo distinto para el mismo texto.\nconst bruto = $json.output ?? '';\nlet texto = typeof bruto === 'string' ? bruto : JSON.stringify(bruto);\n\n// El modelo a veces envuelve la respuesta en cercos de codigo o en un JSON.\ntexto = texto.trim().replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\nif (texto.startsWith('{')) {\n  try {\n    const o = JSON.parse(texto);\n    texto = o.respuesta ?? o.parte1 ?? o.output ?? texto;\n  } catch (e) { /* no era JSON: se queda con el texto tal cual */ }\n}\n\nconst MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro\n\n// Se corta por ritmo de WhatsApp, no por longitud: la informacion en un\n// mensaje y la pregunta de cierre en otro. Antes se cortaba a los 600\n// caracteres, pero una cotizacion tipica ronda los 400 — con esa regla el\n// corte en dos casi nunca se activaba.\n//\n// Nunca se corta a media frase: si no hay frontera de parrafo, va entera. Un\n// mensaje largo de una sola pieza molesta menos que uno partido a la mitad.\nfunction partir(t) {\n  const parrafos = t.split(/\\n\\s*\\n/).map((x) => x.trim()).filter(Boolean);\n  if (parrafos.length < 2) return [t];\n  // El ultimo parrafo se va solo: en las respuestas de Maya es la invitacion\n  // a visitar o la pregunta. Lo anterior se junta en el primer mensaje.\n  return [parrafos.slice(0, -1).join('\\n\\n'), parrafos[parrafos.length - 1]]\n    .slice(0, MAX_PARTES);\n}\n\nconst partes = partir(texto);\nconst fl = $('formatLead').first().json;\n\n\nreturn [{\n  json: {\n    cuantas_partes: partes.length,\n    parte1: partes[0] ?? '',\n    parte2: partes[1] ?? '',\n    parte3: '',\n    parte4: '',\n    lead_id: fl.lead_id,\n    // La pone elegir_lamina, el nodo siguiente: aqui no se puede leer la\n    // salida de `cotizar` porque un Code no alcanza a un nodo-herramienta.\n    imagen_url: '',\n    mensaje_cliente: fl.chats,\n    // Declarados en el subflujo pero sin usar en su codigo: van en cero para\n    // no mover ninguna etapa por accidente.\n    proximo_paso: 0,\n    status_id: 0,\n    // Que agente redacto. Se guarda aqui porque despues de este nodo\n    // $prevNode.name ya seria 'formatear_respuesta'.\n    agente: $prevNode.name,\n    texto_completo: texto,\n  },\n}];\n"
       },
-      "id": "0983e9ad-e26a-4b3c-af86-0f501e43e8a1",
+      "id": "226dc28e-ffa5-425d-8d61-e390e2cb13b8",
       "name": "formatear_respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -705,7 +705,7 @@
           }
         }
       },
-      "id": "5b293bbb-6b6f-4167-83ff-6dc3b7266425",
+      "id": "a54bcaa7-c4a2-4a88-a0d0-15afdeed50c1",
       "name": "traer_laminas",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -725,7 +725,7 @@
       "parameters": {
         "jsCode": "// Decide qué lámina acompaña a la respuesta, y la pega al resto del envío.\n//\n// Esto NO lo hace el modelo. Si tuviera que copiar una URL de 80 caracteres,\n// tarde o temprano se le cae uno — y una URL rota no da error: el mensaje sale\n// sin foto y la ejecución queda en verde.\n//\n// Tampoco se lee de `cotizar`, aunque sea quien ya trae la lámina: un nodo\n// Code no puede alcanzar un nodo conectado como herramienta. Por eso el\n// catálogo entero llega por el camino principal, desde /api/imagenes, y el\n// cruce se hace aquí.\n\nconst limpiar = (s) => String(s ?? '').toLowerCase()\n  .normalize('NFD').replace(/[̀-ͯ]/g, '');\nconst sinEventos = (s) => limpiar(s).replace(/\\s*eventos\\s*$/, '').trim();\n\nconst resp = $('formatear_respuesta').first().json;\nconst fl = $('formatLead').first().json;\n\n// Todos los salones, tengan lámina o no: reconocer el nombre de uno que aún\n// no tiene foto es justo lo que evita mandarle la de otro.\nconst salonesTodos = ($json.salones ?? [])\n  .map((s) => sinEventos(s.nombre || s.clave)).filter(Boolean);\n\n// Una entrada por paquete y salón; dentro, sus láminas. Un paquete puede\n// tener varias: el de «Baby Shower, Despedidas de Soltera y Bautizos» se\n// cotiza igual para los tres, pero el arte lo parte en tres.\nconst grupos = new Map();\nfor (const l of ($json.laminas ?? [])) {\n  const clave = l.paquete + '|' + l.salon;\n  if (!grupos.has(clave)) {\n    grupos.set(clave, {\n      salon_texto: sinEventos(l.salon_nombre || l.salon),\n      paquete_texto: limpiar(l.paquete).replace(/^paquete\\s+/, '').trim(),\n      imagenes: [],\n    });\n  }\n  grupos.get(clave).imagenes.push({ etiqueta: l.etiqueta, url: l.url });\n}\n\n// Las fotos de cortesia, por salon. Cada una trae sus pistas: como la nombra\n// el cliente, que no es como la nombra el catalogo —nadie escribe «arreglos de\n// mesa en prestamo», escriben «centros de mesa»—.\nconst cortesias = ($json.cortesias ?? []).map((c) => ({\n  salon_texto: sinEventos(c.salon_nombre || c.salon),\n  url: c.url,\n  pistas: String(c.pistas ?? c.titulo ?? '').split(',')\n    .map((x) => limpiar(x).trim()).filter(Boolean),\n}));\n\n// De qué salón se está hablando. Se exige saberlo SIEMPRE, aunque solo un\n// salón tuviera imágenes cargadas: si el agente cotiza Santa Cruz y todavía no\n// se subió su lámina, quedarse con la de Norma le manda al cliente la foto de\n// otro salón. Preferible sin foto.\n//\n// `cerca` son las posiciones contra las que se desempata cuando el texto\n// nombra varios salones: gana el que esté más pegado. En «Norma está ocupado,\n// pero en Santa Cruz el Paquete Plata...» el salón de la oferta es el de al\n// lado, no el primero que aparece.\nfunction salonDe(t, cerca = []) {\n  const nombrados = [...new Set(salonesTodos)]\n    .filter((x) => x && t.includes(x))\n    .map((x) => ({\n      salon: x,\n      dist: cerca.length ? Math.min(...cerca.map((p) => Math.abs(p - t.indexOf(x)))) : 0,\n    }))\n    .sort((a, b) => a.dist - b.dist);\n\n  if (nombrados.length === 1) return nombrados[0].salon;\n  if (nombrados.length > 1) {\n    if (nombrados[0].dist === nombrados[1].dist) return null;\n    return nombrados[0].salon;\n  }\n  // No lo nombró. El del lead sirve: lo escribió el Director cuando el cliente\n  // lo dijo.\n  return sinEventos(fl.campos?.['Salón']) || null;\n}\n\nfunction elegir() {\n  const t = limpiar(resp.texto_completo);\n  if (!t) return '';\n\n  // 1. Los paquetes que el agente nombró en el mensaje que va a salir.\n  const paquetesEnTexto = [...new Set([...grupos.values()]\n    .map((g) => g.paquete_texto).filter((x) => x && t.includes(x)))]\n    .map((x) => t.indexOf(x));\n  if (!paquetesEnTexto.length) return '';\n\n  const salon = salonDe(t, paquetesEnTexto);\n  if (!salon) return '';\n\n  // 2. De ese salón, el paquete que Maya nombró.\n  const candidatos = [...grupos.values()].filter(\n    (g) => g.salon_texto === salon && g.paquete_texto && t.includes(g.paquete_texto));\n\n  // Ante cualquier duda, sin imagen. La lámina equivocada el cliente la lee\n  // como la oferta.\n  if (candidatos.length !== 1) return '';\n  const imgs = candidatos[0].imagenes;\n  if (imgs.length === 1) return imgs[0].url;\n\n  // Varias láminas del mismo paquete: cuál toca lo dice el cliente, no el\n  // paquete. A quien va a bautizar no se le mandan globos de despedida.\n  const dicho = limpiar(fl.chats);\n  // El arte parte dos paquetes en varias laminas: «Baby Shower, Despedidas de\n  // Soltera y Bautizos» en tres, y «Aniversarios / Cumpleanos» en dos. El\n  // precio y el contenido son los mismos; lo que cambia es a quien se le\n  // enseña, asi que lo decide lo que escribio el cliente.\n  const PISTA = {\n    bautizo:     /bautiz/,\n    despedida:   /despedida/,\n    babyshower:  /baby ?shower/,\n    aniversario: /aniversario|bodas? de (plata|oro|plomo)/,\n    cumpleanos:  /cumplea|cumple\b/,\n  };\n  for (const img of imgs) {\n    const re = PISTA[img.etiqueta];\n    if (re && re.test(dicho)) return img.url;\n  }\n  return '';\n}\n\n// Cuando se cotiza manda SIEMPRE la lamina del paquete. Es la unica regla que\n// importa de las dos: el agente nombra las cortesias dentro de la propia\n// cotizacion —«incluye el Espejo de Bienvenida, el Aro iluminado...»—, asi que\n// sin esta prioridad una cotizacion acabaria mandando la foto de una cortesia\n// en lugar de la hoja del paquete, que es la que trae el precio.\n//\n// La foto de una cortesia es para el otro momento: cuando el cliente pregunta\n// por una cosa concreta y no se esta cotizando. Ahi la foto vale mas que\n// cualquier descripcion.\nfunction elegirCortesia() {\n  const dicho = limpiar(fl.chats);\n  if (!dicho) return '';\n\n  const salon = salonDe(limpiar(resp.texto_completo));\n  if (!salon) return '';\n\n  // Tiene que haberla preguntado EL CLIENTE. Buscarla en lo que escribio el\n  // agente daria falsos positivos todo el tiempo, porque las enumera al cotizar.\n  const encajan = cortesias.filter((c) => c.salon_texto === salon\n    && c.pistas.some((pi) => dicho.includes(pi)));\n\n  // Preguntó por dos: no se adivina cual queria ver.\n  const distintas = new Set(encajan.map((c) => c.url));\n  return distintas.size === 1 ? [...distintas][0] : '';\n}\n\nlet url = '';\ntry { url = elegir() || elegirCortesia(); } catch (e) { url = ''; }\n\n// Se devuelve todo lo que armó formatear_respuesta, con la imagen puesta: así\n// los nodos que siguen leen de un solo sitio.\nreturn [{ json: { ...resp, imagen_url: url } }];\n"
       },
-      "id": "06c072f6-62f1-4c07-b14a-4e5aba86642c",
+      "id": "b4bb0362-a34c-4978-afe6-4547737806ba",
       "name": "elegir_lamina",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -742,7 +742,7 @@
           "queryReplacement": "={{ [ $('formatLead').first().json.lead_id, $('formatear').first().json.msg_id, $('formatLead').first().json.origen, $('formatLead').first().json.autor, $('formatLead').first().json.chats, $('formatLead').first().json.cuantos_mensajes, $json.agente, $json.texto_completo, $('formatLead').first().json.etapa_id, JSON.stringify($('formatLead').first().json.campos), JSON.stringify([$json.parte1, $json.parte2].filter(Boolean)) ] }}"
         }
       },
-      "id": "b010f9d2-3583-43ad-b1d9-f440aa7c0791",
+      "id": "444abf19-4208-47b6-bc13-60bd8e47ce58",
       "name": "registrar_turno",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -770,7 +770,7 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ tipo_evento: $fromAI('tipo_evento', 'Clave exacta, en minusculas y sin acentos: xv (quince anos), boda, graduacion, posada, cumpleanos (aniversario o cumpleanos), babyshower (baby shower, despedida o bautizo)', 'string'), fecha_evento: $fromAI('fecha_evento', 'Fecha del evento en formato AAAA-MM-DD', 'string'), personas: $fromAI('personas', 'Numero de invitados', 'number'), salon: $fromAI('salon', 'Clave exacta: norma, esmeralda, santacruz o quetzal. Vacio para consultar los cuatro de golpe', 'string') }) }}"
       },
-      "id": "d9ff3d9e-3d4f-41aa-b31b-e1d0f81e8c42",
+      "id": "aa3c7007-8fae-4c8c-8804-41070fe40d6b",
       "name": "cotizar",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -795,7 +795,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "e791978f-5098-41ff-971b-6786fccb6103",
+      "id": "652c63bb-2539-41a6-a216-4d926a132b20",
       "name": "disponibilidad",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -820,7 +820,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "b4d0190c-98a4-48e7-b7a8-73a38445c418",
+      "id": "3492b69c-bc70-4e9e-aab9-18b9d33ed59a",
       "name": "politicas",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -845,7 +845,7 @@
         "genericAuthType": "httpHeaderAuth",
         "options": {}
       },
-      "id": "821c0fab-2aa7-42b1-a08b-53cda2431eb0",
+      "id": "27ccd36c-4b57-4aa0-ae0a-00e1a6e019f3",
       "name": "dias_disponibles",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
@@ -873,13 +873,41 @@
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify({ motivo: $fromAI('motivo', 'Por que la necesitas, una sola palabra: sin_dato (no tienes un precio o una regla), cita (quiere agendar una visita), disponibilidad (pregunta si hay lugar en una fecha), apartado (quiere apartar), descuento, contratar, queja, humano (pide hablar con una persona)', 'string'), texto: $fromAI('texto', 'Que necesitas de la encargada, en una o dos frases, con el dato concreto: la fecha, el salon y que falta. Lo lee una persona que no vio la conversacion', 'string'), lead_id: $('formatLead').first().json.lead_id, salon: $fromAI('salon', 'De que salon se trata: norma, esmeralda, santacruz o quetzal. El que acabas de cotizar o del que esta hablando el cliente, no el que diga el lead', 'string') || $('formatLead').first().json.campos['Salón'] || null }) }}"
       },
-      "id": "d56f092c-cdde-4efe-8fa3-f755409d424c",
+      "id": "3908c02d-c77a-4de8-8f95-3431eb208b65",
       "name": "avisar_encargada",
       "type": "n8n-nodes-base.httpRequestTool",
       "typeVersion": 4.5,
       "position": [
         2100,
         1260
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NmEwnWxyfdqJcNvw",
+          "name": "panel_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "descriptionType": "manual",
+        "toolDescription": "Pide una visita al salon. NO la confirmas tu: queda como solicitud y la encargada la confirma, y de eso le avisas al cliente. Llamala cuando el cliente diga que quiere ir a conocer el salon y ya te haya dado el dia y la hora que le acomodan. Las visitas son de 13:00 a 19:00, de miercoles a lunes; los martes cierran, y si solo puede ese dia pidela igual y que la encargada decida. Con una sola llamada queda la solicitud Y el aviso.",
+        "method": "POST",
+        "url": "http://automatizaciones_salones-panel:4300/api/citas",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {},
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ salon: $fromAI('salon', 'Clave del salon que quiere visitar: norma, esmeralda, santacruz o quetzal', 'string'), fecha: $fromAI('fecha', 'Dia de la visita en formato AAAA-MM-DD. Si no te dio un dia exacto, preguntalo antes de llamar a esta herramienta', 'string'), hora: $fromAI('hora', 'Hora en formato HH:MM de 24 horas, entre 13:00 y 19:00. Si solo dijo «por la tarde», preguntale a que hora le acomoda', 'string'), nombre: $fromAI('nombre', 'Como se llama quien va a venir, si lo dijo', 'string'), lead_id: $('formatLead').first().json.lead_id, avisar: true }) }}"
+      },
+      "id": "35accf3b-88a5-4ac5-b719-90980880fd3c",
+      "name": "pedir_cita",
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.5,
+      "position": [
+        2100,
+        1420
       ],
       "credentials": {
         "httpHeaderAuth": {
@@ -1009,7 +1037,7 @@
         },
         "options": {}
       },
-      "id": "8543b0e6-7056-4105-b0f2-f9841a672ce7",
+      "id": "c78b34fa-d76e-4109-ba4c-a4661577d8b9",
       "name": "enviar_mensaje",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.3,
@@ -1027,7 +1055,7 @@
           "queryReplacement": "={{ [$('registrar_turno').first().json.id] }}"
         }
       },
-      "id": "e598936b-6162-458a-b520-f9b84e2ebb7b",
+      "id": "9bf2e6da-9fb5-40d3-94c4-082fb4dc1e35",
       "name": "marcar_enviada",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -1044,7 +1072,7 @@
     },
     {
       "parameters": {},
-      "id": "b50d0cfb-43ee-4ae7-afc0-011555785591",
+      "id": "b2e5772f-0b7e-4d33-870c-aa64037e160e",
       "name": "enviar_respuesta",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -1055,7 +1083,7 @@
     },
     {
       "parameters": {},
-      "id": "2c93ce08-a4ff-4870-aa6e-8b6a60b1e2fb",
+      "id": "0d0c9109-8850-4e47-be86-7b970a974575",
       "name": "sin_respuesta",
       "type": "n8n-nodes-base.noOp",
       "typeVersion": 1,
@@ -1075,7 +1103,7 @@
           },
           "conditions": [
             {
-              "id": "061e56e7-ed05-49bd-a72a-be28bcecf03e",
+              "id": "5be3be2d-942c-44de-8968-08b965e5901e",
               "leftValue": "={{ ($json.chats ?? '').trim() }}",
               "rightValue": "/*",
               "operator": {
@@ -1089,7 +1117,7 @@
         "looseTypeValidation": true,
         "options": {}
       },
-      "id": "32720c22-9a82-4b8d-988d-fc91c47ec4ba",
+      "id": "2156b94e-7496-4ece-a257-31e47100707e",
       "name": "es_reinicio",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
@@ -1106,7 +1134,7 @@
           "queryReplacement": "={{ [$('formatLead').first().json.lead_id + '-%'] }}"
         }
       },
-      "id": "0e6eafbf-3c9f-4240-a691-e22234d174b8",
+      "id": "15d021c9-c5f7-40e4-b0fe-a2804713a516",
       "name": "borrar_memoria",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -1127,7 +1155,7 @@
         "assignments": {
           "assignments": [
             {
-              "id": "7e296dff-1279-4bcd-8b30-5e5fc668ec77",
+              "id": "20ded065-968f-48ba-99a9-c3fb10bf81d7",
               "name": "output",
               "type": "string",
               "value": "Memoria borrada. Empezamos de cero."
@@ -1136,7 +1164,7 @@
         },
         "options": {}
       },
-      "id": "50da810b-94a2-493a-a09e-c7ccd2913953",
+      "id": "0fe6a019-ffff-4303-bbc1-1b1d30893cf3",
       "name": "aviso_reinicio",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
@@ -1436,6 +1464,17 @@
           },
           {
             "node": "cliente",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "pedir_cita": {
+      "ai_tool": [
+        [
+          {
+            "node": "ventas",
             "type": "ai_tool",
             "index": 0
           }

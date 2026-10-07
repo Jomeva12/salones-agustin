@@ -38,6 +38,14 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS aviso_lead       ON aviso (lead_id);
 `);
 
+// Se agrega sobre la marcha: las bases que ya tienen la tabla no la traen.
+// Cuando el aviso es «quiere agendar», la solicitud ya esta creada y conviene
+// poder saltar de uno a la otra.
+if (!db.prepare('PRAGMA table_info(aviso)').all().some((c) => c.name === 'cita_id')) {
+  db.exec('ALTER TABLE aviso ADD COLUMN cita_id INTEGER');
+  console.log('Columna cita_id agregada.');
+}
+
 console.log(habia ? 'La tabla ya existia; no se toco nada.' : 'Tabla aviso creada.');
 const n = db.prepare("SELECT COUNT(*) n FROM aviso WHERE estado='pendiente'").get().n;
 console.log(`${n} avisos pendientes.`);

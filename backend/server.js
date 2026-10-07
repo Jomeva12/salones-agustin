@@ -1148,8 +1148,11 @@ const rutas = {
     const estado = u.searchParams.get('estado');
     const clave = u.searchParams.get('salon');
     const filas = db.prepare(
-      `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada
-         FROM aviso a LEFT JOIN salon s ON s.id = a.salon_id
+      `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada,
+              c.fecha AS cita_fecha, c.hora AS cita_hora, c.estado AS cita_estado
+         FROM aviso a
+         LEFT JOIN salon s ON s.id = a.salon_id
+         LEFT JOIN cita  c ON c.id = a.cita_id
         WHERE (? IS NULL OR a.estado = ?)
           AND (? IS NULL OR s.clave = ?)
         ORDER BY a.estado = 'pendiente' DESC, a.creado_en DESC
@@ -1266,9 +1269,40 @@ const rutas = {
            (c.nombre ?? '').trim() || null, (c.telefono ?? '').trim() || null,
            c.estado === 'confirmada' ? 'confirmada' : 'solicitada',
            (c.notas ?? '').trim() || null, c._autor ?? null);
-    anotar('cita', Number(r.lastInsertRowid), 'alta', c._autor,
+    const citaId = Number(r.lastInsertRowid);
+    anotar('cita', citaId, 'alta', c._autor,
            `${tipo} ${c.fecha} ${c.hora} en ${c.salon}`);
-    return { ok: true, id: Number(r.lastInsertRowid), libre, aviso };
+
+    // Cuando la pide el agente, el aviso se crea AQUI y no en otra llamada.
+    // Si fueran dos, tarde o temprano haria una sola y quedaria una cita que
+    // nadie sabe que existe, o un recado sin cita que capturar.
+    let avisoId = null;
+    if (c.avisar) {
+      // Lo lee una persona en WhatsApp: «Norma Eventos» y «jueves 18 de marzo»,
+      // no la clave ni la fecha como la guarda la base.
+      const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+                     'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+      const DIAS_SEM = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves',
+                        'viernes', 'sábado'];
+      const [anio, mes, diaMes] = c.fecha.split('-').map(Number);
+      const cuando = `${DIAS_SEM[L.diaSemana(c.fecha)]} ${diaMes} de ${MESES[mes - 1]}` +
+                     (anio !== new Date().getFullYear() ? ` de ${anio}` : '');
+      const comoSeLlama = db.prepare('SELECT nombre FROM salon WHERE id = ?').get(s.id)?.nombre ?? c.salon;
+      const quien = (c.nombre ?? '').trim();
+      const texto = [
+        `Quiere visitar ${comoSeLlama} el ${cuando} a las ${c.hora}.`,
+        quien ? `Es ${quien}.` : null,
+        // Lo que la encargada necesita para decidir de un vistazo. Confirmar
+        // una hora libre es un toque; la que choca pide mirar la agenda.
+        libre ? 'Esa hora está libre.' : (aviso ?? 'Hay que revisar la agenda.'),
+      ].filter(Boolean).join(' ');
+      const ra = db.prepare(
+        `INSERT INTO aviso (salon_id, lead_id, motivo, texto, cita_id) VALUES (?,?,?,?,?)`)
+        .run(s.id, c.lead_id ?? null, 'cita', texto, citaId);
+      avisoId = Number(ra.lastInsertRowid);
+    }
+
+    return { ok: true, id: citaId, libre, aviso, aviso_id: avisoId };
   },
 
   'PUT /api/citas': (_u, c, ctx) => {

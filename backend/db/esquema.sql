@@ -519,7 +519,9 @@ CREATE TABLE aviso (
   ultimo_aviso_en TEXT,
   recordatorios  INTEGER NOT NULL DEFAULT 0,
   atendido_en    TEXT,
-  atendido_por   TEXT
+  atendido_por   TEXT,
+  -- Cuando el aviso es «quiere agendar», la solicitud ya esta creada.
+  cita_id        INTEGER REFERENCES cita(id)
 );
 CREATE INDEX aviso_pendientes ON aviso (estado, creado_en);
 CREATE INDEX aviso_lead       ON aviso (lead_id);

@@ -17,6 +17,10 @@ const MOTIVO = {
   contratar: 'Quiere contratar',
   queja: 'Se queja o reclama',
   humano: 'Pide hablar con una persona',
+  // Nace con Semana Santa: el cliente duda por la fecha y el asesor
+  // tiene margen para mejorarle la oferta. No es un problema, es una
+  // venta que todavia se puede cerrar.
+  oportunidad: 'Se puede mejorar la oferta',
 };
 // Tres tipos de urgencia, cada uno con su color: lo que necesita a una persona
 // ya, lo que es una venta por cerrar, y lo que solo es un dato que falta.

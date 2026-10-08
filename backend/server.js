@@ -1003,6 +1003,11 @@ const rutas = {
     const salones = db.prepare('SELECT id, clave, nombre FROM salon WHERE activo = 1 ORDER BY id').all();
     return {
       fecha, turno,
+      // Preguntar por una fecha es tambien preguntar por el dia, no solo por
+      // el hueco: en Semana Santa la fecha esta libre y aun asi hay algo que
+      // decir. Sin esto, el agente contesta «si hay lugar» y se calla lo unico
+      // que al cliente le habria importado.
+      fecha_especial: L.fechaEspecial(db, fecha),
       salones: salones.map((s) => ({
         salon: s.clave, nombre: s.nombre, ...L.disponibilidadSalon(db, s.id, fecha, turno),
       })),
@@ -1051,9 +1056,14 @@ const rutas = {
           salon: s.clave, nombre: s.nombre,
           ...L.disponibilidadSalon(db, s.id, d.fecha, turno),
         }));
+        // Solo el titulo: la lista trae varios dias y repetir el aviso entero
+        // en cada uno la vuelve ilegible. El texto completo lo da `cotizar`
+        // cuando el cliente ya eligio dia.
+        const esp = L.fechaEspecial(db, d.fecha);
         return {
           fecha: d.fecha,
           dia_semana: DIAS[Number(d.dow)],
+          especial: esp ? esp.titulo : null,
           // Se separan a proposito: «no_confirmada» no es «libre», y el agente
           // no debe poder confundirlas leyendo una sola lista.
           libres: est.filter((e) => e.estado === 'libre').map((e) => e.salon),

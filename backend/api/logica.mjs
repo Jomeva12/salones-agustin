@@ -32,6 +32,34 @@ export function diaSemana(iso) {
 export const esFechaValida = (s) =>
   typeof s === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(s) && !Number.isNaN(Date.parse(s));
 
+// ──────────────────────── fechas especiales ─────────────────────────────────
+
+/**
+ * Lo que hay que decirle al cliente si su fecha cae en un dia marcado.
+ *
+ * El caso que la estreno es Semana Santa: la iglesia no celebra misas esos
+ * dias. La instruccion del Lic. Barron es que eso NO frena la venta — se
+ * cotiza igual y se le dice al cliente, que para eso pregunta.
+ *
+ * Devuelve null cuando no hay nada que decir, que es el caso normal.
+ */
+export function fechaEspecial(db, fecha) {
+  if (!esFechaValida(fecha)) return null;
+  const f = db.prepare(
+    `SELECT clave, titulo, aviso, se_cotiza FROM fecha_especial
+      WHERE activa = 1 AND ? BETWEEN desde AND hasta
+      ORDER BY desde LIMIT 1`).get(fecha);
+  if (!f) return null;
+  return {
+    clave: f.clave,
+    titulo: f.titulo,
+    aviso: f.aviso,
+    // Casi siempre true. Va explicito para que el agente no tenga que deducir
+    // de la ausencia de un campo que si puede vender.
+    se_puede_cotizar: f.se_cotiza === 1,
+  };
+}
+
 // ──────────────────────────── horarios ──────────────────────────────────────
 
 /**
@@ -757,6 +785,9 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
     hoy: HOY,
     fecha: fecha_evento,
     dia_semana: DIA_NOMBRE[dow],
+    // null casi siempre. Cuando trae algo, es algo que el cliente tiene que
+    // saber de ese dia y que no se ve en el precio.
+    fecha_especial: fechaEspecial(db, fecha_evento),
     anio,
     meses_anticipacion: meses,
     turno,

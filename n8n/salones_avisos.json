@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "55ddb6d6-9fce-4eb0-8a7b-a4de5fea69aa",
+      "id": "b6e44275-8af9-4ec3-a7d2-18609d6ea115",
       "name": "cada_5_min",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
           }
         }
       },
-      "id": "7bfcb67f-6afd-436e-90fa-f607536869da",
+      "id": "8148ec4f-1fc8-48c1-a774-497ad673f677",
       "name": "traer_pendientes",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -51,9 +51,9 @@
     },
     {
       "parameters": {
-        "jsCode": "// Cuales toca avisar ahora, y con que texto.\n//\n// El primer aviso sale a CUALQUIER hora: el Lic. dijo que si entra algo a las\n// 2 de la madrugada quiere verlo. Los recordatorios, en cambio, solo en\n// horario laboral — a nadie se le pica costillas mientras duerme.\n//\n// Miercoles a lunes de 12 a 20. El martes cierran, asi que ese dia no se\n// insiste ni una vez.\nconst RECORDAR_CADA_MIN = 30;\n\nconst ahora = $now;                 // ya viene en la zona del flujo (Monterrey)\nconst laboral = ahora.weekday !== 2 && ahora.hour >= 12 && ahora.hour < 20;\n\nconst MOTIVO = {\n  sin_dato: 'Falta un dato',\n  cita: 'Quiere agendar una visita',\n  disponibilidad: 'Pregunta por disponibilidad',\n  apartado: 'Quiere apartar la fecha',\n  descuento: 'Pide descuento',\n  contratar: 'Quiere contratar',\n  queja: 'Se queja o reclama',\n  humano: 'Pide hablar con una persona',\n};\n\nconst minutosDesde = (iso) => {\n  if (!iso) return null;\n  const t = Date.parse(iso.replace(' ', 'T') + 'Z');\n  return Number.isFinite(t) ? Math.round((Date.now() - t) / 60000) : null;\n};\n\nconst enPalabras = (min) => {\n  if (min === null) return '';\n  if (min < 60) return `${min} min`;\n  const h = Math.floor(min / 60);\n  return h < 24 ? `${h} h ${min % 60} min` : `${Math.floor(h / 24)} d`;\n};\n\nconst salida = [];\nfor (const a of ($input.first().json.avisos ?? [])) {\n  const primero = !a.ultimo_aviso_en;\n  const desdeUltimo = minutosDesde(a.ultimo_aviso_en);\n\n  if (!primero) {\n    if (!laboral) continue;\n    if (desdeUltimo === null || desdeUltimo < RECORDAR_CADA_MIN) continue;\n  }\n\n  const espera = enPalabras(minutosDesde(a.creado_en));\n  const encabezado = primero\n    ? `🔔 *${MOTIVO[a.motivo] ?? a.motivo}*`\n    : `⏰ *Sigue pendiente* — ${MOTIVO[a.motivo] ?? a.motivo}`;\n\n  const lineas = [\n    encabezado,\n    a.salon_nombre ? `_${a.salon_nombre}_${a.encargada ? ' · ' + a.encargada : ''}` : null,\n    '',\n    a.texto,\n    '',\n    primero ? null : `La clienta lleva ${espera} esperando.`,\n    a.lead_id\n      ? `https://administracioneventos6.kommo.com/leads/detail/${a.lead_id}`\n      : null,\n  ].filter((x) => x !== null);\n\n  salida.push({ json: { id: a.id, primero, texto: lineas.join('\\n') } });\n}\n\nreturn salida;"
+        "jsCode": "// Cuales toca avisar ahora, y con que texto.\n//\n// El primer aviso sale a CUALQUIER hora: el Lic. dijo que si entra algo a las\n// 2 de la madrugada quiere verlo. Los recordatorios, en cambio, solo en\n// horario laboral — a nadie se le pica costillas mientras duerme.\n//\n// Miercoles a lunes de 12 a 20. El martes cierran, asi que ese dia no se\n// insiste ni una vez.\nconst RECORDAR_CADA_MIN = 30;\n\nconst ahora = $now;                 // ya viene en la zona del flujo (Monterrey)\nconst laboral = ahora.weekday !== 2 && ahora.hour >= 12 && ahora.hour < 20;\n\nconst MOTIVO = {\n  sin_dato: 'Falta un dato',\n  cita: 'Quiere agendar una visita',\n  disponibilidad: 'Pregunta por disponibilidad',\n  apartado: 'Quiere apartar la fecha',\n  descuento: 'Pide descuento',\n  contratar: 'Quiere contratar',\n  queja: 'Se queja o reclama',\n  humano: 'Pide hablar con una persona',\n  // Nace con Semana Santa: el cliente duda por la fecha y el asesor\n  // tiene margen para mejorarle la oferta. No es un problema, es una\n  // venta que todavia se puede cerrar.\n  oportunidad: 'Se puede mejorar la oferta',\n};\n\nconst minutosDesde = (iso) => {\n  if (!iso) return null;\n  const t = Date.parse(iso.replace(' ', 'T') + 'Z');\n  return Number.isFinite(t) ? Math.round((Date.now() - t) / 60000) : null;\n};\n\nconst enPalabras = (min) => {\n  if (min === null) return '';\n  if (min < 60) return `${min} min`;\n  const h = Math.floor(min / 60);\n  return h < 24 ? `${h} h ${min % 60} min` : `${Math.floor(h / 24)} d`;\n};\n\nconst salida = [];\nfor (const a of ($input.first().json.avisos ?? [])) {\n  const primero = !a.ultimo_aviso_en;\n  const desdeUltimo = minutosDesde(a.ultimo_aviso_en);\n\n  if (!primero) {\n    if (!laboral) continue;\n    if (desdeUltimo === null || desdeUltimo < RECORDAR_CADA_MIN) continue;\n  }\n\n  const espera = enPalabras(minutosDesde(a.creado_en));\n  const encabezado = primero\n    ? `🔔 *${MOTIVO[a.motivo] ?? a.motivo}*`\n    : `⏰ *Sigue pendiente* — ${MOTIVO[a.motivo] ?? a.motivo}`;\n\n  const lineas = [\n    encabezado,\n    a.salon_nombre ? `_${a.salon_nombre}_${a.encargada ? ' · ' + a.encargada : ''}` : null,\n    '',\n    a.texto,\n    '',\n    primero ? null : `La clienta lleva ${espera} esperando.`,\n    a.lead_id\n      ? `https://administracioneventos6.kommo.com/leads/detail/${a.lead_id}`\n      : null,\n  ].filter((x) => x !== null);\n\n  salida.push({ json: { id: a.id, primero, texto: lineas.join('\\n') } });\n}\n\nreturn salida;"
       },
-      "id": "7f38b943-ee43-47c0-9b19-1508d8a16816",
+      "id": "e3bbb798-49cc-4684-be36-01d2cacbf07c",
       "name": "a_quien_toca",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -71,7 +71,7 @@
           "appendAttribution": false
         }
       },
-      "id": "52063b16-2815-4c40-890b-42c20b9727a1",
+      "id": "7c7c58dc-7cd3-408d-9052-27a3ec0c07cf",
       "name": "mandar_al_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -111,7 +111,7 @@
         },
         "options": {}
       },
-      "id": "53d22431-a5b7-4d75-83ae-d3618061ef9e",
+      "id": "c449a528-63a5-415b-aaa7-88e9d7711f39",
       "name": "se_entrego",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -137,7 +137,7 @@
           }
         }
       },
-      "id": "8ae127f0-1b64-4b64-959a-ec6eb23e8e8b",
+      "id": "41451c06-7dd4-4919-86f8-1e31d1a27820",
       "name": "marcar_avisado",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

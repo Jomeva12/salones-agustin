@@ -68,6 +68,10 @@ const MOTIVO = {
   contratar: 'Quiere contratar',
   queja: 'Se queja o reclama',
   humano: 'Pide hablar con una persona',
+  // Nace con Semana Santa: el cliente duda por la fecha y el asesor
+  // tiene margen para mejorarle la oferta. No es un problema, es una
+  // venta que todavia se puede cerrar.
+  oportunidad: 'Se puede mejorar la oferta',
 };
 
 const minutosDesde = (iso) => {
@@ -123,9 +127,24 @@ add("mandar_al_grupo", "n8n-nodes-base.telegram", 1.2,
      "additionalFields": {"parse_mode": "Markdown",
                           "appendAttribution": False}},
     [200, 0], cred=CRED_TG,
-    # Si Telegram falla, el aviso NO se marca como avisado y vuelve a salir en
-    # la siguiente vuelta. Reventar aqui dejaria la tanda a medias.
+    # Que un aviso no salga no puede tumbar la tanda entera: los demas tienen
+    # que seguir. Por eso continua -- pero el que fallo NO se marca, de eso se
+    # encarga el nodo de abajo.
     extra={"onError": "continueRegularOutput"})
+
+# El seguro. Sin esto, un fallo de Telegram marcaba el aviso como entregado y
+# la clienta quedaba esperando sin que nadie volviera a verlo: el peor final
+# posible, porque el tablero lo da por hecho. Telegram contesta ok=true cuando
+# de verdad entrego; cuando falla, el item trae `error` y no trae `ok`.
+add("se_entrego", "n8n-nodes-base.if", 2.2,
+    {"conditions": {"options": {"version": 2, "caseSensitive": True,
+                                "typeValidation": "loose"},
+                    "combinator": "and",
+                    "conditions": [{"id": "ok",
+                                    "operator": {"type": "boolean", "operation": "true", "singleValue": True},
+                                    "leftValue": "={{ $json.ok }}", "rightValue": ""}]},
+     "options": {}},
+    [300, 0])
 
 add("marcar_avisado", "n8n-nodes-base.httpRequest", 4.2,
     {"method": "PUT", "url": PANEL + "/api/avisos",
@@ -133,12 +152,15 @@ add("marcar_avisado", "n8n-nodes-base.httpRequest", 4.2,
      "sendBody": True, "specifyBody": "json",
      "jsonBody": "={{ JSON.stringify({ id: $('a_quien_toca').item.json.id, recordado: true }) }}",
      "options": {"response": {"response": {"responseFormat": "json"}}}},
-    [400, 0], cred=CRED_PANEL)
+    [460, 0], cred=CRED_PANEL)
 
 une("cada_5_min", "traer_pendientes")
 une("traer_pendientes", "a_quien_toca")
 une("a_quien_toca", "mandar_al_grupo")
-une("mandar_al_grupo", "marcar_avisado")
+une("mandar_al_grupo", "se_entrego")
+# Solo la salida verdadera. La falsa no va a ningun lado a proposito: el
+# aviso se queda pendiente y vuelve a intentarse en la siguiente vuelta.
+une("se_entrego", "marcar_avisado", salida=0)
 
 DESTINO = r"C:\Users\johan\Desktop\WEB\salones_agustin\n8n"
 ruta = os.path.join(DESTINO, "salones_avisos.json")

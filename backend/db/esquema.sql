@@ -372,6 +372,32 @@ CREATE INDEX idx_politica_vis ON politica (visibilidad);
 -- la bitácora registraba lo que la persona decía ser, no quién era. Con esto
 -- la atribución sale de la sesión y deja de ser una declaración voluntaria.
 
+-- Días que no cierran el salón pero cambian lo que hay que decirle al cliente.
+--
+-- El caso que la estrenó es Semana Santa: la iglesia no celebra misas esos
+-- días, así que quien quería misa para su boda no la va a tener. Pero el
+-- salón se renta igual, y la instrucción del Lic. Barrón es clara — se
+-- cotiza, no se desanima a nadie. Lo que se quiere es vender.
+--
+-- Por eso `se_cotiza` nace en 1: esto avisa, no cierra. Un día que de verdad
+-- no se pueda vender se pone en 0 y queda dicho a propósito, no por omisión.
+--
+-- Vive aquí y no en el prompt para que se corrija el texto o se agregue un
+-- año sin tocar código, igual que las tarifas y las cortesías.
+CREATE TABLE fecha_especial (
+  id        INTEGER PRIMARY KEY,
+  clave     TEXT NOT NULL UNIQUE,   -- semana_santa_2027
+  titulo    TEXT NOT NULL,          -- «Semana Santa 2027»
+  desde     TEXT NOT NULL,          -- AAAA-MM-DD
+  hasta     TEXT NOT NULL,          -- AAAA-MM-DD, incluido
+  aviso     TEXT NOT NULL,          -- lo que el cliente tiene que saber
+  notas     TEXT,                   -- para quien administra; el agente no lo recita
+  se_cotiza INTEGER NOT NULL DEFAULT 1 CHECK (se_cotiza IN (0,1)),
+  activa    INTEGER NOT NULL DEFAULT 1 CHECK (activa IN (0,1))
+);
+
+CREATE INDEX idx_especial_rango ON fecha_especial (activa, desde, hasta);
+
 CREATE TABLE usuario (
   id            INTEGER PRIMARY KEY,
   usuario       TEXT    NOT NULL UNIQUE COLLATE NOCASE,   -- con lo que entra

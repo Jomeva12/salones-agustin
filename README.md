@@ -105,6 +105,36 @@ inventada.
 
 ---
 
+## Fechas que no cierran el salón pero cambian lo que se dice
+
+La tabla `fecha_especial` marca rangos de días con algo que el cliente tiene
+que saber y que no se ve en el precio. La estrenó **Semana Santa**: la iglesia
+no celebra misas esos días, así que quien quería misa para su boda no la va a
+tener.
+
+La instrucción del Lic. Barrón fue explícita y vale la pena dejarla escrita,
+porque la tentación es hacer lo contrario: **eso no frena la venta.** Se
+cotiza igual, se le avisa al cliente, y si duda se le pasa a un asesor que
+tiene margen para mejorarle la oferta. Lo que se quiere es vender.
+
+Por eso la columna se llama `se_cotiza` y nace en `1`. Un día que de verdad no
+se pueda vender se pone en `0` y queda dicho a propósito, no por descuido.
+
+Las semanas santas **se calculan**, no se teclean: la Pascua se mueve cada año
+y una lista escrita a mano caduca sin avisar. `migracion_fechas_especiales.mjs`
+siembra los siete años que vienen y es idempotente — volver a correrla no pisa
+un texto que alguien haya corregido.
+
+| | Semana Santa 2027 | Semana Santa 2028 |
+|---|---|---|
+| Domingo de Ramos | 21 de marzo | 9 de abril |
+| Sábado de Gloria | 27 de marzo | 15 de abril |
+| Domingo de Pascua | 28 de marzo | 16 de abril |
+
+Lo leen tres rutas: `cotizar` y `disponibilidad` devuelven `fecha_especial`
+completo, y `dias-disponibles` marca cada día solo con el título, porque
+repetir el aviso entero en una lista de cuatro sábados la vuelve ilegible.
+
 ## API
 
 | Método y ruta | Para qué |

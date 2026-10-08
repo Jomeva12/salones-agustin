@@ -12,6 +12,7 @@ import { configuracion } from './configuracion.js';
 import { paqueteNuevo } from './paquete_nuevo.js';
 import { salones } from './salones.js';
 import { politicas } from './politicas.js';
+import { especiales } from './especiales.js';
 import { laminas } from './laminas.js';
 import { citas } from './citas.js';
 import { avisos } from './avisos.js';
@@ -27,6 +28,7 @@ const VISTAS = {
   '/respuestas': respuestas,
   '/pendientes': pendientes,
   '/politicas': politicas,
+  '/especiales': especiales,
   '/salones': salones,
   '/imagenes': laminas,
   '/configuracion': configuracion,

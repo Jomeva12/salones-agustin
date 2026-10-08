@@ -54,6 +54,7 @@ export const api = {
   servicios: (salon, texto) => pedir(`/api/servicios?${q({ salon, q: texto })}`),
   faq:       (texto)        => pedir(`/api/faq?${q({ q: texto })}`),
   politicas: (incluir)      => pedir(`/api/politicas?${q({ incluir })}`),
+  fechasEspeciales: (todo) => pedir(`/api/fechas-especiales?${q({ incluir: todo ? 'todo' : null })}`),
 
   // escritura
   guardarTarifa:   (d) => pedir('/api/tarifas', { method: 'PUT', body: JSON.stringify(conUsuario(d)) }),
@@ -69,6 +70,8 @@ export const api = {
   crearPolitica: (d) => pedir('/api/politicas', { method: 'POST', body: JSON.stringify(d) }),
   editarPolitica:(d) => pedir('/api/politicas', { method: 'PUT', body: JSON.stringify(d) }),
   borrarPolitica:(d) => pedir('/api/politicas', { method: 'DELETE', body: JSON.stringify(d) }),
+  crearFechaEspecial:  (d) => pedir('/api/fechas-especiales', { method: 'POST', body: JSON.stringify(conUsuario(d)) }),
+  editarFechaEspecial: (d) => pedir('/api/fechas-especiales', { method: 'PUT', body: JSON.stringify(conUsuario(d)) }),
   publicarPaquete: (d) => pedir('/api/paquetes/publicar', { method: 'POST', body: JSON.stringify(d) }),
   bitacora:      (n)   => pedir(`/api/bitacora?${q({ limite: n })}`),
 

@@ -1147,6 +1147,81 @@ const rutas = {
     return { ok: true, url: subida.url };
   },
 
+  // ═══════════════════════ fechas especiales ══════════════════════
+  //
+  // Dias que no cierran el salon pero cambian lo que hay que decirle al
+  // cliente. El caso que las estreno es Semana Santa: la iglesia no celebra
+  // misas, pero la fecha se vende igual. La regla del Lic. Barron es que esto
+  // avisa, no frena.
+
+  'GET /api/fechas-especiales': (u) => {
+    const todas = u.searchParams.get('incluir') === 'todo';
+    return {
+      fechas: db.prepare(
+        `SELECT id, clave, titulo, desde, hasta, aviso, notas, se_cotiza, activa
+           FROM fecha_especial
+          ${todas ? '' : 'WHERE activa = 1'}
+          ORDER BY desde`).all(),
+    };
+  },
+
+  'PUT /api/fechas-especiales': (_u, c) => {
+    const id = entero(c?.id);
+    const antes = db.prepare('SELECT * FROM fecha_especial WHERE id = ?').get(id);
+    if (!antes) return { error: 'esa fecha no existe' };
+
+    const n = {
+      titulo: 'titulo' in c ? String(c.titulo).trim() : antes.titulo,
+      desde: 'desde' in c ? String(c.desde).trim() : antes.desde,
+      hasta: 'hasta' in c ? String(c.hasta).trim() : antes.hasta,
+      aviso: 'aviso' in c ? String(c.aviso).trim() : antes.aviso,
+      notas: 'notas' in c ? ((c.notas ?? '').trim() || null) : antes.notas,
+      se_cotiza: 'se_cotiza' in c ? (c.se_cotiza ? 1 : 0) : antes.se_cotiza,
+      activa: 'activa' in c ? (c.activa ? 1 : 0) : antes.activa,
+    };
+    if (n.titulo.length < 3) return { error: 'falta el título' };
+    // El aviso se le dice al cliente tal cual o casi: una fecha marcada sin
+    // texto es peor que no marcarla, porque el agente sabe que algo pasa ese
+    // dia y no sabe que decir.
+    if (n.aviso.length < 10) return { error: 'falta el aviso', detalle: 'Es lo que el agente le va a decir al cliente.' };
+    if (!L.esFechaValida(n.desde) || !L.esFechaValida(n.hasta)) return { error: 'fechas inválidas, usa YYYY-MM-DD' };
+    if (n.hasta < n.desde) return { error: 'el final va antes del inicio' };
+
+    db.prepare(`UPDATE fecha_especial
+                   SET titulo=?, desde=?, hasta=?, aviso=?, notas=?, se_cotiza=?, activa=?
+                 WHERE id=?`)
+      .run(n.titulo, n.desde, n.hasta, n.aviso, n.notas, n.se_cotiza, n.activa, id);
+    anotar('fecha_especial', id, 'cambio', c._autor, `${n.titulo} (${n.desde} a ${n.hasta})`);
+    return { ok: true };
+  },
+
+  'POST /api/fechas-especiales': (_u, c) => {
+    const titulo = String(c?.titulo ?? '').trim();
+    const desde = String(c?.desde ?? '').trim();
+    const hasta = String(c?.hasta ?? '').trim();
+    const aviso = String(c?.aviso ?? '').trim();
+    if (titulo.length < 3) return { error: 'falta el título' };
+    if (aviso.length < 10) return { error: 'falta el aviso', detalle: 'Es lo que el agente le va a decir al cliente.' };
+    if (!L.esFechaValida(desde) || !L.esFechaValida(hasta)) return { error: 'fechas inválidas, usa YYYY-MM-DD' };
+    if (hasta < desde) return { error: 'el final va antes del inicio' };
+
+    // La clave sale del titulo porque nadie deberia tener que inventarse un
+    // identificador para agregar un puente. El sufijo evita chocar con una
+    // que ya exista.
+    const base = titulo.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+      .replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '').slice(0, 40) || 'especial';
+    let clave = base, i = 2;
+    while (db.prepare('SELECT 1 FROM fecha_especial WHERE clave = ?').get(clave)) clave = `${base}_${i++}`;
+
+    const r = db.prepare(
+      `INSERT INTO fecha_especial (clave, titulo, desde, hasta, aviso, notas, se_cotiza, activa)
+       VALUES (?,?,?,?,?,?,?,1)`)
+      .run(clave, titulo, desde, hasta, aviso, (c?.notas ?? '').trim() || null,
+           c?.se_cotiza === false ? 0 : 1);
+    anotar('fecha_especial', Number(r.lastInsertRowid), 'alta', c._autor, `${titulo} (${desde} a ${hasta})`);
+    return { ok: true, id: Number(r.lastInsertRowid), clave };
+  },
+
   // ════════════════════════════ avisos ═══════════════════════════
   //
   // La regla del Lic. Barron: el agente NUNCA deja al cliente sin informacion.
@@ -2076,6 +2151,10 @@ const AREA = {
   'DELETE /api/faq': 'respuestas',
   'POST /api/politicas': 'respuestas',
   'PUT /api/politicas': 'respuestas',
+  // Van con las respuestas: es texto que el agente le dice al cliente,
+  // no un precio ni un permiso.
+  'POST /api/fechas-especiales': 'respuestas',
+  'PUT /api/fechas-especiales': 'respuestas',
   'DELETE /api/politicas': 'respuestas',
   'POST /api/paquetes/borrador': 'precios',
   'POST /api/paquetes/publicar': 'precios',

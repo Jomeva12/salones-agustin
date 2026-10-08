@@ -2234,3 +2234,47 @@ main.lienzo a.avi-enlace:hover{border-color:var(--nocturno);color:var(--nocturno
   .conf-pie button{width:100%}
 }
 @media (prefers-reduced-motion:reduce){.conf,.conf-velo{animation:none}}
+
+/* ══════════════════ fechas especiales ══════════════════
+   El sello dice «Se vende igual» en verde a propósito. Lo que uno espera al
+   ver una fecha marcada es una advertencia, y aquí la marca significa lo
+   contrario: hay algo que decir, pero la venta sigue en pie. */
+.esp-sub{color:var(--tinta-2);max-width:62ch;margin:4px 0 0}
+.esp-controles{margin:16px 0}
+.esp-lista{display:flex;flex-direction:column;gap:12px}
+.esp-tarjeta{
+  border:1px solid var(--linea);border-left:4px solid var(--duda);border-radius:var(--r-m);
+  background:var(--panel);box-shadow:var(--sombra-1);padding:16px 18px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.esp-tarjeta.apagada,.esp-tarjeta.pasada{border-left-color:var(--linea-2);background:var(--panel-2)}
+.esp-tarjeta.pasada .esp-arriba b{color:var(--tinta-2)}
+.esp-arriba{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.esp-arriba b{font-size:16px}
+.esp-rango{color:var(--tinta-2);font-size:13.5px}
+.esp-sello{margin-left:auto;font-size:12px;font-weight:700;padding:3px 9px;border-radius:999px;white-space:nowrap}
+.esp-sello.vende{color:var(--libre);background:var(--libre-bg)}
+.esp-sello.cierra{color:var(--ocupada);background:var(--ocupada-bg)}
+.esp-campo{display:flex;flex-direction:column;gap:5px}
+.esp-campo>span{font-size:12.5px;color:var(--tinta-3);font-weight:600}
+.esp-tarjeta textarea,.esp-nueva textarea{
+  width:100%;resize:vertical;font:inherit;font-size:14px;line-height:1.5;
+  border:1px solid var(--linea-2);border-radius:var(--r-s);padding:9px 11px;
+  background:var(--panel);color:var(--tinta);
+}
+.esp-acciones{display:flex;align-items:center;gap:10px}
+.esp-guardado{font-size:13px;color:var(--libre)}
+.esp-guardado.mal{color:var(--ocupada)}
+.esp-vacio{color:var(--tinta-3);padding:24px 0}
+.esp-nueva{
+  margin-top:24px;border:1px dashed var(--linea-2);border-radius:var(--r-m);
+  background:var(--panel-2);padding:18px;display:flex;flex-direction:column;gap:10px;
+}
+.esp-ayuda{color:var(--tinta-3);font-size:13px;margin:0;max-width:62ch}
+.esp-campos{display:flex;gap:10px;flex-wrap:wrap}
+.esp-campos input[type=text]{flex:1 1 280px}
+.esp-check{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--tinta-2)}
+@media (max-width:640px){
+  .esp-sello{margin-left:0}
+  .esp-campos input{flex:1 1 100%}
+}

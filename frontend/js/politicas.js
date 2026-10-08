@@ -7,6 +7,7 @@
 //   · DE QUÉ trata          — la sección que traía el Excel
 import { api, error, puede, sesion } from './api.js';
 import { el, limpiar, cargando, abrirCajon, cerrarCajon } from './ui.js';
+import { confirmar } from './confirmar.js';
 
 const VIS = [
   ['publico', 'Se le puede decir al cliente',
@@ -151,8 +152,17 @@ function fila(p, recargar) {
     ? el('div', { class: 'acciones-pol' }, [
         el('button', { type: 'button', text: 'Corregir', onclick: () =>
           enPanel('Corregir política', p.tema, (volver, alGuardar) => formulario(p, volver, alGuardar), recargar) }),
-        el('button', { type: 'button', class: 'peligro', text: 'Borrar', onclick: () =>
-          enPanel('Borrar política', p.tema, (volver, alGuardar) => confirmarBaja(p, volver, alGuardar), recargar) }),
+        el('button', { type: 'button', class: 'peligro', text: 'Borrar', onclick: async () => {
+          const hecho = await confirmar({
+            titulo: '¿Borrar esta política?',
+            texto: [el('b', { text: p.tema }), '. El agente deja de usarla en ese momento.'],
+            nota: 'El texto queda en la bitácora, así que se puede recuperar si fue por error.',
+            motivo: { etiqueta: '¿Por qué?', placeholder: 'Ya no aplica, cambió la regla…' },
+            confirmar: 'Sí, borrar',
+            accion: (motivo) => api.borrarPolitica({ id: p.id, motivo }),
+          });
+          if (hecho) await recargar();
+        } }),
       ])
     : null;
 
@@ -233,27 +243,3 @@ function formulario(p, volver, recargar) {
   return caja;
 }
 
-function confirmarBaja(p, volver, recargar) {
-  const motivo = el('input', { type: 'text', style: 'width:100%',
-    placeholder: 'Ya no aplica, cambió la regla…' });
-  const aviso = el('div', { class: 'aviso-form' });
-  const si = el('button', { style: 'color:var(--ocupada)', text: 'Sí, borrar', onclick: async () => {
-    si.disabled = true;
-    try {
-      const r = await api.borrarPolitica({ id: p.id, motivo: motivo.value.trim() });
-      if (r.error) { aviso.textContent = r.detalle ?? r.error; si.disabled = false; return; }
-      await recargar();
-    } catch (e) { aviso.textContent = e.message; si.disabled = false; }
-  } });
-  return el('div', { class: 'edita' }, [
-    el('div', { style: 'font-size:13.5px;color:var(--tinta-2);line-height:1.55' }, [
-      'Se va a borrar ', el('b', { text: p.tema }), '. El texto queda en la bitácora, ',
-      'así que se puede recuperar si fue por error.',
-    ]),
-    el('label', { class: 'campo', style: 'margin-top:11px' }, ['¿Por qué?', motivo]),
-    el('div', { class: 'fila', style: 'margin-top:12px' }, [
-      si, el('button', { class: 'fantasma', text: 'Mejor no', onclick: volver }),
-    ]),
-    aviso,
-  ]);
-}

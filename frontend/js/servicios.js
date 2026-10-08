@@ -2,6 +2,7 @@
 // son un muro; por categoría se encuentran como se piensan.
 import { api, pesos, error, usuarioActual, salonActual, fijarSalon } from './api.js';
 import { el, limpiar, cargando, abrirCajon, cerrarCajon } from './ui.js';
+import { confirmar } from './confirmar.js';
 
 const CATEGORIAS = ['Bebidas', 'Comida', 'Decoración', 'Espectáculos', 'Fotografía',
   'Mobiliario', 'Personal y belleza', 'Transporte', 'Trámites y cambios', 'Vestuario', 'Otros'];
@@ -248,14 +249,16 @@ async function editor(id, recargar) {
 
 function bajaBoton(s, recargar, falla) {
   return el('button', { class: 'peligro', text: 'Dejar de ofrecerlo',
-    onclick: async (e) => {
+    onclick: async () => {
       if (!usuarioActual()) { falla('Primero elige quién eres.'); return; }
-      e.target.disabled = true;
-      try {
-        const r = await api.editarServicio({ id: s.id, activo: false });
-        if (r.error) { falla(r.detalle ?? r.error); e.target.disabled = false; return; }
-        cerrarCajon();
-        recargar();
-      } catch (err) { falla(err.message); e.target.disabled = false; }
+      // Antes se retiraba al primer clic; ahora pregunta.
+      const hecho = await confirmar({
+        titulo: '¿Dejar de ofrecer este servicio?',
+        texto: [el('b', { text: s.nombre }), '. El agente deja de ofrecerlo en los cuatro salones.'],
+        nota: 'No se borra: se puede volver a activar más adelante.',
+        confirmar: 'Sí, dejar de ofrecerlo', cancelar: 'No, dejarlo',
+        accion: () => api.editarServicio({ id: s.id, activo: false }),
+      });
+      if (hecho) { cerrarCajon(); recargar(); }
     } });
 }

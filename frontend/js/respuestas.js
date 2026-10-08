@@ -1,6 +1,7 @@
 // Lo que se contesta cuando preguntan algo que no es el precio.
 import { api, error, puede, sesion } from './api.js';
 import { el, limpiar, cargando } from './ui.js';
+import { confirmar } from './confirmar.js';
 
 
 let filtroCat = '';
@@ -91,12 +92,17 @@ function seccionPreguntas(faqs, recargar) {
           acciones.hidden = true;
           zonaEd.append(formFaq(f, () => { acciones.hidden = false; limpiar(zonaEd); }, recargar));
         } }),
-        el('button', { style: 'color:var(--ocupada)', text: 'Borrar', onclick: () => {
-          acciones.hidden = true;
-          zonaEd.append(confirmarBaja(
-            'esta pregunta', f.pregunta,
-            (motivo) => api.borrarFaq({ id: f.id, motivo }),
-            () => { acciones.hidden = false; limpiar(zonaEd); }, recargar));
+        el('button', { style: 'color:var(--ocupada)', text: 'Borrar', onclick: async () => {
+          // Borrar pide motivo: queda en la bitácora junto con el texto completo.
+          const hecho = await confirmar({
+            titulo: '¿Borrar esta respuesta?',
+            texto: [el('b', { text: f.pregunta }), '. El agente deja de usarla en ese momento.'],
+            nota: 'El texto completo queda guardado en la bitácora, así que se puede recuperar si fue por error.',
+            motivo: { etiqueta: '¿Por qué?', placeholder: 'Ya no aplica, cambió la política…' },
+            confirmar: 'Sí, borrar',
+            accion: (motivo) => api.borrarFaq({ id: f.id, motivo }),
+          });
+          if (hecho) await recargar();
         } }),
       ]);
       resp.append(acciones, zonaEd);
@@ -168,28 +174,3 @@ function formFaq(f, volver, recargar) {
 }
 
 
-/** Borrar pide motivo: queda en la bitácora junto con el texto completo. */
-function confirmarBaja(que, titulo, borrar, volver, recargar) {
-  const motivo = el('input', { type: 'text', style: 'width:100%',
-    placeholder: 'Ya no aplica, cambió la política…' });
-  const aviso = el('div', { class: 'aviso-form' });
-  const si = el('button', { style: 'color:var(--ocupada)', text: `Sí, borrar`, onclick: async () => {
-    si.disabled = true;
-    try {
-      const r = await borrar(motivo.value.trim());
-      if (r.error) { aviso.textContent = r.detalle ?? r.error; si.disabled = false; return; }
-      await recargar();
-    } catch (e) { aviso.textContent = e.message; si.disabled = false; }
-  } });
-  return el('div', { class: 'edita' }, [
-    el('div', { style: 'font-size:13.5px;color:var(--tinta-2);line-height:1.55' }, [
-      'Se va a borrar ', el('b', { text: titulo }), '. El texto completo queda guardado en la ',
-      'bitácora, así que se puede recuperar si fue por error.',
-    ]),
-    el('label', { class: 'campo', style: 'margin-top:11px' }, ['¿Por qué?', motivo]),
-    el('div', { class: 'fila', style: 'margin-top:12px' }, [
-      si, el('button', { class: 'fantasma', text: 'Mejor no', onclick: volver }),
-    ]),
-    aviso,
-  ]);
-}

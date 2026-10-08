@@ -1,5 +1,6 @@
 // Cliente del API. Todo pasa por aquí para que el manejo de errores viva en
 // un solo lugar y las vistas no tengan que repetirlo.
+import { notificar } from './notificar.js';
 
 async function pedir(ruta, opciones = {}) {
   const res = await fetch(ruta, {
@@ -83,6 +84,80 @@ export const api = {
   editarServicio:(d)   => pedir('/api/servicios', { method: 'PUT', body: JSON.stringify(conUsuario(d)) }),
   crearServicio: (d)   => pedir('/api/servicios', { method: 'POST', body: JSON.stringify(conUsuario(d)) }),
 };
+
+// ── avisos de cada escritura, en un solo lugar ──────────────────────────────
+// Cada acción que cambia algo confirma con un aviso flotante, y cada falla lo
+// dice. Vive aquí y no en cada pantalla: son 27 lugares que guardan, y así
+// ninguno se queda callado ni dice las cosas de otra manera.
+// Un mensaje puede ser texto o una función (respuesta, datos) → texto.
+// Lo que no está en la lista no avisa (las lecturas, y el borrador de paquete,
+// que se guarda solo cada segundo y ya tiene su propio indicador).
+const ESTADO_CITA = { confirmada: 'Cita confirmada', asistio: 'Se marcó que asistió',
+  no_asistio: 'Se marcó que no asistió', cancelada: 'Cita cancelada' };
+const AL_GUARDAR = {
+  guardarTarifa:      'Precio guardado',
+  resolverTarifa:     ['Precio elegido', 'Las otras versiones se retiraron.'],
+  guardarConceptos:   'Contenido del paquete guardado',
+  crearConcepto:      'Concepto agregado',
+  publicarPaquete:    ['Paquete publicado', 'Ya se puede cotizar.'],
+  editarSalon:        'Datos del salón guardados',
+  crearFaq:           'Respuesta creada',
+  editarFaq:          'Respuesta guardada',
+  borrarFaq:          ['Respuesta borrada', 'Queda en la bitácora por si hay que recuperarla.'],
+  crearPolitica:      'Política creada',
+  editarPolitica:     'Política guardada',
+  borrarPolitica:     ['Política borrada', 'Queda en la bitácora por si hay que recuperarla.'],
+  crearCompromiso:    'Evento registrado en la agenda',
+  editarCompromiso:   'Evento corregido',
+  cancelarCompromiso: ['Evento cancelado', 'La fecha quedó libre para venderse.'],
+  guardarControl:     'Fecha de captura actualizada',
+  crearServicio:      'Servicio creado',
+  editarServicio:     (r, d) => (d?.activo === false ? ['Servicio retirado', 'Ya no se le ofrece a nadie.'] : 'Servicio guardado'),
+  crearCita:          (r) => (r?.aviso ? null : 'Cita agendada'),
+  cambiarCita:        (r, d) => ESTADO_CITA[d?.estado] ?? 'Cita actualizada',
+  atenderAviso:       'Aviso marcado como atendido',
+  crearUsuario:       'Cuenta creada',
+  editarUsuario:      (r, d) => (d?.activo === false ? 'Cuenta desactivada'
+                               : d?.activo === true ? 'Cuenta reactivada' : 'Cuenta actualizada'),
+  claveUsuario:       'Contraseña nueva generada',
+  desbloquearUsuario: 'Cuenta desbloqueada',
+};
+// Lo que tarda (una subida a Kommo) avisa desde que empieza.
+const AL_EMPEZAR = { reemplazarImagen: 'Subiendo imagen a Kommo…' };
+const AL_TERMINAR = { reemplazarImagen: ['Imagen reemplazada', 'Ya es la que manda el agente.'] };
+
+const enPartes = (m) => (Array.isArray(m) ? m : [m]);
+for (const nombre of new Set([...Object.keys(AL_GUARDAR), ...Object.keys(AL_EMPEZAR)])) {
+  const original = api[nombre];
+  if (typeof original !== 'function') continue;
+  api[nombre] = async (...args) => {
+    const espera = AL_EMPEZAR[nombre] ? notificar.cargando(AL_EMPEZAR[nombre]) : null;
+    try {
+      const r = await original(...args);
+      // Varias rutas contestan 200 con { error } cuando algo no se puede: eso
+      // también es una falla y se dice como tal.
+      if (r?.error) {
+        (espera ?? notificar).error('No se pudo completar', { detalle: r.detalle ?? r.error });
+        return r;
+      }
+      // Una cita que se agendó pero choca con algo: se avisa en ámbar.
+      if (r?.aviso && nombre === 'crearCita') notificar.aviso('Cita agendada con un aviso', { detalle: r.aviso });
+      const m = AL_TERMINAR[nombre] ?? (typeof AL_GUARDAR[nombre] === 'function'
+        ? AL_GUARDAR[nombre](r, args[0]) : AL_GUARDAR[nombre]);
+      if (m) {
+        const [titulo, detalle] = enPartes(m);
+        (espera ?? notificar).exito(titulo, { detalle });
+      } else espera?.cerrar();
+      return r;
+    } catch (e) {
+      // La sesión vencida ya manda a entrar: no hace falta además un aviso.
+      if (!/Se cerró la sesión/.test(e.message)) {
+        (espera ?? notificar).error('No se pudo completar', { detalle: e.message });
+      }
+      throw e;
+    }
+  };
+}
 
 /**
  * Quién está trabajando. Ya no lo elige la persona de un menú: sale de la

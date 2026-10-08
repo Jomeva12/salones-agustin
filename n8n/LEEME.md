@@ -178,6 +178,17 @@ encargada capturo a mano, y eso no se nota hasta que alguien busca el dato.
 UTC en Monterrey (UTC-6) todavia es el dia anterior, y la fecha del evento
 aparecería corrida un dia.
 
+**La fecha sale de ahi ya con su dia de la semana.** El Lic. pidio que nunca
+se diga «el 20 de marzo» sino «el sabado 20 de marzo». Eso NO se le pide al
+prompt: sacar el dia de la semana de una fecha es aritmetica y el modelo la
+falla con total seguridad, con el mismo tono con que dice un precio. Asi que
+`armar_patch` devuelve `fecha_larga` y el turno de ventas, cliente y
+seguimiento la lleva pegada en una linea `[Sistema]`. El modelo solo la copia.
+
+Si el cliente no dijo el dia, no hay `fecha_larga`: el mismo guardia que
+impide escribir una fecha inventada en Kommo impide nombrarla en el chat.
+Cuando en el turno no se menciona fecha, se usa la que ya traia el lead.
+
 IDs de los campos, por si hay que tocarlos:
 
 | Campo | id | Opciones |

@@ -2,6 +2,7 @@
 // más rápido que la libreta, y dejar registrar, corregir y cancelar sin salir.
 import { api, error, pesos, usuarioActual, salonActual, fijarSalon } from './api.js';
 import { el, limpiar, cargando, iso, MESES, DIAS_CORTO, fechaLarga, abrirCajon, cerrarCajon } from './ui.js';
+import { confirmar } from './confirmar.js';
 
 const INICIAL = { norma: 'N', esmeralda: 'E', santacruz: 'S', quetzal: 'Q' };
 const ETIQUETA = { libre: 'disponible', ocupada: 'ya tiene evento', no_confirmada: 'falta confirmar' };
@@ -300,37 +301,23 @@ function bloqueEvento(ev, zona) {
     acciones.hidden = true;
     zonaForm.append(formulario(ev, { clave: ev.salon, nombre: ev.salon_nombre }, ev.fecha, zona));
   } }));
-  acciones.append(el('button', { text: 'Cancelar evento', style: 'color:var(--ocupada)', onclick: () => {
-    acciones.hidden = true;
-    zonaForm.append(confirmarCancelacion(ev, zona, () => { acciones.hidden = false; limpiar(zonaForm); }));
+  acciones.append(el('button', { text: 'Cancelar evento', style: 'color:var(--ocupada)', onclick: async () => {
+    const hecho = await confirmar({
+      titulo: '¿Cancelar este evento?',
+      texto: [el('b', { text: `${ev.tipo_evento ?? 'Evento'} · ${ev.salon_nombre ?? ''}` }),
+        ` el ${fechaLarga(ev.fecha)}. La fecha queda libre de inmediato y se puede volver a vender.`],
+      nota: 'El evento se borra, pero queda registrado quién lo canceló y por qué.',
+      motivo: { etiqueta: 'Motivo', placeholder: 'El cliente canceló, cambió de fecha…' },
+      confirmar: 'Sí, liberar la fecha', cancelar: 'No, dejarlo',
+      accion: (motivo) => {
+        if (!usuarioActual()) throw new Error('Primero elige quién eres.');
+        return api.cancelarCompromiso({ id: ev.id, motivo });
+      },
+    });
+    if (hecho) { cerrarCajon(); pintar(zona); }
   } }));
   caja.append(acciones, zonaForm);
   return caja;
-}
-
-function confirmarCancelacion(ev, zona, volver) {
-  const motivo = el('input', { type: 'text', placeholder: 'El cliente canceló, cambió de fecha…', style: 'width:100%' });
-  const aviso = el('div', { style: 'font-size:12.5px;color:var(--ocupada);margin-top:6px' });
-  return el('div', { style: 'margin-top:9px' }, [
-    el('div', { class: 'aviso atencion', style: 'margin-bottom:9px',
-      text: 'Al cancelar, la fecha queda libre de inmediato y se puede volver a vender. El evento se borra, pero queda registrado quién lo canceló y por qué.' }),
-    el('label', { class: 'campo' }, ['Motivo', motivo]),
-    el('div', { class: 'fila', style: 'margin-top:9px' }, [
-      el('button', { class: 'primario', style: 'background:var(--ocupada);border-color:var(--ocupada)',
-        text: 'Sí, liberar la fecha', onclick: async (e) => {
-          if (!usuarioActual()) { aviso.textContent = 'Primero elige quién eres.'; return; }
-          e.target.disabled = true;
-          try {
-            const r = await api.cancelarCompromiso({ id: ev.id, motivo: motivo.value.trim() });
-            if (r.error) { aviso.textContent = r.detalle ?? r.error; e.target.disabled = false; return; }
-            cerrarCajon();
-            pintar(zona);
-          } catch (err) { aviso.textContent = err.message; e.target.disabled = false; }
-        } }),
-      el('button', { text: 'No, dejarlo', onclick: volver }),
-    ]),
-    aviso,
-  ]);
 }
 
 /** Un solo formulario para dar de alta y para corregir. */

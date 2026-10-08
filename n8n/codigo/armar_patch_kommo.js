@@ -63,6 +63,42 @@ if (/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha_evento ?? '')
   valores.push({ field_id: CAMPO.fecha_evento, values: [{ value: epoch }] });
   anotado.fecha_evento = datos.fecha_evento;
 }
+// ─────────────────────────────────────────────────────────────────────────
+// La fecha, ya con su dia de la semana, lista para que el agente la nombre.
+//
+// El Lic. quiere que nunca se diga «el 20 de marzo» a secas, sino «el sabado
+// 20 de marzo». Pero esto NO se le puede pedir al prompt: sacar el dia de la
+// semana de una fecha es aritmetica, y el modelo la falla sin avisar. Peor
+// aun, la falla con seguridad — diria «viernes 20 de marzo» con el mismo tono
+// con que dice el precio, y el cliente le cree.
+//
+// Asi que se calcula aqui y se le entrega hecha. El modelo solo la copia.
+// Con acentos: esto lo copia el agente tal cual y sale al chat del cliente.
+const DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+             'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+// En español la fecha va «20 de marzo de 2027». «Marzo 20 de 2027» es orden
+// de ingles y en el chat se nota raro.
+function enLetras(iso) {
+  const y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7)), d = Number(iso.slice(8, 10));
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return `${DIA[dow]} ${d} de ${MES[m - 1]} de ${y}`;
+}
+
+// Primero la de este mensaje; si en este turno no dijo fecha, la que ya traia
+// el lead. Sin esto, en cuanto el cliente escribe «¿y cuanto sale?» el agente
+// se queda sin el dia de la semana y vuelve a decir la fecha pelada.
+let fechaISO = anotado.fecha_evento ?? null;
+if (!fechaISO) {
+  const epoch = Number($('formatLead').first().json.campos?.['Fecha del evento']);
+  // Se guarda a mediodia UTC justamente para que el dia no se corra al pasarla
+  // a texto. Ver el comentario de arriba.
+  if (Number.isFinite(epoch) && epoch > 0) {
+    fechaISO = new Date(epoch * 1000).toISOString().slice(0, 10);
+  }
+}
+
 const invitados = Number(datos.invitados);
 if (Number.isFinite(invitados) && invitados > 0) {
   valores.push({ field_id: CAMPO.invitados, values: [{ value: invitados }] });
@@ -83,6 +119,8 @@ return [{
     hay_datos: valores.length > 0,
     lead_id: $('formatLead').first().json.lead_id,
     anotado,
+    fecha_iso: fechaISO,
+    fecha_larga: fechaISO ? enLetras(fechaISO) : null,
     cuerpo: { custom_fields_values: valores },
   },
 }];

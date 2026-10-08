@@ -6,6 +6,7 @@
 // termina sabiendo la clave de nadie, ni siquiera el Lic. Barrón.
 import { api, error, sesion } from './api.js';
 import { el, limpiar, cargando } from './ui.js';
+import { confirmar } from './confirmar.js';
 
 const ROLES = [
   ['admin', 'Administrador', 'Todo: agenda, precios, servicios y usuarios.'],
@@ -113,8 +114,18 @@ function tarjetaUsuario(u, zona, admins) {
 
   acciones.append(el('button', { text: 'Cambiar rol o salón',
     onclick: () => soloUno(() => formularioEditar(u, zona, volver, ultimoAdmin)) }));
-  acciones.append(el('button', { text: 'Generar contraseña nueva',
-    onclick: () => soloUno(() => confirmarClave(u, zona, volver)) }));
+  acciones.append(el('button', { text: 'Generar contraseña nueva', onclick: async () => {
+    let respuesta = null;
+    const hecho = await confirmar({
+      tipo: 'normal',
+      titulo: `¿Generar una contraseña nueva para ${u.nombre}?`,
+      texto: 'Su contraseña actual deja de servir en el momento, y si tiene una sesión abierta se le cierra.',
+      nota: 'Tendrás que dictarle la nueva: se muestra una sola vez.',
+      confirmar: 'Sí, generar una nueva',
+      accion: async () => { respuesta = await api.claveUsuario({ usuario: u.usuario }); return respuesta; },
+    });
+    if (hecho) mostrarClave(zona, respuesta, `Contraseña nueva para ${u.nombre}.`);
+  } }));
   if (bloqueado) {
     acciones.append(el('button', { text: 'Quitar el bloqueo', onclick: async (e) => {
       e.target.disabled = true;
@@ -123,8 +134,17 @@ function tarjetaUsuario(u, zona, admins) {
     } }));
   }
   if (u.activo && !propia) {
-    acciones.append(el('button', { style: 'color:var(--ocupada)', text: 'Desactivar',
-      onclick: () => soloUno(() => confirmarBaja(u, zona, volver, ultimoAdmin)) }));
+    acciones.append(el('button', { style: 'color:var(--ocupada)', text: 'Desactivar', onclick: async () => {
+      const hecho = await confirmar({
+        titulo: `¿Desactivar a ${u.nombre}?`,
+        texto: 'No se borra: la cuenta se apaga y se le cierra la sesión. Lo que ya hizo sigue firmado ' +
+          'con su nombre en la bitácora. Se puede reactivar cuando quieras.',
+        nota: ultimoAdmin ? 'Es la única cuenta de administrador activa: el servidor no va a dejar desactivarla.' : null,
+        confirmar: `Sí, desactivar a ${u.nombre}`,
+        accion: () => api.editarUsuario({ usuario: u.usuario, activo: false }),
+      });
+      if (hecho) pintar(zona);
+    } }));
   }
   if (!u.activo) {
     acciones.append(el('button', { text: 'Reactivar', onclick: async (e) => {
@@ -254,28 +274,6 @@ function formularioEditar(u, zona, volver, ultimoAdmin) {
 }
 
 // ── contraseña nueva ────────────────────────────────────────────────────────
-function confirmarClave(u, zona, volver) {
-  const aviso = el('div', { class: 'aviso-form' });
-  const si = el('button', { class: 'primario', text: 'Sí, generar una nueva', onclick: async () => {
-    si.disabled = true;
-    try {
-      const r = await api.claveUsuario({ usuario: u.usuario });
-      if (r.error) { aviso.textContent = r.detalle ?? r.error; si.disabled = false; return; }
-      mostrarClave(zona, r, `Contraseña nueva para ${u.nombre}.`);
-    } catch (e) { aviso.textContent = e.message; si.disabled = false; }
-  } });
-  return el('div', { class: 'edita' }, [
-    el('div', { style: 'font-size:13.5px;line-height:1.55;color:var(--tinta-2)' }, [
-      `La contraseña actual de ${u.nombre} deja de servir en el momento, y si tiene una `,
-      'sesión abierta se le cierra. Tendrás que dictarle la nueva.',
-    ]),
-    el('div', { class: 'fila', style: 'margin-top:12px' }, [
-      si, el('button', { class: 'fantasma', text: 'Mejor no', onclick: volver }),
-    ]),
-    aviso,
-  ]);
-}
-
 /**
  * La contraseña temporal, una sola vez. Se muestra arriba del todo y con un
  * botón para copiarla, porque es el único momento en que existe en claro.
@@ -300,35 +298,6 @@ function mostrarClave(zona, r, titulo) {
       onclick: () => pintar(zona) }),
   ]);
   limpiar(zona).append(caja);
-}
-
-// ── baja ────────────────────────────────────────────────────────────────────
-function confirmarBaja(u, zona, volver, ultimoAdmin) {
-  const aviso = el('div', { class: 'aviso-form' });
-  const si = el('button', { style: 'color:var(--ocupada)', text: `Sí, desactivar a ${u.nombre}`,
-    onclick: async () => {
-      si.disabled = true;
-      try {
-        const r = await api.editarUsuario({ usuario: u.usuario, activo: false });
-        if (r.error) { aviso.textContent = r.detalle ?? r.error; si.disabled = false; return; }
-        pintar(zona);
-      } catch (e) { aviso.textContent = e.message; si.disabled = false; }
-    } });
-  return el('div', { class: 'edita' }, [
-    el('div', { style: 'font-size:13.5px;line-height:1.55;color:var(--tinta-2)' }, [
-      'No se borra: la cuenta se apaga y se le cierra la sesión. Lo que ya hizo sigue ',
-      'firmado con su nombre en la bitácora, que es justo para lo que sirve. ',
-      'Se puede reactivar cuando quieras.',
-    ]),
-    ultimoAdmin
-      ? el('div', { class: 'ayuda-rol', style: 'color:var(--ocupada)',
-          text: 'Es la única cuenta de administrador activa: el servidor no va a dejar desactivarla.' })
-      : null,
-    el('div', { class: 'fila', style: 'margin-top:12px' }, [
-      si, el('button', { class: 'fantasma', text: 'Mejor no', onclick: volver }),
-    ]),
-    aviso,
-  ].filter(Boolean));
 }
 
 // ── utilidades ──────────────────────────────────────────────────────────────

@@ -121,6 +121,19 @@ return [{
     anotado,
     fecha_iso: fechaISO,
     fecha_larga: fechaISO ? enLetras(fechaISO) : null,
+    // La linea ya armada, lista para pegarla al turno del agente.
+    //
+    // Se arma aqui y no en la expresion del nodo a proposito: un ternario con
+    // concatenacion dentro de {{ }} le reventó al agente con «invalid syntax»
+    // y, como nadie le escribio al bot en todo un dia, el fallo no aparecio
+    // hasta la primera conversacion real. En el nodo queda una sola
+    // referencia a una propiedad, que no tiene como romperse.
+    nota_fecha: fechaISO
+      ? `
+
+[Sistema] La fecha de la que se habla es el ${enLetras(fechaISO)}. `
+        + 'Nombrala siempre asi, con su dia de la semana.'
+      : '',
     cuerpo: { custom_fields_values: valores },
   },
 }];

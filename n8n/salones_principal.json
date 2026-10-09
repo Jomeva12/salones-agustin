@@ -212,7 +212,7 @@
     },
     {
       "parameters": {
-        "jsCode": "// Aplana los campos personalizados de Kommo a algo legible.\nconst crudo = $input.first().json ?? {};\nconst l = crudo.data ?? crudo;\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  campos[c.field_name] = v.value ?? v.enum_id ?? null;\n}\nconst msg = $('formatear').first().json;\nconst rafaga = $('leer_rafaga').first().json;\nreturn [{ json: {\n  lead_id: String(l.id ?? msg.lead_id),\n  etapa_id: l.status_id ?? null,\n  responsable_id: l.responsible_user_id ?? null,\n  presupuesto: l.price ?? 0,\n  campos,\n  // Todo lo que el cliente dijo en la rafaga, ya junto en un solo texto.\n  chats: rafaga.chats ?? msg.texto,\n  cuantos_mensajes: Number(rafaga.cuantos ?? 1),\n  origen: msg.origen,\n  autor: msg.autor,\n  adjunto_tipo: msg.adjunto_tipo,\n  adjunto_url: msg.adjunto_url,\n}}];"
+        "jsCode": "// Aplana los campos personalizados de Kommo a algo legible.\nconst crudo = $input.first().json ?? {};\nconst l = crudo.data ?? crudo;\nconst campos = {};\nfor (const c of (l.custom_fields_values ?? [])) {\n  const v = (c.values ?? [])[0] ?? {};\n  let valor = v.value ?? v.enum_id ?? null;\n  // Un campo de fecha vaciado se queda en 0, porque Kommo no acepta null ahi\n  // (ver armar_reinicio.js). Sin esta linea, 0 viaja como si fuera una fecha\n  // y acaba siendo el 1 de enero de 1970 en una cotizacion.\n  if (c.field_type === 'date' && Number(valor) === 0) valor = null;\n  campos[c.field_name] = valor;\n}\nconst msg = $('formatear').first().json;\nconst rafaga = $('leer_rafaga').first().json;\nreturn [{ json: {\n  lead_id: String(l.id ?? msg.lead_id),\n  etapa_id: l.status_id ?? null,\n  responsable_id: l.responsible_user_id ?? null,\n  presupuesto: l.price ?? 0,\n  campos,\n  // Todo lo que el cliente dijo en la rafaga, ya junto en un solo texto.\n  chats: rafaga.chats ?? msg.texto,\n  cuantos_mensajes: Number(rafaga.cuantos ?? 1),\n  origen: msg.origen,\n  autor: msg.autor,\n  adjunto_tipo: msg.adjunto_tipo,\n  adjunto_url: msg.adjunto_url,\n}}];\n"
       },
       "id": "3311bf39-5ecf-424c-a62e-859c64b47190",
       "name": "formatLead",
@@ -1172,6 +1172,83 @@
         1740,
         -220
       ]
+    },
+    {
+      "parameters": {
+        "jsCode": "// Lo que hay que hacer en Kommo cuando alguien manda «/*».\n//\n// Borrar la memoria sola no alcanza: el Director lee los campos del lead y\n// arrastra la fecha y el salon de la conversacion anterior, asi que el\n// «empezamos de cero» era mentira a medias.\n//\n// Pero esto borra datos de verdad, y ya paso en otro cliente: un «/*» cayo en\n// un lead que resulto ser una clienta real y le limpio los campos en plena\n// cotizacion. Por eso ANTES de borrar se deja una nota en el lead con lo que\n// habia. Si alguna vez vuelve a pasar, el dato se recupera leyendo la nota en\n// vez de reconstruirlo preguntandole al cliente.\n\nconst CAMPO = {\n  salon: 352870,\n  tipo_evento: 352872,\n  fecha_evento: 352874,\n  invitados: 352876,\n  paquete: 352880,\n};\n\n// Lo que NO se toca, a proposito:\n//   352882 «Stop IA»        — si la encargada apago la IA, un /* no la puede\n//                             volver a encender. Seria lo contrario de lo que\n//                             quiso quien la apago.\n//   352884 «Estado de contacto» — es operativo del equipo, no del agente.\n\nconst lead = $('formatLead').first().json;\nconst campos = lead.campos ?? {};\n\n// El nombre que Kommo le da a cada campo, para leer lo que habia. Se mira por\n// nombre porque es lo que trae `formatLead`, ya aplanado.\nconst NOMBRE = {\n  'Salón': 'Salón',\n  'Tipo de evento': 'Tipo de evento',\n  'Fecha del evento': 'Fecha del evento',\n  'Invitados': 'Invitados',\n  'Paquete cotizado': 'Paquete cotizado',\n};\n\nconst comoTexto = (nombre, valor) => {\n  if (valor === null || valor === undefined || valor === '') return null;\n  // La fecha viene en epoch y una nota con «1797055200» no le sirve a nadie.\n  if (nombre === 'Fecha del evento') {\n    const n = Number(valor);\n    if (Number.isFinite(n) && n > 0) return new Date(n * 1000).toISOString().slice(0, 10);\n  }\n  return String(valor);\n};\n\nconst habia = [];\nfor (const nombre of Object.keys(NOMBRE)) {\n  const t = comoTexto(nombre, campos[nombre]);\n  if (t !== null) habia.push(`${nombre}: ${t}`);\n}\n\nconst nota = habia.length\n  ? 'Se reinició la conversación con «/*». Los campos quedaron en blanco. '\n    + 'Lo que había antes:\\n' + habia.join('\\n')\n  : 'Se reinició la conversación con «/*». El lead no tenía datos capturados.';\n\n// Vaciar un campo en Kommo depende del TIPO, y no esta documentado junto:\n//\n//   `values: []`            -> rechazado siempre. «TooFew: exactly 1 element»\n//   `{ value: null }`       -> funciona en texto, numero y select\n//   `{ value: null }` en fecha -> rechazado. «NotNullable» + «InvalidDateFormat»\n//   `{ value: 0 }` en fecha -> aceptado, y es lo unico que acepta\n//\n// El 0 deja la fecha en el 1-ene-1970 en vez de vacia. Es feo en la ficha de\n// Kommo, pero `formatLead` lo traduce a null y nada aguas abajo lo ve como\n// una fecha de verdad. Probado contra la cuenta, campo por campo.\nconst FECHA = CAMPO.fecha_evento;\nconst cuerpo = {\n  custom_fields_values: Object.values(CAMPO).map((field_id) => ({\n    field_id,\n    values: [{ value: field_id === FECHA ? 0 : null }],\n  })),\n};\n\nreturn [{\n  json: {\n    lead_id: lead.lead_id,\n    tenia_datos: habia.length > 0,\n    nota,\n    cuerpo,\n  },\n}];\n"
+      },
+      "id": "e7aaba72-ab00-4bbd-a808-122826c589a8",
+      "name": "armar_reinicio",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -120,
+        620
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://administracioneventos6.kommo.com/api/v4/leads/{{ $json.lead_id }}/notes",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify([{ note_type: 'common', params: { text: $json.nota } }]) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "48312a9f-8686-4918-a5f4-601c613f2994",
+      "name": "nota_del_reinicio",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        620
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YrRdSRPkquUkNRAB",
+          "name": "kommo_salones"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "=https://administracioneventos6.kommo.com/api/v4/leads/{{ $('armar_reinicio').first().json.lead_id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify($('armar_reinicio').first().json.cuerpo) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "c8e024f2-6f4a-44d8-aaea-08b26b220c93",
+      "name": "borrar_campos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        620
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "YrRdSRPkquUkNRAB",
+          "name": "kommo_salones"
+        }
+      }
     }
   ],
   "connections": {
@@ -1678,7 +1755,7 @@
       "main": [
         [
           {
-            "node": "aviso_reinicio",
+            "node": "armar_reinicio",
             "type": "main",
             "index": 0
           }
@@ -1690,6 +1767,39 @@
         [
           {
             "node": "formatear_respuesta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "armar_reinicio": {
+      "main": [
+        [
+          {
+            "node": "nota_del_reinicio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "nota_del_reinicio": {
+      "main": [
+        [
+          {
+            "node": "borrar_campos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "borrar_campos": {
+      "main": [
+        [
+          {
+            "node": "aviso_reinicio",
             "type": "main",
             "index": 0
           }

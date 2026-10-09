@@ -201,6 +201,44 @@ IDs de los campos, por si hay que tocarlos:
 | Stop IA | 352882 | casilla · marcada = la IA no contesta |
 | Estado de contacto | 352884 | Activo 281650, En frio 281652 |
 
+## El reinicio: «/*»
+
+Borra la memoria del lead **y limpia los campos** que escribe el Director:
+salon, tipo de evento, fecha, invitados y paquete cotizado.
+
+```
+es_reinicio -> borrar_memoria -> armar_reinicio -> nota_del_reinicio
+                                                        |
+                                                   borrar_campos -> aviso_reinicio
+```
+
+**Antes de borrar se deja una nota en el lead** con lo que habia. No es
+cosmetico: en otro cliente un `/*` cayo en un lead que resulto ser una clienta
+real y le limpio los campos en plena cotizacion. Con la nota, el dato se
+recupera leyendola en vez de volver a preguntarselo al cliente. Por eso la
+nota va primero y **sin** `continueRegularOutput`: si no se puede dejar
+constancia, mejor que reviente antes de borrar.
+
+**Lo que `/*` NO toca:** el campo «Stop IA» (352882). Si la encargada apago la
+IA, un reinicio no la puede volver a encender — seria lo contrario de lo que
+quiso quien la apago. Tampoco «Estado de contacto» (352884), que es del
+equipo.
+
+### Vaciar un campo en Kommo depende del tipo
+
+Probado contra la cuenta, campo por campo, porque no esta documentado junto:
+
+| Lo que se manda | Resultado |
+|---|---|
+| `values: []` | Rechazado siempre: «TooFew: exactly 1 element» |
+| `values: [{ value: null }]` | Funciona en texto, numero y **select** |
+| `values: [{ value: null }]` en **fecha** | Rechazado: «NotNullable» + «InvalidDateFormat» |
+| `values: [{ value: 0 }]` en **fecha** | Lo unico que acepta |
+
+El `0` deja la fecha en el 1-ene-1970 en vez de vacia, y asi se ve en la ficha
+de Kommo. Por eso `formatLead` traduce una fecha en 0 a `null`: aguas abajo
+nadie la ve como una fecha de verdad, que si no acabaria cotizando 1970.
+
 ## salones_avisos
 
 Lo que el agente no pudo resolver se queda en la tabla `aviso` del panel. Este

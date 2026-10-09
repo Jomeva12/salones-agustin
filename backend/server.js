@@ -1290,6 +1290,19 @@ const rutas = {
   },
 
   'PUT /api/avisos': (_u, c) => {
+    // Cerrar de golpe lo que quedo pendiente de un lead. Lo llama el reinicio
+    // «/*»: si la conversacion empieza de cero, los avisos de la anterior ya
+    // no los espera nadie — y sin esto seguian repicando en el grupo cada 30
+    // minutos, mandando a la encargada a atender a un cliente que ya no tiene
+    // esa duda. Un aviso falso gasta la confianza de los verdaderos.
+    if (c?.cerrar_pendientes && c?.lead_id) {
+      const r = db.prepare(
+        `UPDATE aviso SET estado='atendido', atendido_en=datetime('now'), atendido_por=?
+          WHERE lead_id = ? AND estado = 'pendiente'`)
+        .run(c._autor ?? 'reinicio', String(c.lead_id));
+      return { ok: true, cerrados: r.changes };
+    }
+
     const id = entero(c?.id);
     const a = db.prepare('SELECT id FROM aviso WHERE id = ?').get(id);
     if (!a) return { error: 'ese aviso no existe' };

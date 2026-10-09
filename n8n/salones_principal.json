@@ -1301,6 +1301,39 @@
         60,
         60
       ]
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "http://automatizaciones_salones-panel:4300/api/avisos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ cerrar_pendientes: true, lead_id: $('armar_reinicio').first().json.lead_id, _autor: 'reinicio' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "845e0303-1e54-4f0e-baa5-34eb164e0644",
+      "name": "cerrar_avisos",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        640,
+        620
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NmEwnWxyfdqJcNvw",
+          "name": "panel_salones"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -1851,7 +1884,7 @@
       "main": [
         [
           {
-            "node": "aviso_reinicio",
+            "node": "cerrar_avisos",
             "type": "main",
             "index": 0
           }
@@ -1874,6 +1907,17 @@
         [
           {
             "node": "hay_datos",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "cerrar_avisos": {
+      "main": [
+        [
+          {
+            "node": "aviso_reinicio",
             "type": "main",
             "index": 0
           }

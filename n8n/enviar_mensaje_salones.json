@@ -1,0 +1,530 @@
+{
+  "name": "enviar_mensaje_salones",
+  "nodes": [
+    {
+      "parameters": {
+        "content": "## Enviar mensaje\n\n\n",
+        "height": 272,
+        "width": 720
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        160,
+        336
+      ],
+      "typeVersion": 1,
+      "id": "301d229e-635e-4577-9b59-2ad8328440e2",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "https://administracioneventos6.kommo.com/api/v4/chats/templates",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "authorization",
+              "value": "=eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjUwMjU0YzUwMWUxYzg2MTAxN2RhOWVjZGFkZDFmOTRjNmRkYmY3MGNlNGIwZWUwYzZkNGY5Y2Y0ZTIxODQwNjljMDBlM2UyMTM0NGIzZWEyIn0.eyJhdWQiOiIyZjVmY2FiZC00MmE4LTQwYWQtOWRiNi04Y2YwMDAwYWUzY2EiLCJqdGkiOiI1MDI1NGM1MDFlMWM4NjEwMTdkYTllY2RhZGQxZjk0YzZkZGJmNzBjZTRiMGVlMGM2ZDRmOWNmNGUyMTg0MDY5YzAwZTNlMjEzNDRiM2VhMiIsImlhdCI6MTc5MDY4NDU1OCwibmJmIjoxNzkwNjg0NTU4LCJleHAiOjE5MTQzNjQ4MDAsInN1YiI6IjEzNjY2Mzg0IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjM3MDE5ODExLCJiYXNlX2RvbWFpbiI6ImtvbW1vLmNvbSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJsaXN0X2V4dGVybmFsX21lc3NhZ2VzIiwicHVzaF9ub3RpZmljYXRpb25zIiwiZmlsZXMiLCJjcm0iLCJmaWxlc19kZWxldGUiLCJub3RpZmljYXRpb25zIiwic2VuZF9leHRlcm5hbF9tZXNzYWdlcyJdLCJoYXNoX3V1aWQiOiI1ZmViMjcyYi1lMTU5LTRlMzMtOTc1OC02NDUwNTdiNDM5YTYiLCJhcGlfZG9tYWluIjoiYXBpLWMua29tbW8uY29tIn0.lKNHnUddTATPXzgnDbWuTP78nnkkQJ6YKMBFLqWCt1rnF2HzB0PyWC19E_8Otn85SjFL-T2Hg7kZCHFB1zODxtpqfYc4WGYz3LHh6rPZn30Kucw2TGdEOt6ZlS682VbGnXaPF4nq7zsfTUjhuUSHq5pfNa3-smT0s1FcH-xHpOfg1W4YX9SxGzk2MoPv2y4TYm-dCeVWU_Z2AMHbmHS3vV1G6_kPh-5rptu44eCk1sbVG5lkev0Q4DfZ2zFr6QattyzG4kRK0Yinyiv-jT2SSjRlbJ9CTiWxxtF7JnL6M1sZCAJJi3IXZgM382VEAZUfJKeKVsRq1HHtRP-BBiDCJQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n  {\n    \"id\": {{ parseInt($('Code in JavaScript').item.json.id_plantilla_kommo) }},\n    \"content\": {{ JSON.stringify($('Code in JavaScript').item.json.texto_a_enviar) }},\n    \"attachment\": {{ $('Code in JavaScript').item.json.url_imagen ? \n      JSON.stringify({\n        \"id\": $('Code in JavaScript').item.json.url_imagen.split('/')[5],\n        \"name\": \"Imagen_Informativa.jpg\",\n        \"type\": \"picture\"\n      }) : \"null\" \n    }}\n  }\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        224,
+        416
+      ],
+      "id": "9ed2d61a-4d36-4fe5-a4c5-3c896d19b384",
+      "name": "modificar_plantilla "
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://administracioneventos6.kommo.com/api/v2/salesbot/run",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            },
+            {
+              "name": "authorization",
+              "value": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiIsImp0aSI6IjUwMjU0YzUwMWUxYzg2MTAxN2RhOWVjZGFkZDFmOTRjNmRkYmY3MGNlNGIwZWUwYzZkNGY5Y2Y0ZTIxODQwNjljMDBlM2UyMTM0NGIzZWEyIn0.eyJhdWQiOiIyZjVmY2FiZC00MmE4LTQwYWQtOWRiNi04Y2YwMDAwYWUzY2EiLCJqdGkiOiI1MDI1NGM1MDFlMWM4NjEwMTdkYTllY2RhZGQxZjk0YzZkZGJmNzBjZTRiMGVlMGM2ZDRmOWNmNGUyMTg0MDY5YzAwZTNlMjEzNDRiM2VhMiIsImlhdCI6MTc5MDY4NDU1OCwibmJmIjoxNzkwNjg0NTU4LCJleHAiOjE5MTQzNjQ4MDAsInN1YiI6IjEzNjY2Mzg0IiwiZ3JhbnRfdHlwZSI6IiIsImFjY291bnRfaWQiOjM3MDE5ODExLCJiYXNlX2RvbWFpbiI6ImtvbW1vLmNvbSIsInZlcnNpb24iOjIsInNjb3BlcyI6WyJsaXN0X2V4dGVybmFsX21lc3NhZ2VzIiwicHVzaF9ub3RpZmljYXRpb25zIiwiZmlsZXMiLCJjcm0iLCJmaWxlc19kZWxldGUiLCJub3RpZmljYXRpb25zIiwic2VuZF9leHRlcm5hbF9tZXNzYWdlcyJdLCJoYXNoX3V1aWQiOiI1ZmViMjcyYi1lMTU5LTRlMzMtOTc1OC02NDUwNTdiNDM5YTYiLCJhcGlfZG9tYWluIjoiYXBpLWMua29tbW8uY29tIn0.lKNHnUddTATPXzgnDbWuTP78nnkkQJ6YKMBFLqWCt1rnF2HzB0PyWC19E_8Otn85SjFL-T2Hg7kZCHFB1zODxtpqfYc4WGYz3LHh6rPZn30Kucw2TGdEOt6ZlS682VbGnXaPF4nq7zsfTUjhuUSHq5pfNa3-smT0s1FcH-xHpOfg1W4YX9SxGzk2MoPv2y4TYm-dCeVWU_Z2AMHbmHS3vV1G6_kPh-5rptu44eCk1sbVG5lkev0Q4DfZ2zFr6QattyzG4kRK0Yinyiv-jT2SSjRlbJ9CTiWxxtF7JnL6M1sZCAJJi3IXZgM382VEAZUfJKeKVsRq1HHtRP-BBiDCJQ"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "=[\n  {\n  \"bot_id\": {{ parseInt($('Code in JavaScript').item.json.en_salesbot) }},\n  \"entity_id\": {{ $('When Executed by Another Workflow').first().json.lead_id }},\n  \"entity_type\": 2\n}\n]",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        528,
+        416
+      ],
+      "id": "c4398bd7-1387-4b8b-9a9f-3b466dca7907",
+      "name": "enviar_salesbot",
+      "retryOnFail": true,
+      "waitBetweenTries": 3000
+    },
+    {
+      "parameters": {
+        "amount": 3
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        384,
+        416
+      ],
+      "id": "e5099438-6c0f-4697-af1b-042823dec8a0",
+      "name": "Wait",
+      "webhookId": "9e685cbb-53bd-4375-b927-7c7ccc4034f5"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "T2b5qZt2ZdF4Pl9x",
+          "mode": "list",
+          "cachedResultName": "listado_plantillas_salones",
+          "cachedResultUrl": "/projects/xtFrcd8Q15e86FZt/datatables/T2b5qZt2ZdF4Pl9x"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $('Code in JavaScript').item.json.id_db }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_lead": "DISPONIBLE"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_plantilla",
+              "displayName": "id_plantilla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "en_salesbot",
+              "displayName": "en_salesbot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "nombre_bot",
+              "displayName": "nombre_bot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "id_lead",
+              "displayName": "id_lead",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        704,
+        416
+      ],
+      "id": "53e6ad7c-2cfa-410e-b37f-c6c39a75f0d4",
+      "name": "liberar_fila"
+    },
+    {
+      "parameters": {
+        "workflowInputs": {
+          "values": [
+            {
+              "name": "cuantas_partes",
+              "type": "number"
+            },
+            {
+              "name": "parte1"
+            },
+            {
+              "name": "parte2"
+            },
+            {
+              "name": "parte3"
+            },
+            {
+              "name": "parte4"
+            },
+            {
+              "name": "lead_id"
+            },
+            {
+              "name": "imagen_url"
+            },
+            {
+              "name": "mensaje_cliente"
+            },
+            {
+              "name": "proximo_paso",
+              "type": "number"
+            },
+            {
+              "name": "status_id",
+              "type": "number"
+            },
+            {
+              "name": "imagenes"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.executeWorkflowTrigger",
+      "typeVersion": 1.1,
+      "position": [
+        -944,
+        80
+      ],
+      "id": "f2145990-26a7-4e76-8686-90a0c5b0983e",
+      "name": "When Executed by Another Workflow"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "dataTableId": {
+          "__rl": true,
+          "value": "T2b5qZt2ZdF4Pl9x",
+          "mode": "list",
+          "cachedResultName": "listado_plantillas_salones",
+          "cachedResultUrl": "/projects/xtFrcd8Q15e86FZt/datatables/T2b5qZt2ZdF4Pl9x"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "id_lead",
+              "keyValue": "DISPONIBLE"
+            }
+          ]
+        },
+        "limit": "={{ $json.cuantas_partes }}"
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -688,
+        80
+      ],
+      "id": "2f0263ee-7922-4758-9140-ad7052f1c70c",
+      "name": "Get row(s)"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "dataTableId": {
+          "__rl": true,
+          "value": "T2b5qZt2ZdF4Pl9x",
+          "mode": "list",
+          "cachedResultName": "listado_plantillas_salones",
+          "cachedResultUrl": "/projects/xtFrcd8Q15e86FZt/datatables/T2b5qZt2ZdF4Pl9x"
+        },
+        "filters": {
+          "conditions": [
+            {
+              "keyValue": "={{ $json.id_db }}"
+            }
+          ]
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "id_lead": "={{ $json.lead_id }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "id_plantilla",
+              "displayName": "id_plantilla",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "name",
+              "displayName": "name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "type",
+              "displayName": "type",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "texto",
+              "displayName": "texto",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "en_salesbot",
+              "displayName": "en_salesbot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "nombre_bot",
+              "displayName": "nombre_bot",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": true
+            },
+            {
+              "id": "id_lead",
+              "displayName": "id_lead",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.dataTable",
+      "typeVersion": 1,
+      "position": [
+        -288,
+        80
+      ],
+      "id": "53be9378-f731-4101-8e5e-da21bbd52880",
+      "name": "Update row(s)"
+    },
+    {
+      "parameters": {
+        "jsCode": "// 1. Obtenemos los datos del Webhook (Nodo inicial)\nconst webhook = $(\"When Executed by Another Workflow\").first().json; \n\n// 2. Obtenemos TODAS las plantillas del nodo \"Get row(s)\"\nconst plantillas = $(\"Get row(s)\").all(); \n\nconst resultados = [];\n// El drive de cada cuenta de Kommo vive en un host distinto: esta es\n// drive-c, y aqui decia drive-g porque el subflujo se copio de otra\n// cuenta. Con el dominio equivocado TODA imagen se descartaba en\n// silencio. Se acepta cualquier drive de Kommo para que no vuelva a\n// romperse si la cuenta cambia de host.\nconst DRIVE_KOMMO = /^https:\\/\\/drive-[a-z0-9-]+\\.kommo\\.com\\//i;\n\nconst PATRON_TOOL_LEAK = /Calling\\s+\\w+\\s*[:.]|default_api\\s*[:.]|tool_code|functions?\\.\\w+\\s*\\(/i;\nconst MENSAJE_SEGURO = 'Permíteme un momento, en seguida te confirmo esa información. 🙌';\n\n// Extrae el valor de un campo string del texto SIN depender de JSON.parse.\n// Recupera el mensaje real aunque el JSON esté roto/truncado.\nfunction extraerCampo(t, campo) {\n  const re = new RegExp('\"' + campo + '\"\\\\s*:\\\\s*\"((?:\\\\\\\\.|[^\"\\\\\\\\])*)\"');\n  const m = t.match(re);\n  if (!m) return null;\n  try { return JSON.parse('\"' + m[1] + '\"'); } catch (e) { return m[1]; }\n}\n\nfunction blindarTexto(texto, i) {\n  if (typeof texto !== 'string') return texto;\n  let t = texto.trim()\n    .replace(/^```json\\s*/i, '').replace(/^```\\s*/i, '').replace(/```\\s*$/i, '').trim();\n\n  // fuga de tool-call: no hay mensaje real que rescatar\n  if (PATRON_TOOL_LEAK.test(t)) return MENSAJE_SEGURO;\n\n  // ¿parece payload crudo del agente?\n  const pareceAgente = t.startsWith('{') &&\n    /\"(parte1|parte2|parte3|parte4|cadena_pensamiento|datos_capturados|bot_id|respuesta|quiere_cita)\"/i.test(t);\n  if (!pareceAgente) return texto; // texto normal → tal cual\n\n  // 1) parse completo\n  try {\n    const obj = JSON.parse(t.substring(t.indexOf('{'), t.lastIndexOf('}') + 1));\n    const cand = obj['parte' + i] || obj.parte1 || obj.respuesta || obj.parte2;\n    if (typeof cand === 'string' && cand.trim() && !cand.trim().startsWith('{')) return cand.trim();\n  } catch (e) { /* sigue al rescate por regex */ }\n\n  // 2) rescate por REGEX (JSON roto) → recupera el mensaje REAL, no un genérico\n  for (const campo of ['parte' + i, 'parte1', 'respuesta', 'parte2']) {\n    const val = extraerCampo(t, campo);\n    if (val && val.trim() && !val.trim().startsWith('{')) return val.trim();\n  }\n\n  // 3) sin mensaje rescatable (output vacío/basura) → seguro, nunca JSON crudo\n  return MENSAJE_SEGURO;\n}\n\n// Las imagenes llegan como JSON porque la entrada del subflujo es plana.\n// Si viene rota o vacia se sigue sin fotos: el texto es lo que no puede\n// faltar.\nlet imagenes = [];\ntry {\n    const crudo = webhook.imagenes;\n    imagenes = Array.isArray(crudo) ? crudo : JSON.parse(crudo || '[]');\n    if (!Array.isArray(imagenes)) imagenes = [];\n} catch (e) { imagenes = []; }\n\n// 3. Validamos disponibilidad según 'cuantas_partes' del webhook\nif (plantillas.length < webhook.cuantas_partes) {\n    throw new Error(`Insuficientes bots disponibles. Requeridos: ${webhook.cuantas_partes}, Disponibles: ${plantillas.length}`);\n}\n\n// 4. Mapeamos las partes del mensaje a las plantillas\nfor (let i = 1; i <= webhook.cuantas_partes; i++) {\n    let texto = blindarTexto(webhook[`parte${i}`], i);\n    \n    if (texto && texto.trim() !== \"\" && texto !== \"vacio\") {\n        // Asignamos la plantilla según el índice\n        const plantillaAsignada = plantillas[i - 1].json;\n\n        let item = {\n            texto_a_enviar: texto,\n            lead_id: webhook.lead_id,\n            parte_numero: i,\n            id_db: plantillaAsignada.id, \n            id_plantilla_kommo: plantillaAsignada.id_plantilla,\n            nombre_bot: plantillaAsignada.nombre_bot,\n            en_salesbot: plantillaAsignada.en_salesbot\n        };\n\n        // Una imagen por parte. Kommo adjunta UNA por plantilla, asi que\n        // tres laminas son tres mensajes; `imagenes` viene alineado con las\n        // partes y lo arma elegir_lamina. `imagen_url` se sigue aceptando\n        // para no romper a quien todavia mande solo una.\n        const dePart = imagenes[i - 1] || (i === 1 ? webhook.imagen_url : '');\n        if (dePart) {\n            if (DRIVE_KOMMO.test(dePart)) {\n                item.url_imagen = dePart;\n            } else {\n                console.log(\"URL bloqueada: \" + dePart);\n            }\n        }\n\n        resultados.push(item);\n    }\n}\n\nreturn resultados;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -480,
+        80
+      ],
+      "id": "dcc191c5-44f2-41eb-9eb3-2e679723eaad",
+      "name": "Code in JavaScript"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "4e5ecb63-830d-44f2-b1f3-4af0f1675150",
+      "name": "Loop Over Items"
+    }
+  ],
+  "connections": {
+    "modificar_plantilla ": {
+      "main": [
+        [
+          {
+            "node": "Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "enviar_salesbot": {
+      "main": [
+        [
+          {
+            "node": "liberar_fila",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait": {
+      "main": [
+        [
+          {
+            "node": "enviar_salesbot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "liberar_fila": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "When Executed by Another Workflow": {
+      "main": [
+        [
+          {
+            "node": "Get row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get row(s)": {
+      "main": [
+        [
+          {
+            "node": "Code in JavaScript",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update row(s)": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Items",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code in JavaScript": {
+      "main": [
+        [
+          {
+            "node": "Update row(s)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Items": {
+      "main": [
+        [],
+        [
+          {
+            "node": "modificar_plantilla ",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": false
+  }
+}

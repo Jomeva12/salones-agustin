@@ -15,6 +15,30 @@ if (texto.startsWith('{')) {
   } catch (e) { /* no era JSON: se queda con el texto tal cual */ }
 }
 
+// El agente ve las URL de las laminas dentro de la respuesta de `cotizar` y
+// se le ha dado por pegarlas en el texto en markdown:
+//
+//   «Aqui te dejo la imagen: ![Paquete Bronce](https://kommo.cc/K/YG9FBW/...)»
+//
+// Al cliente le llega el corchetazo crudo Y la foto adjunta, duplicado y feo.
+// Se quita aqui y no solo en el prompt porque el prompt es una peticion y
+// esto es una garantia: las fotos las adjunta el sistema, no se escriben.
+function quitarEnlacesDeImagen(t) {
+  return t
+    // ![lo que sea](url)  y  [lo que sea](url de kommo)
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+    .replace(/\[[^\]]*\]\(https?:\/\/(?:kommo\.cc|drive-[a-z0-9-]+\.kommo\.com)[^)]*\)/gi, '')
+    // y la URL suelta, sin markdown
+    .replace(/https?:\/\/(?:kommo\.cc|drive-[a-z0-9-]+\.kommo\.com)\S*/gi, '')
+    // la frase que los presentaba se queda colgando con dos puntos al aire:
+    // «Aqui te dejo la imagen:» sin nada detras.
+    .replace(/[^\S\r\n]*:[^\S\r\n]*(?=\r?\n|$)/g, '')
+    .replace(/[^\S\r\n]{2,}/g, ' ')
+    .replace(/(\r?\n){3,}/g, '\n\n')
+    .trim();
+}
+texto = quitarEnlacesDeImagen(texto);
+
 const MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro
 
 // Se corta por ritmo de WhatsApp, no por longitud: la informacion en un

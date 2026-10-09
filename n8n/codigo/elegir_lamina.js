@@ -56,13 +56,23 @@ const cortesias = ($json.cortesias ?? []).map((c) => ({
     .map((x) => limpiar(x).trim()).filter(Boolean),
 }));
 
-/** Todas las posiciones donde aparece `aguja` en `t`. */
+/** Todas las posiciones donde aparece `aguja` en `t`, como palabra entera. */
 function posiciones(t, aguja) {
+  if (!aguja) return [];
+  const esc = aguja.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const re = new RegExp('(^|[^a-z0-9])' + esc + '([^a-z0-9]|$)', 'g');
   const out = [];
-  let i = t.indexOf(aguja);
-  while (i !== -1) { out.push(i); i = t.indexOf(aguja, i + 1); }
+  let m;
+  while ((m = re.exec(t)) !== null) {
+    out.push(m.index + m[1].length);
+    re.lastIndex = m.index + 1;   // permite solapes
+  }
   return out;
 }
+
+// Palabras que no distinguen un paquete de otro, asi que no sirven de apodo.
+const RELLENO = new Set(['paquete', 'de', 'del', 'la', 'las', 'el', 'los', 'y',
+  'boda', 'bodas', 'xv', 'para', 'con', 'o', 'u']);
 
 // Un salón que se acaba de descartar no lleva lámina. «El salón Norma ya está
 // ocupado ese día, pero tengo Esmeralda y Santa Cruz con el Paquete Bronce»:
@@ -85,6 +95,35 @@ for (const g of grupos.values()) {
   paquetesDe.get(g.salon_texto).add(g.paquete_texto);
 }
 
+/**
+ * Los apodos con que se puede reconocer un paquete dentro de su salón.
+ *
+ * El nombre exacto no basta: el catálogo dice «Paquete Plata Boda y XV» y el
+ * agente escribe «el Paquete Plata para boda». Son el mismo, y por una
+ * preposición Quetzal se quedaba sin lámina.
+ *
+ * Un apodo es una palabra suya que **ningún otro paquete de ese salón usa**.
+ * «plata» vale porque en Quetzal solo hay uno con plata; «día» no vale en
+ * Esmeralda, que tiene el del Día de las Madres y el del Día del Maestro —
+ * ahí los que distinguen son «madres» y «maestro».
+ */
+const apodosDe = new Map();
+for (const [salon, paquetes] of paquetesDe) {
+  const cuenta = new Map();
+  const palabras = new Map();
+  for (const p of paquetes) {
+    const ws = [...new Set(p.split(/[^a-z0-9]+/).filter(
+      (x) => x.length >= 3 && !RELLENO.has(x)))];
+    palabras.set(p, ws);
+    for (const w of ws) cuenta.set(w, (cuenta.get(w) ?? 0) + 1);
+  }
+  const m = new Map();
+  for (const p of paquetes) {
+    m.set(p, [p, ...palabras.get(p).filter((w) => cuenta.get(w) === 1 && w !== p)]);
+  }
+  apodosDe.set(salon, m);
+}
+
 /** Los pares salón+paquete nombrados DENTRO de un mismo párrafo. */
 function paresDelParrafo(t) {
   const marcasSalon = [];
@@ -97,13 +136,15 @@ function paresDelParrafo(t) {
   for (const ms of marcasSalon) {
     if (estaDescartado(t, ms.pos, ms.largo)) continue;
     let mejor = null;
-    for (const paquete of (paquetesDe.get(ms.salon) ?? [])) {
-      for (const pos of posiciones(t, paquete)) {
-        const d = Math.abs(pos - ms.pos);
-        // A igual distancia gana el nombre más largo: «plata boda y xv»
-        // empieza donde «plata», y el que describe mejor es el largo.
-        if (!mejor || d < mejor.d || (d === mejor.d && paquete.length > mejor.paquete.length)) {
-          mejor = { paquete, d };
+    for (const [paquete, apodos] of (apodosDe.get(ms.salon) ?? new Map())) {
+      for (const apodo of apodos) {
+        for (const pos of posiciones(t, apodo)) {
+          const d = Math.abs(pos - ms.pos);
+          // A igual distancia gana el apodo más largo: «plata boda y xv»
+          // empieza donde «plata», y el que describe mejor es el largo.
+          if (!mejor || d < mejor.d || (d === mejor.d && apodo.length > mejor.largo)) {
+            mejor = { paquete, d, largo: apodo.length };
+          }
         }
       }
     }

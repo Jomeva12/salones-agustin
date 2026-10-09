@@ -1155,6 +1155,18 @@ const rutas = {
   // avisa, no frena.
 
   'GET /api/fechas-especiales': (u) => {
+    // Con ?fecha= contesta solo por ese dia. Lo usa n8n en CADA mensaje para
+    // poder avisar de Semana Santa antes de cotizar: el aviso viajaba dentro
+    // de `cotizar`, asi que mientras el agente seguia recabando datos la
+    // fecha pasaba sin que nadie dijera nada.
+    // `has` y no `get`: n8n manda ?fecha= vacio cuando el cliente todavia no
+    // dijo dia, y con `get` eso caia en la rama de abajo y devolvia las siete
+    // Semanas Santas en cada mensaje.
+    if (u.searchParams.has('fecha')) {
+      const fecha = u.searchParams.get('fecha');
+      return { fecha: fecha || null, fecha_especial: L.fechaEspecial(db, fecha) };
+    }
+
     const todas = u.searchParams.get('incluir') === 'todo';
     return {
       fechas: db.prepare(

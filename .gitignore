@@ -17,6 +17,10 @@ para-subir/
 .n8n_key
 .kommo_token
 
+# El disparador de despliegue de Easypanel. Quien tenga esa URL puede lanzar
+# una construccion del panel, asi que vale lo mismo que una contrasena.
+.easypanel_hook
+
 # Cualquier archivo con credenciales que caiga en esta carpeta. El repositorio
 # es PUBLICO: un `git add -A` distraido publica tokens vivos para siempre.
 .env

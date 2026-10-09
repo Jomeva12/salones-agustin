@@ -1,6 +1,7 @@
 // Enrutador por hash. Ocho pantallas, sin framework.
 import { api, cargarSesion, salir, salonActual, fijarSalon } from './api.js';
 import { icono } from './ui.js';
+import { ponerGlobo, refrescarAvisos } from './globos.js';
 import { hoy } from './hoy.js';
 import { cotizar } from './cotizar.js';
 import { agenda } from './agenda.js';
@@ -62,6 +63,9 @@ async function enrutar() {
   }
 
   app.scrollTop = 0;
+  // En cada cambio de pantalla, no solo al arrancar: si la encargada atiende
+  // un aviso y se va a otra pantalla, el numero tiene que haber bajado.
+  refrescarAvisos();
   try {
     await vista(app, params);
   } catch (e) {
@@ -132,13 +136,9 @@ montarSesion()
     return api.revisar();
   })
   .then((r) => {
-    const n = (r.tarifas?.length ?? 0) + (r.contenidos?.length ?? 0);
-    if (!n) return;
-    const a = menu.querySelector('a[href="#/pendientes"]');
-    const globo = document.createElement('span');
-    globo.className = 'globo';
-    globo.textContent = String(n);
-    a.append(globo);
+    // Pendientes se cuenta una sola vez: `revisar` recorre las mil tarifas y
+    // lo que cuenta no cambia solo. Avisos si, en cada pantalla.
+    ponerGlobo('/pendientes', (r.tarifas?.length ?? 0) + (r.contenidos?.length ?? 0));
   })
   .catch(() => {
     document.getElementById('pie').textContent = 'Sin conexión con el servidor';

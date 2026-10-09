@@ -1244,6 +1244,11 @@ const rutas = {
   'GET /api/avisos': (u) => {
     const estado = u.searchParams.get('estado');
     const clave = u.searchParams.get('salon');
+    // Al filtrar por salon se incluyen tambien los avisos SIN salon. Desde
+    // que el agente puede dejarlo vacio —cuando la conversacion todavia no
+    // habla de un salon en concreto— esos avisos no son de nadie, y si se
+    // excluyen no los mira ninguna encargada: un cliente esperando que no
+    // aparece en ninguna pantalla.
     const filas = db.prepare(
       `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada,
               c.fecha AS cita_fecha, c.hora AS cita_hora, c.estado AS cita_estado
@@ -1251,11 +1256,18 @@ const rutas = {
          LEFT JOIN salon s ON s.id = a.salon_id
          LEFT JOIN cita  c ON c.id = a.cita_id
         WHERE (? IS NULL OR a.estado = ?)
-          AND (? IS NULL OR s.clave = ?)
+          AND (? IS NULL OR s.clave = ? OR a.salon_id IS NULL)
         ORDER BY a.estado = 'pendiente' DESC, a.creado_en DESC
         LIMIT 300`).all(estado || null, estado || null, clave || null, clave || null);
+    // El contador sigue el MISMO filtro de salon que la lista. Si contara
+    // todos, el globo del menu diria 3 y la pantalla ensenaria uno — y el
+    // numero que no cuadra con lo que se ve deja de mirarse.
     const pendientes = db.prepare(
-      "SELECT COUNT(*) n FROM aviso WHERE estado = 'pendiente'").get().n;
+      `SELECT COUNT(*) n FROM aviso a
+         LEFT JOIN salon s ON s.id = a.salon_id
+        WHERE a.estado = 'pendiente'
+          AND (? IS NULL OR s.clave = ? OR a.salon_id IS NULL)`)
+      .get(clave || null, clave || null).n;
     return { pendientes, avisos: filas };
   },
 

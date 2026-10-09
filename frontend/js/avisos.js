@@ -7,6 +7,7 @@
 // las 9.
 import { api, error, salonActual, puede } from './api.js';
 import { el, limpiar, cargando } from './ui.js';
+import { refrescarAvisos } from './globos.js';
 
 const MOTIVO = {
   sin_dato: 'Falta un dato',
@@ -134,7 +135,7 @@ export async function avisos(raiz) {
       acciones.appendChild(el('button', { class: 'primario', text: 'Ya lo atendí',
         onclick: async (ev) => {
           ev.target.disabled = true;
-          try { await api.atenderAviso(a.id); await pintar(); }
+          try { await api.atenderAviso(a.id); await pintar(); refrescarAvisos(); }
           catch { ev.target.disabled = false; /* el aviso de error ya lo da api.js */ }
         } }));
     }

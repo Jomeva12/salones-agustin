@@ -259,6 +259,18 @@ equivocarse.
 dijo que si entra algo a las 2 de la madrugada quiere verlo. Los que insisten
 solo salen de 12 a 20 y nunca en martes, que es cuando cierran.
 
+**La espera entre recordatorios crece.** Las primeras dos horas cada media,
+que es cuando de verdad se puede reaccionar; el resto del dia cada dos; de ahi
+en adelante, una vez al dia. No se apaga nunca, porque sigue habiendo alguien
+esperando.
+
+Sin ese freno no habia techo: un aviso que nadie atendio llego a **71
+recordatorios en cuatro dias**, el mismo texto cada media hora. Eso no es
+insistir, es ruido, y lo que gasta es la atencion al resto — un grupo que
+repite lo mismo 71 veces se deja de mirar y el aviso bueno se pierde entre los
+malos. Pasado el dia, el mensaje ademas dice como cerrarlo, que es lo unico
+que rompe el bucle cuando el aviso ya no aplica.
+
 **`se_entrego` es un seguro, no un adorno.** El nodo de Telegram esta en
 `continueRegularOutput` para que un aviso caido no tumbe la tanda entera. Pero
 sin el IF, ese fallo seguia derecho a `marcar_avisado` y el aviso quedaba

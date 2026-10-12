@@ -54,7 +54,21 @@ DECIDIR = r'''// Cuales toca avisar ahora, y con que texto.
 //
 // Miercoles a lunes de 12 a 20. El martes cierran, asi que ese dia no se
 // insiste ni una vez.
-const RECORDAR_CADA_MIN = 30;
+//
+// Y la espera CRECE. Al principio no habia techo: un aviso que nadie atendio
+// llego a 71 recordatorios en cuatro dias, el mismo texto cada media hora. Eso
+// ya no es insistir, es ruido — y lo que se gasta es la atencion al resto: un
+// grupo que repite lo mismo 71 veces se deja de mirar, y el aviso bueno se
+// pierde entre los malos.
+//
+// Las primeras dos horas cada media, que es cuando de verdad se puede
+// reaccionar. El resto del dia cada dos. De ahi en adelante, una vez al dia,
+// para que no desaparezca: sigue habiendo alguien esperando.
+function esperaMin(veces) {
+  if (veces < 4) return 30;
+  if (veces < 10) return 120;
+  return 1440;
+}
 
 const ahora = $now;                 // ya viene en la zona del flujo (Monterrey)
 const laboral = ahora.weekday !== 2 && ahora.hour >= 12 && ahora.hour < 20;
@@ -94,7 +108,7 @@ for (const a of ($input.first().json.avisos ?? [])) {
 
   if (!primero) {
     if (!laboral) continue;
-    if (desdeUltimo === null || desdeUltimo < RECORDAR_CADA_MIN) continue;
+    if (desdeUltimo === null || desdeUltimo < esperaMin(Number(a.recordatorios ?? 0))) continue;
   }
 
   const espera = enPalabras(minutosDesde(a.creado_en));
@@ -109,6 +123,13 @@ for (const a of ($input.first().json.avisos ?? [])) {
     a.texto,
     '',
     primero ? null : `La clienta lleva ${espera} esperando.`,
+    // Pasado un dia sin que nadie lo toque, lo probable es que ya no aplique
+    // —la conversacion siguio, o se atendio por fuera— y nadie se acuerda de
+    // cerrarlo. Decir COMO se cierra es lo unico que rompe el bucle.
+    Number(a.recordatorios ?? 0) >= 10
+      ? 'Van ' + a.recordatorios + ' recordatorios. Si ya se atendio o ya no aplica, '
+        + 'cierralo en el panel con «Ya lo atendi» y deja de aparecer.'
+      : null,
     a.lead_id
       ? `https://administracioneventos6.kommo.com/leads/detail/${a.lead_id}`
       : null,

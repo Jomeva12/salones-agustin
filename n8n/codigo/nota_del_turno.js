@@ -31,6 +31,16 @@ if (especial && especial.aviso) {
       ? 'Diselo con tus palabras en cuanto hablen de esa fecha, sin esperar a cotizar, '
         + 'y sigue adelante con normalidad: la fecha se vende igual.'
       : 'Esa fecha NO se puede vender.'));
+} else if (p.fecha_larga) {
+  // El «no» va DICHO, no sobreentendido.
+  //
+  // Callar cuando la fecha no tiene nada especial parecia suficiente, y no lo
+  // es: el cliente pregunto «el 20 de marzo cae en Semana Santa?» y la agente
+  // le dijo que si. No lo saco de ningun dato —aqui venia null— sino de la
+  // propia pregunta. Un modelo lee el silencio como permiso para seguirle la
+  // corriente a quien pregunta, asi que el silencio se acabo.
+  partes.push('Ese dia NO es Semana Santa ni ninguna fecha especial, y no tiene '
+    + 'nada que avisar. Si el cliente da por hecho que si, corrigelo.');
 }
 
 return [{

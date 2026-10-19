@@ -177,25 +177,20 @@ if (fechaDicha) {
 //
 // Asi que se calcula aqui y se le entrega hecha. El modelo solo la copia.
 
-// Primero la de este mensaje; si en este turno no dijo fecha, la que ya traia
-// el lead. Sin esto, en cuanto el cliente escribe «¿y cuanto sale?» el agente
-// se queda sin el dia de la semana y vuelve a decir la fecha pelada.
-let fechaISO = anotado.fecha_evento ?? null;
-// Si en ESTE mensaje dijo un dia sin anio, la fecha vieja del lead no vale:
-// esta hablando de otra, y nombrarle la anterior seria contestarle a algo que
-// no pregunto.
-if (!fechaISO && !faltaAnio) {
-  const epoch = Number($('formatLead').first().json.campos?.['Fecha del evento']);
-  // Se guarda a mediodia UTC justamente para que el dia no se corra al pasarla
-  // a texto. Ver el comentario de arriba.
-  if (Number.isFinite(epoch) && epoch > 0) {
-    fechaISO = new Date(epoch * 1000).toISOString().slice(0, 10);
-  }
-}
-// Tampoco se nombra una fecha pasada que ya estuviera guardada en el lead.
-// Las que escribio el modelo antes de este guardia siguen ahi, y sin esto el
-// agente las seguiria repitiendo como si nada.
-if (fechaISO && fechaISO < HOY) fechaISO = null;
+// SOLO la fecha de este mensaje. El campo del lead no entra aqui.
+//
+// Antes si entraba, como respaldo para no perder el dia de la semana cuando
+// el cliente escribia «¿y cuanto sale?». Ese respaldo acabo diciendo una
+// mentira: tras un «/*» la memoria queda limpia pero el campo del lead no
+// —Kommo no deja vaciar una fecha—, asi que el agente leia esa fecha vieja y
+// se la afirmaba al cliente como suya: «tus XV para el sabado 13 de marzo de
+// 2027», cuando nadie habia dicho ninguna fecha en toda la conversacion.
+//
+// No hacia falta ese respaldo: cuando el agente cotiza, `cotizar` le devuelve
+// `dia_semana` y `fecha_especial` de esa misma fecha, y mientras conversa la
+// tiene en su propia memoria. Lo unico que aportaba era afirmar lo que nadie
+// dijo.
+const fechaISO = fechaDicha;
 
 const invitados = Number(datos.invitados);
 if (Number.isFinite(invitados) && invitados > 0) {

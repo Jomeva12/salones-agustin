@@ -175,6 +175,26 @@ function paresDelParrafo(t) {
 function paresDelTexto(t) {
   const pares = [];
   const vistos = new Set();
+
+  // Si en todo el mensaje hay UN solo salon, no hay nada que desambiguar: los
+  // paquetes que nombre son suyos, esten en el parrafo que esten. La regla de
+  // parrafo existe para cuando compiten varios, y aplicarla igual aqui dejaba
+  // sin lamina lo mas comun de todo —«tus XV en Santa Cruz...» en un parrafo y
+  // «el Paquete Bronce cuesta $60,400» en el siguiente.
+  const unicos = [...new Set(salonesTodos.filter((x) => x && t.includes(x)))];
+  if (unicos.length === 1) {
+    const salon = unicos[0];
+    if (!posiciones(t, salon).some((p) => estaDescartado(t, p, salon.length))) {
+      for (const par of paresDelParrafo(t.replace(/\n\s*\n/g, ' '))) {
+        const clave = par.salon + '|' + par.paquete;
+        if (vistos.has(clave)) continue;
+        vistos.add(clave);
+        pares.push(par);
+      }
+      return pares;
+    }
+  }
+
   for (const parrafo of t.split(/\n\s*\n/)) {
     for (const par of paresDelParrafo(parrafo)) {
       const clave = par.salon + '|' + par.paquete;

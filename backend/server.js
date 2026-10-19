@@ -1101,6 +1101,23 @@ const rutas = {
          FROM cortesia_imagen c
          JOIN salon s ON s.id = c.salon_id
         ORDER BY s.id, c.clave`).all(),
+    // Las fotos del salon viajan por aqui y no por una herramienta propia
+    // porque este payload ya llega al nodo que elige la imagen. Una
+    // herramienta mas significaria que la URL pasa por el modelo, y eso es
+    // justo lo que no se hace.
+    //
+    // Solo las activas y solo las seis primeras de cada salon: de ahi se
+    // mandan tres, y arrastrar las veinte en cada mensaje es peso que nadie
+    // mira. El panel si las ve todas, por /api/fotos-salon.
+    fotos: db.prepare(
+      `SELECT f.id, f.titulo, f.orden, f.url, s.clave AS salon, s.nombre AS salon_nombre
+         FROM salon_imagen f
+         JOIN salon s ON s.id = f.salon_id
+        WHERE f.activa = 1
+          AND (SELECT COUNT(*) FROM salon_imagen x
+                WHERE x.salon_id = f.salon_id AND x.activa = 1
+                  AND (x.orden < f.orden OR (x.orden = f.orden AND x.id < f.id))) < 6
+        ORDER BY s.id, f.orden, f.id`).all(),
   }),
 
   /**
@@ -1145,6 +1162,110 @@ const rutas = {
       .run(subida.url, subida.uuid, nombre, sha, id);
     anotar(tabla, id, 'cambio', c._autor, `imagen reemplazada (${nombre})`);
     return { ok: true, url: subida.url };
+  },
+
+  // ══════════════════════ fotos de los salones ════════════════════
+  //
+  // Como se ve el lugar, no que trae el paquete. Se mandan DESPUES de la
+  // lamina, cuando el cliente dice que si quiere verlas.
+  //
+  // El `orden` ES la seleccion: de las veinte que puede haber solo salen las
+  // primeras, asi que moverlas en el panel decide que ve el cliente.
+
+  'GET /api/fotos-salon': (u) => {
+    const clave = u.searchParams.get('salon');
+    const todas = u.searchParams.get('incluir') === 'todo';
+    return {
+      fotos: db.prepare(
+        `SELECT f.id, f.titulo, f.orden, f.activa, f.url, f.nombre, f.subida_at,
+                s.clave AS salon, s.nombre AS salon_nombre
+           FROM salon_imagen f
+           JOIN salon s ON s.id = f.salon_id
+          WHERE (? IS NULL OR s.clave = ?)
+            ${todas ? '' : 'AND f.activa = 1'}
+          ORDER BY s.id, f.orden, f.id`).all(clave || null, clave || null),
+    };
+  },
+
+  'PUT /api/fotos-salon': (_u, c) => {
+    const id = entero(c?.id);
+    const f = db.prepare('SELECT * FROM salon_imagen WHERE id = ?').get(id);
+    if (!f) return { error: 'esa foto no existe' };
+
+    // Mover es lo que de verdad se usa, y hacerlo con numeros a mano desde el
+    // panel seria pedirle a alguien que lleve la cuenta. Se intercambia con
+    // la vecina y ya.
+    if (c.mover === 'arriba' || c.mover === 'abajo') {
+      const arriba = c.mover === 'arriba';
+      const vecina = db.prepare(
+        `SELECT id, orden FROM salon_imagen
+          WHERE salon_id = ?
+            AND (orden ${arriba ? '<' : '>'} ? OR (orden = ? AND id ${arriba ? '<' : '>'} ?))
+          ORDER BY orden ${arriba ? 'DESC' : 'ASC'}, id ${arriba ? 'DESC' : 'ASC'} LIMIT 1`)
+        .get(f.salon_id, f.orden, f.orden, f.id);
+      if (!vecina) return { ok: true, sin_mover: true };
+      db.prepare('UPDATE salon_imagen SET orden = ? WHERE id = ?').run(vecina.orden, f.id);
+      db.prepare('UPDATE salon_imagen SET orden = ? WHERE id = ?').run(f.orden, vecina.id);
+      anotar('salon_imagen', f.id, 'cambio', c._autor, 'movida ' + c.mover);
+      return { ok: true };
+    }
+
+    const titulo = 'titulo' in c ? ((c.titulo ?? '').trim() || null) : f.titulo;
+    const activa = 'activa' in c ? (c.activa ? 1 : 0) : f.activa;
+    db.prepare('UPDATE salon_imagen SET titulo = ?, activa = ? WHERE id = ?')
+      .run(titulo, activa, id);
+    anotar('salon_imagen', id, 'cambio', c._autor,
+      (activa ? 'activa' : 'apagada') + (titulo ? ' · ' + titulo : ''));
+    return { ok: true };
+  },
+
+  'DELETE /api/fotos-salon': (_u, c) => {
+    const id = entero(c?.id);
+    const f = db.prepare('SELECT nombre FROM salon_imagen WHERE id = ?').get(id);
+    if (!f) return { error: 'esa foto no existe' };
+    // La fila se va; el archivo se queda en el Drive de Kommo a proposito. Si
+    // alguien borra la que no era, ahi sigue.
+    db.prepare('DELETE FROM salon_imagen WHERE id = ?').run(id);
+    anotar('salon_imagen', id, 'baja', c._autor, f.nombre ?? '');
+    return { ok: true };
+  },
+
+  /** Subir una foto nueva de un salon. Mismo camino que las laminas. */
+  'POST /api/fotos-salon/archivo': async (u, c) => {
+    if (!KOMMO_TOKEN) {
+      return { error: 'sin token', detalle: 'Falta KOMMO_TOKEN para poder subir imágenes a Kommo.' };
+    }
+    const sal = db.prepare('SELECT id FROM salon WHERE clave = ?').get(u.searchParams.get('salon'));
+    if (!sal) return { error: 'salón desconocido' };
+
+    const bytes = c?.bytes;
+    if (!bytes?.length) return { error: 'sin archivo', detalle: 'No llegó ninguna imagen.' };
+    // La firma de los formatos que Kommo muestra como foto. Se mira el
+    // contenido y no la extensión, que la pone quien sube.
+    const esJPG = bytes[0] === 0xff && bytes[1] === 0xd8;
+    const esPNG = bytes.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]));
+    const esWEBP = bytes.subarray(0, 4).toString('latin1') === 'RIFF'
+                && bytes.subarray(8, 12).toString('latin1') === 'WEBP';
+    if (!esJPG && !esPNG && !esWEBP) {
+      return { error: 'no es imagen', detalle: 'Solo se aceptan JPG, PNG o WebP.' };
+    }
+
+    const sha = createHash('sha256').update(bytes).digest('hex');
+    const ya = db.prepare('SELECT id FROM salon_imagen WHERE salon_id = ? AND sha256 = ?')
+      .get(sal.id, sha);
+    if (ya) return { error: 'repetida', detalle: 'Esa misma foto ya está subida en este salón.' };
+
+    const nombre = (u.searchParams.get('nombre') || 'foto.jpg').slice(0, 120);
+    const subida = await subirAKommo(bytes, nombre, esPNG ? 'image/png' : esWEBP ? 'image/webp' : 'image/jpeg');
+    // Al final de la fila: la nueva no se cuela entre las que ya se eligieron.
+    const ultimo = db.prepare('SELECT COALESCE(MAX(orden), 0) n FROM salon_imagen WHERE salon_id = ?')
+      .get(sal.id).n;
+    const r = db.prepare(
+      `INSERT INTO salon_imagen (salon_id, orden, url, archivo_uuid, nombre, sha256)
+       VALUES (?,?,?,?,?,?)`)
+      .run(sal.id, ultimo + 10, subida.url, subida.uuid, nombre, sha);
+    anotar('salon_imagen', Number(r.lastInsertRowid), 'alta', c._autor, nombre);
+    return { ok: true, id: Number(r.lastInsertRowid), url: subida.url };
   },
 
   // ═══════════════════════ fechas especiales ══════════════════════
@@ -2169,7 +2290,7 @@ async function servirEstatico(req, res, ruta) {
 const ABIERTAS = new Set(['POST /api/entrar', 'GET /api/salud', 'GET /api/yo', 'POST /api/salir']);
 
 // Rutas cuyo cuerpo son bytes y no JSON.
-const BINARIAS = new Set(['POST /api/imagenes/archivo']);
+const BINARIAS = new Set(['POST /api/imagenes/archivo', 'POST /api/fotos-salon/archivo']);
 
 /** Y lo único que se puede hacer con la contraseña temporal todavía puesta. */
 const CON_CLAVE_TEMPORAL = new Set([...ABIERTAS, 'POST /api/cambiar-clave']);
@@ -2209,6 +2330,9 @@ const AREA = {
   'POST /api/paquetes/borrador': 'precios',
   'POST /api/paquetes/publicar': 'precios',
   'POST /api/imagenes/archivo': 'precios',
+  'POST /api/fotos-salon/archivo': 'precios',
+  'PUT /api/fotos-salon': 'precios',
+  'DELETE /api/fotos-salon': 'precios',
   'POST /api/usuarios': 'usuarios',
   'PUT /api/usuarios': 'usuarios',
   'POST /api/usuarios/clave': 'usuarios',

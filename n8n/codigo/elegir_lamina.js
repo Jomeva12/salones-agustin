@@ -258,8 +258,42 @@ function cortesia() {
   return distintas.length === 1 ? [{ url: distintas[0], pie: '' }] : [];
 }
 
+// Las fotos del salon: como se ve el lugar.
+//
+// Van DESPUES de la lamina del paquete, cuando el cliente dijo que si quiere
+// verlas. El disparo es la frase con la que Maya las anuncia —«te paso unas
+// fotos del salon»—, igual que la lamina se dispara con el paquete que
+// nombra. Lo que ella no decide nunca es CUALES: eso sale del orden que tenga
+// el salon en el panel.
+const ANUNCIA_FOTOS =
+  /\b(te (paso|mando|comparto|envio|dejo)|aqui (te dejo|van)|mira)\b[^.]{0,40}\b(fotos?|imagenes?)\b/;
+
+function fotosDelSalon() {
+  const t = limpiar(resp.texto_completo);
+  if (!t || !ANUNCIA_FOTOS.test(t)) return [];
+
+  const nombrados = salonesTodos.filter((x) => x && t.includes(x));
+  // Si nombra dos salones no se adivina de cual las queria ver; si no nombra
+  // ninguno, el del lead sirve: lo escribio el Director cuando el cliente lo
+  // dijo.
+  const salon = nombrados.length === 1
+    ? nombrados[0]
+    : (nombrados.length ? null : sinEventos(fl.campos?.['Salón']) || null);
+  if (!salon) return [];
+
+  return ($json.fotos ?? [])
+    .filter((f) => sinEventos(f.salon_nombre || f.salon) === salon)
+    .slice(0, MAX_IMAGENES)
+    .map((f) => ({ url: f.url, pie: f.titulo || '' }));
+}
+
 let fotos = [];
-try { fotos = laminas(); if (!fotos.length) fotos = cortesia(); } catch (e) { fotos = []; }
+try {
+  // La cotizacion manda sobre todo lo demas: si hay lamina, va la lamina.
+  fotos = laminas();
+  if (!fotos.length) fotos = cortesia();
+  if (!fotos.length) fotos = fotosDelSalon();
+} catch (e) { fotos = []; }
 
 // ── repartir las fotos entre las partes del mensaje ────────────────────────
 //

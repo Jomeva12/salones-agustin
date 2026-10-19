@@ -55,6 +55,7 @@ export const api = {
   faq:       (texto)        => pedir(`/api/faq?${q({ q: texto })}`),
   politicas: (incluir)      => pedir(`/api/politicas?${q({ incluir })}`),
   fechasEspeciales: (todo) => pedir(`/api/fechas-especiales?${q({ incluir: todo ? 'todo' : null })}`),
+  fotosSalon: (salon, todo) => pedir(`/api/fotos-salon?${q({ salon, incluir: todo ? 'todo' : null })}`),
 
   // escritura
   guardarTarifa:   (d) => pedir('/api/tarifas', { method: 'PUT', body: JSON.stringify(conUsuario(d)) }),
@@ -72,6 +73,13 @@ export const api = {
   borrarPolitica:(d) => pedir('/api/politicas', { method: 'DELETE', body: JSON.stringify(d) }),
   crearFechaEspecial:  (d) => pedir('/api/fechas-especiales', { method: 'POST', body: JSON.stringify(conUsuario(d)) }),
   editarFechaEspecial: (d) => pedir('/api/fechas-especiales', { method: 'PUT', body: JSON.stringify(conUsuario(d)) }),
+  cambiarFotoSalon: (d)  => pedir('/api/fotos-salon', { method: 'PUT', body: JSON.stringify(conUsuario(d)) }),
+  borrarFotoSalon: (id)  => pedir('/api/fotos-salon', { method: 'DELETE', body: JSON.stringify(conUsuario({ id })) }),
+  // El archivo va como bytes crudos: el nombre y el salon viajan en la URL.
+  subirFotoSalon: (salon, archivo) => pedir(
+    `/api/fotos-salon/archivo?${q({ salon, nombre: archivo.name })}`,
+    { method: 'POST', body: archivo,
+      headers: { 'Content-Type': archivo.type || 'application/octet-stream' } }),
   publicarPaquete: (d) => pedir('/api/paquetes/publicar', { method: 'POST', body: JSON.stringify(d) }),
   bitacora:      (n)   => pedir(`/api/bitacora?${q({ limite: n })}`),
 

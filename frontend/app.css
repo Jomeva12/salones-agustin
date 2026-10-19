@@ -2278,3 +2278,39 @@ main.lienzo a.avi-enlace:hover{border-color:var(--nocturno);color:var(--nocturno
   .esp-sello{margin-left:0}
   .esp-campos input{flex:1 1 100%}
 }
+
+/* ══════════════════ fotos del salón ══════════════════
+   El número de la esquina no es decoración: marca las que el agente manda.
+   Sin él, ordenar es mover cosas a ciegas. */
+.fts-sub{color:var(--tinta-2);max-width:66ch;margin:4px 0 0}
+.fts-controles{margin:16px 0}
+.fts-cuenta{color:var(--tinta-2);font-size:13.5px;margin:0 0 14px}
+.fts-vacio{color:var(--tinta-3);padding:24px 0}
+.fts-rejilla{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.fts-tarjeta{
+  position:relative;margin:0;border:1px solid var(--linea);border-radius:var(--r-m);
+  background:var(--panel);overflow:hidden;box-shadow:var(--sombra-1);
+}
+.fts-tarjeta img{display:block;width:100%;aspect-ratio:4/3;object-fit:cover;cursor:zoom-in;background:var(--panel-2)}
+.fts-tarjeta.apagada img{filter:grayscale(1);opacity:.5}
+.fts-puesto{
+  position:absolute;top:8px;left:8px;min-width:22px;height:22px;padding:0 6px;
+  display:flex;align-items:center;justify-content:center;
+  background:var(--coral);color:#fff;font-size:12px;font-weight:700;border-radius:999px;
+  box-shadow:0 1px 3px rgba(0,0,0,.3);
+}
+.fts-fuera{
+  position:absolute;top:8px;right:8px;padding:2px 8px;border-radius:999px;
+  background:var(--panel);color:var(--tinta-3);font-size:11px;font-weight:600;
+  border:1px solid var(--linea-2);
+}
+.fts-acciones{display:flex;align-items:center;gap:6px;padding:8px;flex-wrap:wrap}
+.fts-acciones button{font-size:12.5px;padding:4px 8px}
+.fts-acciones .peligro{color:var(--ocupada);margin-left:auto;font-size:16px;line-height:1;padding:2px 8px}
+.fts-subir{
+  margin-top:24px;border:1px dashed var(--linea-2);border-radius:var(--r-m);
+  background:var(--panel-2);padding:18px;display:flex;flex-direction:column;gap:10px;
+}
+.fts-ayuda{color:var(--tinta-3);font-size:13px;margin:0;max-width:66ch}
+.fts-dicho{font-size:13px;color:var(--libre)}
+.fts-dicho.mal{color:var(--ocupada)}

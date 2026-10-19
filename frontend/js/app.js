@@ -15,6 +15,7 @@ import { salones } from './salones.js';
 import { politicas } from './politicas.js';
 import { especiales } from './especiales.js';
 import { laminas } from './laminas.js';
+import { fotos } from './fotos.js';
 import { citas } from './citas.js';
 import { avisos } from './avisos.js';
 
@@ -32,6 +33,7 @@ const VISTAS = {
   '/especiales': especiales,
   '/salones': salones,
   '/imagenes': laminas,
+  '/fotos': fotos,
   '/configuracion': configuracion,
   // Cuelga de Paquetes, no del menú: se usa dos veces al año y un ítem más
   // en la barra estorba todos los días.

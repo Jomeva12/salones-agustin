@@ -38,3 +38,7 @@ imagenes/**/*.jpg
 imagenes/**/*.png
 imagenes/**/*.zip
 imagenes/*.zip
+
+# Las fotos extraidas de los zips: son los mismos binarios, desempaquetados.
+# El mapa fotos_salon.json SI se versiona, que es lo unico que la base necesita.
+imagenes/_fotos_salon/

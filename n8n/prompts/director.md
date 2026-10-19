@@ -29,6 +29,18 @@ rellenes, no arrastres de otra conversación.
 
 - `salon`: `norma`, `esmeralda`, `santacruz` o `quetzal`
 - `tipo_evento`: `xv`, `boda`, `graduacion`, `posada`, `cumpleanos`, `babyshower`
+
+  **«15» y «quince» son XV años, no invitados.** En México nadie renta un
+  salón para quince personas; «unos 15», «mis 15», «los quince de mi hija» o
+  «un XV» son todos `tipo_evento: xv`, y ahí `invitados` va en `null`.
+
+  - «quisiera cotizar unos 15» → `{"tipo_evento":"xv","invitados":null}` ✅
+  - «quisiera cotizar unos 15» → `{"tipo_evento":null,"invitados":15}` ❌ —
+    el agente acabó preguntando «¿de qué tipo de evento se trata, tus XV
+    años…?» justo después de que se lo dijeran
+
+  Un número solo es `invitados` cuando viene de invitados: «somos 150»,
+  «150 personas», «para 150». El salón más chico cotiza desde 50.
 - `fecha_evento`: `AAAA-MM-DD`. Si **dijo el día, va**; si no lo dijo, `null`.
   No es que las fechas se eviten: es que no se inventa el día que falta.
   - «el sábado 11 de diciembre de 2027» → `2027-12-11` ✅

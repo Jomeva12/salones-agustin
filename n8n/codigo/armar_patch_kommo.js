@@ -204,10 +204,23 @@ if (fechaDicha) {
 // dijo.
 const fechaISO = fechaDicha;
 
+// El tramo de tarifa mas chico que existe es de 50 personas: por debajo de
+// ahi no hay nada que cotizar en ningun salon ni ningun paquete.
+//
+// Sirve de guardia de dos cosas a la vez. Un numero asi de bajo casi nunca es
+// la cantidad de invitados: «quisiera cotizar unos 15» son unos XV anos, y el
+// Director lo leyo como quince invitados — luego el agente pregunto «de que
+// tipo de evento se trata? tus XV anos, boda...» justo despues de que se lo
+// dijeran. Y cuando SI son invitados de verdad, lo que toca no es callarse,
+// es decirle que el minimo son 50.
+const MINIMO_INVITADOS = 50;
 const invitados = Number(datos.invitados);
-if (Number.isFinite(invitados) && invitados > 0) {
+let invitadosBajos = null;
+if (Number.isFinite(invitados) && invitados >= MINIMO_INVITADOS) {
   valores.push({ field_id: CAMPO.invitados, values: [{ value: invitados }] });
   anotado.invitados = invitados;
+} else if (Number.isFinite(invitados) && invitados > 0) {
+  invitadosBajos = invitados;
 }
 
 // El interruptor ya no se escribe desde aqui. Cuando el campo se llamaba «IA
@@ -224,11 +237,16 @@ return [{
     hay_datos: valores.length > 0,
     lead_id: $('formatLead').first().json.lead_id,
     anotado,
+    // Lo acumulado de la conversacion, para que el turno sepa que NO hay que
+    // volver a preguntar. `anotado` solo trae lo de este mensaje.
+    campos: $('formatLead').first().json.campos ?? {},
     fecha_iso: fechaISO,
     fecha_larga: fechaISO ? enLetras(fechaISO) : null,
     // Dijo el dia y el mes pero no el anio. No se supone ninguno: el agente
     // pregunta, con estas dos opciones concretas.
     falta_anio: faltaAnio,
+    // Un numero de invitados por debajo del minimo que se puede cotizar.
+    invitados_bajos: invitadosBajos,
     // Escribio un anio que ya paso. Tampoco se da por bueno.
     fecha_pasada: fechaPasada,
     cuerpo: { custom_fields_values: valores },

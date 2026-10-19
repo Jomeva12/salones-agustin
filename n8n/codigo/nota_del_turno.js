@@ -22,6 +22,47 @@ try {
 
 const partes = [];
 
+// Lo que el Director ya entendio, dicho con todas sus letras.
+//
+// Sin esto el agente solo ve el texto crudo y vuelve a interpretarlo por su
+// cuenta, a veces peor: el cliente escribio «quisiera cotizar unos 15», el
+// Director lo normalizo bien a XV anos, y el agente —que no lo veia— contesto
+// «¿para que tipo de evento serian esos 15 invitados?». Preguntar por algo que
+// el cliente acaba de decir es lo que mas cara de tonto le pone.
+const EVENTO = {
+  xv: 'unos XV años', boda: 'una boda', graduacion: 'una graduación',
+  posada: 'una posada', cumpleanos: 'un cumpleaños', babyshower: 'un baby shower',
+};
+const SALON = {
+  norma: 'Norma Eventos', esmeralda: 'Esmeralda Eventos',
+  santacruz: 'Santa Cruz Eventos', quetzal: 'Quetzal Eventos',
+};
+// Lo de este turno manda sobre lo que ya estaba guardado en el lead, que es
+// lo acumulado de la conversacion. `anotado` solo trae lo que se dijo AHORA.
+const a = p.anotado ?? {};
+const guardado = p.campos ?? {};
+const tipo = a.tipo_evento ?? (guardado['Tipo de evento'] ? String(guardado['Tipo de evento']).toLowerCase() : null);
+const salon = a.salon ?? (guardado['Salón'] ? String(guardado['Salón']) : null);
+const cuantos = a.invitados ?? (Number(guardado['Invitados']) || null);
+
+const sabido = [];
+if (tipo) sabido.push(`es ${EVENTO[tipo] ?? tipo}`);
+if (salon) sabido.push(`el salón es ${SALON[salon] ?? salon}`);
+if (cuantos) sabido.push(`son ${cuantos} invitados`);
+
+// Y lo que NO ha dicho, dicho tambien. Sin esta mitad el agente rellena el
+// hueco con lo que encuentre en el texto: con «quisiera cotizar unos 15» dio
+// por hecho que eran quince invitados y contesto «tus XV años para unos 15
+// invitados». El 15 era el evento, no la gente.
+const faltan = [];
+if (!tipo) faltan.push('qué tipo de evento es');
+if (!cuantos) faltan.push('cuántos invitados son');
+
+if (sabido.length) {
+  partes.push(`Esto ya lo dijo el cliente y NO se lo vuelvas a preguntar: ${sabido.join(', ')}.`
+    + (faltan.length ? ` Y esto NO lo ha dicho todavía, así que no te lo inventes: ${faltan.join(' ni ')}.` : ''));
+}
+
 // Dijo el dia y el mes, pero no el anio. No se elige por el: «10 de
 // diciembre» puede ser 2026 o 2027, y entre uno y otro cambia el escalon de
 // anticipacion, o sea el precio. Se pregunta, con los dos anios concretos en
@@ -33,6 +74,16 @@ if (p.falta_anio) {
     + (op ? `—${op}—` : '') + ' y espera a que te conteste. '
     + 'El precio depende de cuantos meses falten, asi que con el anio '
     + 'equivocado la cotizacion entera sale mal.');
+}
+
+// Un numero demasiado chico para ser invitados. Casi siempre es otra cosa
+// —«unos 15» son XV anos— y cuando de verdad son invitados, hay que decirle
+// el minimo en vez de callarse.
+if (p.invitados_bajos) {
+  partes.push(`El cliente dijo el numero ${p.invitados_bajos}, que NO se guardo como `
+    + 'invitados: el minimo que se puede cotizar son 50 personas. Mira si se '
+    + 'referia a otra cosa —«unos 15» suele ser XV anos— y si de verdad son '
+    + 'sus invitados, diselo: por menos de 50 no hay paquete.');
 }
 
 // Escribio un anio que ya paso.

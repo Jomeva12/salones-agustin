@@ -1616,16 +1616,29 @@ const rutas = {
   'GET /api/servicios': (u) => {
     const salon = u.searchParams.get('salon');
     const q = (u.searchParams.get('q') ?? '').trim();
-    return db.prepare(
+    const todos = db.prepare(
       `SELECT DISTINCT s.id, s.nombre, s.es_propio, s.precio, s.precio_texto,
               s.que_incluye, s.anticipacion_minima, s.notas, s.personas_ref, s.categoria
          FROM servicio s
          JOIN servicio_salon ss ON ss.servicio_id = s.id
          JOIN salon sa          ON sa.id = ss.salon_id
         WHERE s.activo = 1 AND (? = '' OR sa.clave = ?)
-          AND (? = '' OR s.nombre LIKE '%' || ? || '%' OR s.que_incluye LIKE '%' || ? || '%')
-        ORDER BY s.categoria, s.nombre`
-    ).all(salon ?? '', salon ?? '', q, q, q);
+        ORDER BY s.categoria, s.nombre`).all(salon ?? '', salon ?? '');
+    if (!q) return todos;
+
+    // El filtro se hace aqui y no en SQL por lo mismo que en politicas: el
+    // LIKE de SQLite no ignora acentos, y quien pregunta escribe «decoracion»
+    // tan a menudo como «decoración». Son 104 filas; filtrarlas en memoria no
+    // cuesta nada y evita esa clase de silencio.
+    //
+    // Se busca tambien en las NOTAS y en la CATEGORIA. Ahi vive lo que el
+    // cliente usa para nombrar las cosas —«bebidas», «mobiliario»— y las
+    // restricciones que importan al contratar.
+    const pl = (x) => String(x ?? '').toLowerCase()
+      .normalize('NFD').replace(/[̀-ͯ]/g, '');
+    const aguja = pl(q);
+    return todos.filter((s2) =>
+      pl(`${s2.nombre} ${s2.que_incluye} ${s2.notas} ${s2.categoria}`).includes(aguja));
   },
 
   'GET /api/faq': (u) => {

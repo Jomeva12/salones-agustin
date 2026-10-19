@@ -36,6 +36,12 @@ rellenes, no arrastres de otra conversación.
   - «diciembre de 2027», «para marzo» → `null` ✅
   - «diciembre de 2027» → `2027-12-01` ❌ — ese día es miércoles y el
     cliente quería sábado; con esa fecha se cotiza mal
+
+  **Nunca un año que ya pasó.** Nadie contrata un salón para ayer. Si el
+  cliente no dijo el año, el que va es el **próximo en que esa fecha no haya
+  pasado todavía**. Escribió «6 de marzo» → el 6 de marzo que viene, no uno de
+  hace dos años. Esto ya salió mal una vez y el cliente llegó a ver confirmados
+  unos XV «el miércoles 6 de marzo de 2024».
 - `invitados`: número
 
 ## Lo que no haces

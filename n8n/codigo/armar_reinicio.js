@@ -13,7 +13,6 @@
 const CAMPO = {
   salon: 352870,
   tipo_evento: 352872,
-  fecha_evento: 352874,
   invitados: 352876,
   paquete: 352880,
 };
@@ -23,6 +22,16 @@ const CAMPO = {
 //                             volver a encender. Seria lo contrario de lo que
 //                             quiso quien la apago.
 //   352884 «Estado de contacto» — es operativo del equipo, no del agente.
+//   352874 «Fecha del evento» — porque NO SE PUEDE. La API de Kommo no deja
+//     vaciar un campo de tipo fecha. Probado contra la cuenta:
+//       values: []             -> «TooFew: exactly 1 element»
+//       values: [{value:null}] -> «NotNullable» + «InvalidDateFormat»
+//       values: [{value:0}]    -> lo unico que acepta... y la ficha lo pinta
+//                                 «31/12/1969», que parece un sistema roto.
+//     Entre dejar la fecha anterior y dejar 1969, la anterior hace menos
+//     dano: `formatLead` ya ignora una fecha pasada y el Director la
+//     reemplaza en cuanto el cliente diga otra. Para vaciarla de verdad hay
+//     que borrarla a mano en la ficha de Kommo, que si puede.
 
 const lead = $('formatLead').first().json;
 const campos = lead.campos ?? {};
@@ -53,26 +62,25 @@ for (const nombre of Object.keys(NOMBRE)) {
   if (t !== null) habia.push(`${nombre}: ${t}`);
 }
 
+// Que la fecha se queda se DICE, aqui mismo. Quien lea la nota y vea que los
+// demas campos estan en blanco va a dar por hecho que la fecha tambien, y la
+// unica forma de que no se lleve la sorpresa es contarselo.
+const aclaracion = campos['Fecha del evento']
+  ? '\n\nLa fecha del evento se queda como estaba: Kommo no deja vaciarla desde '
+    + 'el API. Si hay que quitarla, se borra a mano aquí.'
+  : '';
+
 const nota = habia.length
   ? 'Se reinició la conversación con «/*». Los campos quedaron en blanco. '
-    + 'Lo que había antes:\n' + habia.join('\n')
+    + 'Lo que había antes:\n' + habia.join('\n') + aclaracion
   : 'Se reinició la conversación con «/*». El lead no tenía datos capturados.';
 
-// Vaciar un campo en Kommo depende del TIPO, y no esta documentado junto:
-//
-//   `values: []`            -> rechazado siempre. «TooFew: exactly 1 element»
-//   `{ value: null }`       -> funciona en texto, numero y select
-//   `{ value: null }` en fecha -> rechazado. «NotNullable» + «InvalidDateFormat»
-//   `{ value: 0 }` en fecha -> aceptado, y es lo unico que acepta
-//
-// El 0 deja la fecha en el 1-ene-1970 en vez de vacia. Es feo en la ficha de
-// Kommo, pero `formatLead` lo traduce a null y nada aguas abajo lo ve como
-// una fecha de verdad. Probado contra la cuenta, campo por campo.
-const FECHA = CAMPO.fecha_evento;
+// Vaciar un campo en Kommo es mandarlo con `{ value: null }`. Sirve en texto,
+// numero y select, que son los cuatro que quedan; `values: []` lo rechaza
+// siempre, con «TooFew: exactly 1 element».
 const cuerpo = {
   custom_fields_values: Object.values(CAMPO).map((field_id) => ({
-    field_id,
-    values: [{ value: field_id === FECHA ? 0 : null }],
+    field_id, values: [{ value: null }],
   })),
 };
 

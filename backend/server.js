@@ -313,6 +313,40 @@ function loQueFalta(id) {
   return falta;
 }
 
+/**
+ * Las fotos de salón que el agente puede mandar, con su guardia.
+ *
+ * Va aparte y dentro de un try por una razón concreta: este payload es el que
+ * alimenta al nodo que elige las imágenes, y si la consulta revienta —porque
+ * la tabla todavía no existe en esa base— el nodo recibe un error, continúa
+ * como está configurado, y la conversación sale SIN NINGUNA imagen. Verde por
+ * fuera y sin láminas por dentro.
+ *
+ * Ya pasó: el panel se desplegó antes de correr la migración y durante ese
+ * rato no salió una sola foto. Con esto, el orden entre desplegar y migrar
+ * deja de importar: sin tabla, cero fotos de salón y las láminas intactas.
+ *
+ * Solo las activas y solo las seis primeras de cada salón: de ahí se mandan
+ * tres, y arrastrar las veinte en cada mensaje es peso que nadie mira. El
+ * panel sí las ve todas, por /api/fotos-salon.
+ */
+function fotosDeSalonParaElAgente() {
+  try {
+    return db.prepare(
+      `SELECT f.id, f.titulo, f.orden, f.url, s.clave AS salon, s.nombre AS salon_nombre
+         FROM salon_imagen f
+         JOIN salon s ON s.id = f.salon_id
+        WHERE f.activa = 1
+          AND (SELECT COUNT(*) FROM salon_imagen x
+                WHERE x.salon_id = f.salon_id AND x.activa = 1
+                  AND (x.orden < f.orden OR (x.orden = f.orden AND x.id < f.id))) < 6
+        ORDER BY s.id, f.orden, f.id`).all();
+  } catch (e) {
+    console.error('fotos de salón no disponibles: ' + e.message);
+    return [];
+  }
+}
+
 const rutas = {
   'GET /api/salud': () => ({
     ok: true, hoy_monterrey: L.hoyMonterrey(),
@@ -1109,15 +1143,7 @@ const rutas = {
     // Solo las activas y solo las seis primeras de cada salon: de ahi se
     // mandan tres, y arrastrar las veinte en cada mensaje es peso que nadie
     // mira. El panel si las ve todas, por /api/fotos-salon.
-    fotos: db.prepare(
-      `SELECT f.id, f.titulo, f.orden, f.url, s.clave AS salon, s.nombre AS salon_nombre
-         FROM salon_imagen f
-         JOIN salon s ON s.id = f.salon_id
-        WHERE f.activa = 1
-          AND (SELECT COUNT(*) FROM salon_imagen x
-                WHERE x.salon_id = f.salon_id AND x.activa = 1
-                  AND (x.orden < f.orden OR (x.orden = f.orden AND x.id < f.id))) < 6
-        ORDER BY s.id, f.orden, f.id`).all(),
+    fotos: fotosDeSalonParaElAgente(),
   }),
 
   /**

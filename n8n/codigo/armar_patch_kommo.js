@@ -10,7 +10,17 @@
 const CAMPO = {
   salon: 352870,
   tipo_evento: 352872,
-  fecha_evento: 352874,
+  // TEXTO, no fecha (el viejo 352874 era `date` y sigue ahi, sin usar).
+  //
+  // Un campo de fecha de Kommo no se puede vaciar desde el API: `values: []`
+  // da TooFew, `null` da NotNullable, y lo unico que acepta es 0 — que la
+  // ficha pinta «31/12/1969» y parece un sistema roto. Como el tipo de un
+  // campo tampoco se puede cambiar, se creo uno nuevo de texto.
+  //
+  // El formato es «2027-03-20 (sábado)»: en ISO al principio para que
+  // ordenar alfabeticamente sea ordenar cronologicamente, y el dia de la
+  // semana al lado para quien lo lee en la ficha.
+  fecha_evento: 611320,
   invitados: 352876,
 };
 
@@ -159,11 +169,13 @@ if (/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha_evento ?? '')
 }
 
 if (fechaDicha) {
-  // Kommo guarda las fechas como epoch. Se usa mediodia UTC a proposito: a
-  // las 00:00 UTC en Monterrey (UTC-6) todavia es el dia anterior, y la
-  // fecha del evento aparecería corrida un dia.
-  const epoch = Math.floor(Date.parse(fechaDicha + 'T12:00:00Z') / 1000);
-  valores.push({ field_id: CAMPO.fecha_evento, values: [{ value: epoch }] });
+  // Ya no va como epoch: el campo es de texto. De paso se acabo la clase de
+  // error mas tonta que tenia esto — guardar a medianoche UTC hacia que en
+  // Monterrey (UTC-6) la ficha mostrara el dia anterior.
+  valores.push({
+    field_id: CAMPO.fecha_evento,
+    values: [{ value: `${fechaDicha} (${enLetras(fechaDicha).split(' ')[0]})` }],
+  });
   anotado.fecha_evento = fechaDicha;
 }
 // ─────────────────────────────────────────────────────────────────────────

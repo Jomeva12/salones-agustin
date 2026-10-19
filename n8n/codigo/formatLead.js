@@ -5,9 +5,10 @@ const campos = {};
 for (const c of (l.custom_fields_values ?? [])) {
   const v = (c.values ?? [])[0] ?? {};
   let valor = v.value ?? v.enum_id ?? null;
-  // Un campo de fecha vaciado se queda en 0, porque Kommo no acepta null ahi
-  // (ver armar_reinicio.js). Sin esta linea, 0 viaja como si fuera una fecha
-  // y acaba siendo el 1 de enero de 1970 en una cotizacion.
+  // Un campo de fecha vaciado se queda en 0, porque Kommo no acepta null ahi.
+  // La fecha del evento ya es de texto y no pasa por aqui, pero quedan los
+  // del equipo —«Apartado vence el», «Liquidado el»— y un 0 suelto se leeria
+  // como el 1 de enero de 1970.
   if (c.field_type === 'date' && Number(valor) === 0) valor = null;
   campos[c.field_name] = valor;
 }

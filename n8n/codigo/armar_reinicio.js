@@ -13,6 +13,7 @@
 const CAMPO = {
   salon: 352870,
   tipo_evento: 352872,
+  fecha_evento: 611320,   // el de TEXTO; ver armar_patch_kommo.js
   invitados: 352876,
   paquete: 352880,
 };
@@ -22,16 +23,6 @@ const CAMPO = {
 //                             volver a encender. Seria lo contrario de lo que
 //                             quiso quien la apago.
 //   352884 «Estado de contacto» — es operativo del equipo, no del agente.
-//   352874 «Fecha del evento» — porque NO SE PUEDE. La API de Kommo no deja
-//     vaciar un campo de tipo fecha. Probado contra la cuenta:
-//       values: []             -> «TooFew: exactly 1 element»
-//       values: [{value:null}] -> «NotNullable» + «InvalidDateFormat»
-//       values: [{value:0}]    -> lo unico que acepta... y la ficha lo pinta
-//                                 «31/12/1969», que parece un sistema roto.
-//     Entre dejar la fecha anterior y dejar 1969, la anterior hace menos
-//     dano: `formatLead` ya ignora una fecha pasada y el Director la
-//     reemplaza en cuanto el cliente diga otra. Para vaciarla de verdad hay
-//     que borrarla a mano en la ficha de Kommo, que si puede.
 
 const lead = $('formatLead').first().json;
 const campos = lead.campos ?? {};
@@ -41,38 +32,29 @@ const campos = lead.campos ?? {};
 const NOMBRE = {
   'Salón': 'Salón',
   'Tipo de evento': 'Tipo de evento',
-  'Fecha del evento': 'Fecha del evento',
+  'Fecha del evento (texto)': 'Fecha del evento',
   'Invitados': 'Invitados',
   'Paquete cotizado': 'Paquete cotizado',
 };
 
-const comoTexto = (nombre, valor) => {
-  if (valor === null || valor === undefined || valor === '') return null;
-  // La fecha viene en epoch y una nota con «1797055200» no le sirve a nadie.
-  if (nombre === 'Fecha del evento') {
-    const n = Number(valor);
-    if (Number.isFinite(n) && n > 0) return new Date(n * 1000).toISOString().slice(0, 10);
-  }
-  return String(valor);
-};
+// Ya no hay que traducir epochs: la fecha es texto y se lee tal cual. Antes
+// esto convertia «1797055200» a algo legible, porque una nota con ese numero
+// no le sirve a nadie.
+const comoTexto = (_nombre, valor) =>
+  (valor === null || valor === undefined || valor === '' ? null : String(valor));
 
+// La clave es como se llama el campo en Kommo; el valor, como se escribe en
+// la nota. No siempre coinciden: el de la fecha se llama «Fecha del evento
+// (texto)» por el tipo, y ese parentesis no le dice nada a quien la lee.
 const habia = [];
-for (const nombre of Object.keys(NOMBRE)) {
-  const t = comoTexto(nombre, campos[nombre]);
-  if (t !== null) habia.push(`${nombre}: ${t}`);
+for (const [enKommo, etiqueta] of Object.entries(NOMBRE)) {
+  const t = comoTexto(enKommo, campos[enKommo]);
+  if (t !== null) habia.push(`${etiqueta}: ${t}`);
 }
-
-// Que la fecha se queda se DICE, aqui mismo. Quien lea la nota y vea que los
-// demas campos estan en blanco va a dar por hecho que la fecha tambien, y la
-// unica forma de que no se lleve la sorpresa es contarselo.
-const aclaracion = campos['Fecha del evento']
-  ? '\n\nLa fecha del evento se queda como estaba: Kommo no deja vaciarla desde '
-    + 'el API. Si hay que quitarla, se borra a mano aquí.'
-  : '';
 
 const nota = habia.length
   ? 'Se reinició la conversación con «/*». Los campos quedaron en blanco. '
-    + 'Lo que había antes:\n' + habia.join('\n') + aclaracion
+    + 'Lo que había antes:\n' + habia.join('\n')
   : 'Se reinició la conversación con «/*». El lead no tenía datos capturados.';
 
 // Vaciar un campo en Kommo es mandarlo con `{ value: null }`. Sirve en texto,

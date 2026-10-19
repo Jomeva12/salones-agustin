@@ -54,6 +54,19 @@ function dijoElDia(fecha, texto) {
   return dia === 1 && /\bprimero\b/i.test(t);
 }
 
+// Con acentos: esto lo copia el agente tal cual y sale al chat del cliente.
+const DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+             'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+// En español la fecha va «20 de marzo de 2027». «Marzo 20 de 2027» es orden
+// de ingles y en el chat se nota raro.
+function enLetras(iso) {
+  const y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7)), d = Number(iso.slice(8, 10));
+  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
+  return `${DIA[dow]} ${d} de ${MES[m - 1]} de ${y}`;
+}
+
 // Hoy en Monterrey. Nunca el reloj del servidor: n8n corre en UTC y al cruzar
 // la medianoche eso cambia que fechas cuentan como pasadas.
 const HOY = new Intl.DateTimeFormat('en-CA', {
@@ -72,39 +85,77 @@ function dijoElAnio(fecha, texto) {
 }
 
 /**
- * El anio que el cliente no dijo.
+ * El anio no se adivina: se pregunta.
  *
  * El cliente escribio «6 de marzo» y el modelo devolvio «2024-03-06»: un
  * miercoles de hace dos anios. Eso se escribio en Kommo como fecha del evento
- * y el agente se lo confirmo al cliente tan seguro —«tus XV serian el
- * miercoles 6 de marzo de 2024»— porque el dia de la semana SI era correcto.
- * Un dato inventado con un detalle verdadero al lado es el mas dificil de ver.
+ * y el agente se lo confirmo tan seguro —«tus XV serian el miercoles 6 de
+ * marzo de 2024»— porque el dia de la semana SI era correcto. Un dato
+ * inventado con un detalle verdadero al lado es el mas dificil de ver.
  *
- * Nadie contrata un salon para una fecha que ya paso. Si el anio no esta en lo
- * que el cliente escribio, se calcula: el proximo en que ese dia y ese mes no
- * hayan pasado todavia.
+ * La primera version de este guardia tomaba el proximo anio en que esa fecha
+ * no hubiera pasado. Estaba mal, y lo dijo el Lic.: «10 de diciembre» puede
+ * ser 2026 o 2027, y entre uno y otro cambia el escalon de anticipacion —o
+ * sea, el precio. Adivinar bien la mitad de las veces es cotizar mal la otra
+ * mitad, y el cliente se entera tarde.
+ *
+ * Asi que cuando el anio no esta en lo que el cliente escribio, aqui no sale
+ * ninguna fecha: sale el aviso de que falta, con los dos anios concretos que
+ * el agente tiene que ofrecerle.
  */
-function corregirAnio(iso, texto) {
-  if (dijoElAnio(iso, texto)) return iso;
-  const mesDia = iso.slice(5);
+function anios(mesDia, cuantos = 2) {
+  const out = [];
   const desde = Number(HOY.slice(0, 4));
-  for (let y = desde; y <= desde + 4; y++) {
+  for (let y = desde; y <= desde + 5 && out.length < cuantos; y++) {
     const cand = `${y}-${mesDia}`;
-    // El 29 de febrero no existe todos los anios, y saltarselo es lo correcto:
-    // quien dijo «29 de febrero» quiere el proximo que exista de verdad.
-    if (esFechaReal(cand) && cand >= HOY) return cand;
+    // El 29 de febrero no existe todos los anios: se ofrecen los que si.
+    if (esFechaReal(cand) && cand >= HOY) out.push(y);
   }
-  return iso;
+  return out;
 }
 
-let fechaDicha = null;
+let fechaDicha = null;   // la fecha buena, lista para Kommo
+let faltaAnio = null;    // «10 de diciembre», con los anios que se le ofrecen
+let fechaPasada = null;  // el cliente escribio un anio que ya paso
+
+const loQueDijo = $('formatLead').first().json.chats;
+
+/**
+ * El cliente contesta solo el anio a la pregunta de arriba.
+ *
+ * «10 de diciembre» -> se le pregunta 2026 o 2027 -> contesta «2027». En ese
+ * mensaje ya no esta el dia, asi que el guardia del dia lo rechazaba y la
+ * fecha no llegaba nunca a Kommo: el agente cotizaba bien de memoria y el
+ * lead se quedaba vacio.
+ *
+ * Se acepta cuando el anio SI esta escrito y el dia no es 1. Ese 1 es la
+ * frontera: es lo que el modelo pone cuando el cliente solo dijo el mes
+ * —«diciembre de 2027» -> 2027-12-01—, que es justo lo que no queremos dar
+ * por bueno. A cambio, quien de verdad quiera el dia 1 tendra que decirlo una
+ * segunda vez; sale mas barato que guardar un dia inventado.
+ */
+function contestoElAnio(iso, texto) {
+  return !dijoElDia(iso, texto)
+    && dijoElAnio(iso, texto)
+    && Number(iso.slice(8, 10)) !== 1;
+}
+
 if (/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha_evento ?? '')
     && esFechaReal(datos.fecha_evento)
-    && dijoElDia(datos.fecha_evento, $('formatLead').first().json.chats)) {
-  const corregida = corregirAnio(datos.fecha_evento, $('formatLead').first().json.chats);
-  // Si despues de corregir sigue en el pasado, es que el cliente escribio ese
-  // anio a mano. No se escribe en Kommo ni se nombra: el agente preguntara.
-  if (corregida >= HOY) fechaDicha = corregida;
+    && (dijoElDia(datos.fecha_evento, loQueDijo)
+        || contestoElAnio(datos.fecha_evento, loQueDijo))) {
+  const iso = datos.fecha_evento;
+  const mesDia = iso.slice(5);
+  if (!dijoElAnio(iso, loQueDijo)) {
+    faltaAnio = {
+      dia_mes: `${Number(iso.slice(8, 10))} de ${MES[Number(iso.slice(5, 7)) - 1]}`,
+      opciones: anios(mesDia),
+    };
+  } else if (iso < HOY) {
+    fechaPasada = enLetras(iso);
+  } else {
+    fechaDicha = iso;
+  }
 }
 
 if (fechaDicha) {
@@ -125,24 +176,15 @@ if (fechaDicha) {
 // con que dice el precio, y el cliente le cree.
 //
 // Asi que se calcula aqui y se le entrega hecha. El modelo solo la copia.
-// Con acentos: esto lo copia el agente tal cual y sale al chat del cliente.
-const DIA = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
-const MES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
-             'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-
-// En español la fecha va «20 de marzo de 2027». «Marzo 20 de 2027» es orden
-// de ingles y en el chat se nota raro.
-function enLetras(iso) {
-  const y = Number(iso.slice(0, 4)), m = Number(iso.slice(5, 7)), d = Number(iso.slice(8, 10));
-  const dow = new Date(Date.UTC(y, m - 1, d)).getUTCDay();
-  return `${DIA[dow]} ${d} de ${MES[m - 1]} de ${y}`;
-}
 
 // Primero la de este mensaje; si en este turno no dijo fecha, la que ya traia
 // el lead. Sin esto, en cuanto el cliente escribe «¿y cuanto sale?» el agente
 // se queda sin el dia de la semana y vuelve a decir la fecha pelada.
 let fechaISO = anotado.fecha_evento ?? null;
-if (!fechaISO) {
+// Si en ESTE mensaje dijo un dia sin anio, la fecha vieja del lead no vale:
+// esta hablando de otra, y nombrarle la anterior seria contestarle a algo que
+// no pregunto.
+if (!fechaISO && !faltaAnio) {
   const epoch = Number($('formatLead').first().json.campos?.['Fecha del evento']);
   // Se guarda a mediodia UTC justamente para que el dia no se corra al pasarla
   // a texto. Ver el comentario de arriba.
@@ -177,19 +219,11 @@ return [{
     anotado,
     fecha_iso: fechaISO,
     fecha_larga: fechaISO ? enLetras(fechaISO) : null,
-    // La linea ya armada, lista para pegarla al turno del agente.
-    //
-    // Se arma aqui y no en la expresion del nodo a proposito: un ternario con
-    // concatenacion dentro de {{ }} le reventó al agente con «invalid syntax»
-    // y, como nadie le escribio al bot en todo un dia, el fallo no aparecio
-    // hasta la primera conversacion real. En el nodo queda una sola
-    // referencia a una propiedad, que no tiene como romperse.
-    nota_fecha: fechaISO
-      ? `
-
-[Sistema] La fecha de la que se habla es el ${enLetras(fechaISO)}. `
-        + 'Nombrala siempre asi, con su dia de la semana.'
-      : '',
+    // Dijo el dia y el mes pero no el anio. No se supone ninguno: el agente
+    // pregunta, con estas dos opciones concretas.
+    falta_anio: faltaAnio,
+    // Escribio un anio que ya paso. Tampoco se da por bueno.
+    fecha_pasada: fechaPasada,
     cuerpo: { custom_fields_values: valores },
   },
 }];

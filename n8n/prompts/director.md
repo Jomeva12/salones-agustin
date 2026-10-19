@@ -37,6 +37,15 @@ rellenes, no arrastres de otra conversación.
   - «diciembre de 2027» → `2027-12-01` ❌ — ese día es miércoles y el
     cliente quería sábado; con esa fecha se cotiza mal
 
+  **Si contesta solo el año, júntalo con lo que ya había.** Es la respuesta a
+  una pregunta que el agente acaba de hacer, y en el historial está el resto:
+
+  - antes: «10 de diciembre» · ahora: «2027» → `2027-12-10` ✅
+  - antes: «10 de diciembre» · ahora: «2027» → `null` ❌ — así se pierde la
+    fecha y hay que volver a preguntarla
+
+  Lo mismo al revés: si antes dijo el año y ahora el día, júntalos.
+
   **Nunca un año que ya pasó.** Nadie contrata un salón para ayer. Si el
   cliente no dijo el año, el que va es el **próximo en que esa fecha no haya
   pasado todavía**. Escribió «6 de marzo» → el 6 de marzo que viene, no uno de

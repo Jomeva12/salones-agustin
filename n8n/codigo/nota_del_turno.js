@@ -21,6 +21,27 @@ try {
 } catch (e) { especial = null; }
 
 const partes = [];
+
+// Dijo el dia y el mes, pero no el anio. No se elige por el: «10 de
+// diciembre» puede ser 2026 o 2027, y entre uno y otro cambia el escalon de
+// anticipacion, o sea el precio. Se pregunta, con los dos anios concretos en
+// la mano para que no tenga que calcularlos.
+if (p.falta_anio) {
+  const op = (p.falta_anio.opciones ?? []).join(' o ');
+  partes.push(`El cliente dijo «${p.falta_anio.dia_mes}» pero NO dijo el anio. `
+    + 'No lo supongas y no cotices todavia: preguntale de que anio '
+    + (op ? `—${op}—` : '') + ' y espera a que te conteste. '
+    + 'El precio depende de cuantos meses falten, asi que con el anio '
+    + 'equivocado la cotizacion entera sale mal.');
+}
+
+// Escribio un anio que ya paso.
+if (p.fecha_pasada) {
+  partes.push(`El cliente escribio «${p.fecha_pasada}», que ya paso. `
+    + 'Preguntale de que anio es, con tacto: lo mas probable es que se haya '
+    + 'equivocado de tecla.');
+}
+
 if (p.fecha_larga) {
   partes.push(`La fecha de la que se habla es el ${p.fecha_larga}. `
     + 'Nombrala siempre asi, con su dia de la semana.');

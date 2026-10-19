@@ -73,7 +73,14 @@ if (existsSync(MAPA)) {
   console.log(`${nuevas} ${nuevas === 1 ? 'foto sembrada' : 'fotos sembradas'}`
     + ` de ${mapa.length} en el mapa.${sinSalon ? ` ${sinSalon} con salón desconocido.` : ''}`);
 } else {
-  console.log('No hay imagenes/fotos_salon.json; la tabla queda vacía.');
+  // Falla a proposito en vez de avisar y seguir. Corrio asi una vez en
+  // produccion —el mapa no entraba en la imagen de Docker— y el aviso se
+  // perdio entre las demas lineas: la migracion parecio buena y la tabla
+  // quedo vacia. Una migracion que no hizo su trabajo tiene que doler.
+  console.error(`FALTA el mapa en ${MAPA}. Sin el no hay fotos que sembrar.`);
+  console.error('Si esto sale en el servidor, el Dockerfile no esta copiando imagenes/*.json.');
+  db.close();
+  process.exit(1);
 }
 
 for (const s of db.prepare(

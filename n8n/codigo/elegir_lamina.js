@@ -13,7 +13,13 @@
 // —la del salón que quedaba más cerca del nombre del paquete— y el cliente
 // veía la hoja de uno y el precio de tres.
 
-const MAX_IMAGENES = 3;
+// Las laminas van con la cotizacion y son como mucho una por salon ofrecido.
+const MAX_LAMINAS = 3;
+// Las fotos del salon son otra cosa: el Lic. las quiere a montones, que es
+// como se ensena un lugar. Diez mensajes seguidos, uno por foto, porque Kommo
+// adjunta una imagen por plantilla.
+const MIN_FOTOS = 10;
+const MAX_FOTOS = 12;
 
 const limpiar = (s) => String(s ?? '').toLowerCase()
   .normalize('NFD').replace(/[̀-ͯ]/g, '');
@@ -241,7 +247,7 @@ function laminas() {
     // cliente la lee como la oferta.
     if (!url) continue;
     out.push({ url, pie: `${g.paquete_nombre} · ${g.salon_nombre}` });
-    if (out.length === MAX_IMAGENES) break;
+    if (out.length === MAX_LAMINAS) break;
   }
   return out;
 }
@@ -301,10 +307,19 @@ function fotosDelSalon() {
     : (nombrados.length ? null : sinEventos(fl.campos?.['Salón']) || null);
   if (!salon) return [];
 
-  return ($json.fotos ?? [])
+  const suyas = ($json.fotos ?? [])
     .filter((f) => sinEventos(f.salon_nombre || f.salon) === salon)
-    .slice(0, MAX_IMAGENES)
-    .map((f) => ({ url: f.url, pie: f.titulo || '' }));
+    .slice(0, MAX_FOTOS);
+
+  // El pie: el titulo que le haya puesto la encargada en el panel y, si no
+  // tiene, «3 de 10». Antes todas decian «Mira también esta.», diez veces
+  // seguidas — repetir la misma frase diez veces no es una conversacion, es
+  // un robot. El contador al menos dice cuantas faltan.
+  return suyas.map((f, i) => ({
+    url: f.url,
+    pie: f.titulo || `${i + 1} de ${suyas.length}`,
+    esFoto: true,
+  }));
 }
 
 let fotos = [];
@@ -317,27 +332,43 @@ try {
 
 // ── repartir las fotos entre las partes del mensaje ────────────────────────
 //
-// Kommo adjunta UNA imagen por plantilla, asi que tres laminas son tres
-// mensajes. La primera viaja con el texto; las demas van detras, cada una con
-// su pie, para que el cliente sepa cual es cual sin tener que adivinar.
+// Kommo adjunta UNA imagen por plantilla, asi que diez fotos son diez
+// mensajes. La primera viaja con el texto del agente; las demas van detras,
+// cada una con su pie.
 const partes = [resp.parte1, resp.parte2, resp.parte3, resp.parte4]
   .filter((x) => x && String(x).trim());
 const porParte = partes.map((_, i) => (i === 0 && fotos.length ? fotos[0].url : ''));
 
-for (const foto of fotos.slice(1)) {
-  if (partes.length >= 4) break;   // el subflujo admite cuatro y ni una mas
-  partes.push(foto.pie || 'Mira también esta.');
+// La ULTIMA foto se queda con la pregunta de cierre, y por eso se le quita
+// aqui al bloque de texto: diez fotos detras de la pregunta la entierran, y
+// el cliente se queda mirando fotos sin saber que se esperaba de el.
+const cierre = fotos.length > 1 && partes.length > 1 ? partes.pop() : null;
+if (cierre) porParte.pop();
+
+for (const [i, foto] of fotos.slice(1).entries()) {
+  const ultima = i === fotos.length - 2;
+  partes.push(ultima && cierre ? cierre : foto.pie);
   porParte.push(foto.url);
+}
+
+// Si no habia pregunta que mover —el agente mando un solo parrafo— se le
+// pone una: diez fotos sin nada detras dejan la conversacion muerta.
+if (fotos.length > 1 && !cierre && fotos[0].esFoto) {
+  partes.push('¿Qué te parece el salón?');
+  porParte.push('');
 }
 
 return [{
   json: {
     ...resp,
     cuantas_partes: partes.length,
+    // Se mantienen las cuatro sueltas por compatibilidad; de la quinta en
+    // adelante solo viajan en `partes`.
     parte1: partes[0] ?? '',
     parte2: partes[1] ?? '',
     parte3: partes[2] ?? '',
     parte4: partes[3] ?? '',
+    partes: JSON.stringify(partes),
     // Se mantiene por si algo viejo la lee; la que manda es `imagenes`.
     imagen_url: fotos[0]?.url ?? '',
     // Alineada con las partes: la posicion i es la foto de la parte i+1.

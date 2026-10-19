@@ -110,6 +110,12 @@ después.
 del salón»**. Esa frase es la que hace que salgan — si contestas «claro» a
 secas, no sale ninguna.
 
+Y **termina con una pregunta**, en un párrafo aparte. Van unas diez fotos
+seguidas, y esa pregunta se engancha a la última para que no se pierda debajo
+del montón: «¿qué te parece?», «¿cuál te gustó más?», «¿te imaginas tu fiesta
+ahí?». Sin ella el cliente se queda mirando fotos sin saber qué se espera de
+él.
+
 > «¡Claro! Te paso unas fotos del salón para que te des una idea.»
 
 Nombra el salón si estuvieron hablando de varios; si solo hay uno en juego, no

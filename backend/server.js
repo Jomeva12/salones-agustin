@@ -326,9 +326,9 @@ function loQueFalta(id) {
  * rato no salió una sola foto. Con esto, el orden entre desplegar y migrar
  * deja de importar: sin tabla, cero fotos de salón y las láminas intactas.
  *
- * Solo las activas y solo las seis primeras de cada salón: de ahí se mandan
- * tres, y arrastrar las veinte en cada mensaje es peso que nadie mira. El
- * panel sí las ve todas, por /api/fotos-salon.
+ * Solo las activas y solo las doce primeras de cada salón: de ahí se mandan
+ * diez, y arrastrar las veinticinco en cada mensaje es peso que nadie mira.
+ * El panel sí las ve todas, por /api/fotos-salon.
  */
 function fotosDeSalonParaElAgente() {
   try {
@@ -339,7 +339,7 @@ function fotosDeSalonParaElAgente() {
         WHERE f.activa = 1
           AND (SELECT COUNT(*) FROM salon_imagen x
                 WHERE x.salon_id = f.salon_id AND x.activa = 1
-                  AND (x.orden < f.orden OR (x.orden = f.orden AND x.id < f.id))) < 6
+                  AND (x.orden < f.orden OR (x.orden = f.orden AND x.id < f.id))) < 12
         ORDER BY s.id, f.orden, f.id`).all();
   } catch (e) {
     console.error('fotos de salón no disponibles: ' + e.message);

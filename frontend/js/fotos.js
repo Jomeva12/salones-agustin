@@ -11,7 +11,10 @@
 import { api, error, salonActual, puede } from './api.js';
 import { el, limpiar, cargando } from './ui.js';
 
-const CUANTAS_MANDA = 3;
+// Lo que manda el agente de una tanda. Tiene que coincidir con MIN_FOTOS de
+// n8n/codigo/elegir_lamina.js: si aqui dice 3 y alla manda 10, quien ordena
+// las fotos cree que esta eligiendo tres y esta eligiendo diez.
+const CUANTAS_MANDA = 10;
 
 export async function fotos(raiz) {
   limpiar(raiz);
@@ -39,6 +42,7 @@ export async function fotos(raiz) {
     const todas = d.fotos ?? [];
     const activas = todas.filter((f) => f.activa);
 
+    cuantasVan = Math.min(CUANTAS_MANDA, activas.length);
     cuerpo.appendChild(el('p', { class: 'fts-cuenta', text:
       activas.length
         ? `${todas.length} fotos · ${activas.length} activas. El agente manda las ` +
@@ -60,9 +64,29 @@ export async function fotos(raiz) {
     if (puede('precios')) cuerpo.appendChild(subir());
   }
 
+  let cuantasVan = 0;
+
   function tarjeta(f, puesto) {
     const img = el('img', { src: f.url, alt: f.titulo || f.nombre || 'Foto del salón',
       loading: 'lazy', onclick: () => ver(f) });
+
+    // El título es lo que el cliente lee debajo de la foto cuando le llega.
+    // Sin título sale «3 de 12», que sirve pero no dice nada; con él, cada
+    // foto se explica sola. Por eso el campo va aquí y no escondido en un
+    // menú: es lo único de esta pantalla que cambia lo que ve el cliente.
+    const titulo = el('input', { type: 'text', class: 'fts-titulo', value: f.titulo ?? '',
+      placeholder: puesto ? `Sin título: saldrá «${puesto} de ${cuantasVan}»` : 'Sin título',
+      maxlength: '60', 'aria-label': 'Título de la foto' });
+    titulo.addEventListener('change', async () => {
+      const antes = f.titulo ?? '';
+      if (titulo.value.trim() === antes.trim()) return;
+      titulo.disabled = true;
+      try {
+        await api.cambiarFotoSalon({ id: f.id, titulo: titulo.value });
+        f.titulo = titulo.value.trim() || null;
+      } catch (e) { titulo.value = antes; alert(e.message); }
+      finally { titulo.disabled = false; }
+    });
 
     const acciones = el('div', { class: 'fts-acciones' });
     if (puede('precios')) {
@@ -92,6 +116,7 @@ export async function fotos(raiz) {
       img,
       puesto ? el('span', { class: 'fts-puesto', text: String(puesto) }) : null,
       !f.activa ? el('span', { class: 'fts-fuera', text: 'No se manda' }) : null,
+      puede('precios') ? titulo : (f.titulo ? el('p', { class: 'fts-titulo-fijo', text: f.titulo }) : null),
       acciones,
     ]);
   }

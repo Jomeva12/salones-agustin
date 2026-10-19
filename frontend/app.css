@@ -2314,3 +2314,12 @@ main.lienzo a.avi-enlace:hover{border-color:var(--nocturno);color:var(--nocturno
 .fts-ayuda{color:var(--tinta-3);font-size:13px;margin:0;max-width:66ch}
 .fts-dicho{font-size:13px;color:var(--libre)}
 .fts-dicho.mal{color:var(--ocupada)}
+.fts-titulo{
+  width:calc(100% - 16px);margin:8px 8px 0;font:inherit;font-size:13px;
+  border:1px solid transparent;border-radius:var(--r-s);padding:4px 6px;
+  background:var(--panel-2);color:var(--tinta);
+}
+.fts-titulo:hover{border-color:var(--linea-2)}
+.fts-titulo:focus{border-color:var(--acento);background:var(--panel);outline:none}
+.fts-titulo::placeholder{color:var(--tinta-3);font-size:12px}
+.fts-titulo-fijo{margin:8px 8px 0;font-size:13px;color:var(--tinta-2)}

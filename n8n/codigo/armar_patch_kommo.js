@@ -10,7 +10,7 @@
 const CAMPO = {
   salon: 352870,
   tipo_evento: 352872,
-  // TEXTO, no fecha (el viejo 352874 era `date` y sigue ahi, sin usar).
+  // TEXTO, no fecha. El viejo 352874 era `date` y ya esta borrado.
   //
   // Un campo de fecha de Kommo no se puede vaciar desde el API: `values: []`
   // da TooFew, `null` da NotNullable, y lo unico que acepta es 0 — que la

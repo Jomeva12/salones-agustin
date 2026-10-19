@@ -32,7 +32,7 @@ const campos = lead.campos ?? {};
 const NOMBRE = {
   'Salón': 'Salón',
   'Tipo de evento': 'Tipo de evento',
-  'Fecha del evento (texto)': 'Fecha del evento',
+  'Fecha del evento': 'Fecha del evento',
   'Invitados': 'Invitados',
   'Paquete cotizado': 'Paquete cotizado',
 };
@@ -44,8 +44,8 @@ const comoTexto = (_nombre, valor) =>
   (valor === null || valor === undefined || valor === '' ? null : String(valor));
 
 // La clave es como se llama el campo en Kommo; el valor, como se escribe en
-// la nota. No siempre coinciden: el de la fecha se llama «Fecha del evento
-// (texto)» por el tipo, y ese parentesis no le dice nada a quien la lee.
+// la nota. Hoy coinciden todas, pero se mantienen separadas: el nombre del
+// campo se cambia desde Kommo sin avisar a nadie.
 const habia = [];
 for (const [enKommo, etiqueta] of Object.entries(NOMBRE)) {
   const t = comoTexto(enKommo, campos[enKommo]);

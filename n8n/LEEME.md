@@ -192,8 +192,10 @@ Cuando en el turno no se menciona fecha, se usa la que ya traia el lead.
 **Las fechas del agente son campos de TEXTO, no de fecha.** Un campo `date`
 de Kommo no se puede vaciar desde el API —`values: []` da TooFew, `null` da
 NotNullable, y lo unico que acepta es `0`, que la ficha pinta «31/12/1969»— y
-el tipo de un campo tampoco se puede cambiar, asi que se crearon nuevos. Los
-viejos (352874 y 352878) siguen ahi sin usar.
+el tipo de un campo tampoco se puede cambiar, asi que se crearon nuevos y se
+borraron los viejos (352874 y 352878). Se pudo borrar sin perder nada porque
+la cuenta tenia dos leads, los dos de prueba; mas adelante no habria salido
+gratis.
 
 El formato es **«2027-03-20 (sábado)»**: el ISO al principio para que ordenar
 alfabeticamente sea ordenar cronologicamente, y el dia de la semana al lado
@@ -211,7 +213,7 @@ IDs de los campos, por si hay que tocarlos:
 |---|---|---|
 | Salon | 352870 | norma 281622, esmeralda 281624, santacruz 281626, quetzal 281628 |
 | Tipo de evento | 352872 | xv 281630, boda 281632, graduacion 281634, posada 281636, cumpleanos 281638, babyshower 281640 |
-| Fecha del evento (texto) | 611320 | **texto**, «2027-03-20 (sábado)» |
+| Fecha del evento | 611320 | **texto**, «2027-03-20 (sábado)» |
 | Invitados | 352876 | numero |
 | Paquete cotizado | 352880 | Plata 281642, Onix 281644, Bronce 281646, Oro 281648 |
 | Stop IA | 352882 | casilla · marcada = la IA no contesta |

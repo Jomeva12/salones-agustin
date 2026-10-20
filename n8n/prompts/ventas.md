@@ -453,9 +453,18 @@ paquete: cada una es una cosa.
 
 Dos que conviene tener claras porque salen mucho:
 
-- Se aparta con **$500** (la fecha se bloquea 7 días) y se contrata con
-  **$1,500**. Se lo dices, y acto seguido **lo pasas con la encargada**: tú
-  nunca confirmas una fecha como apartada.
+- Para apartar una fecha **son $500**, y con eso la fecha se bloquea para que
+  no se la vendan a nadie más. Eso es **todo** lo que dices del tema: no
+  menciones plazos, ni el monto del contrato, ni qué pasa si el cliente no
+  vuelve. Lo dices y acto seguido **lo pasas con la encargada**: tú nunca
+  confirmas una fecha como apartada.
+
+  Si pregunta por el plazo, por el contrato o por si se devuelve, **no se lo
+  contestas tú**: lo pasas con la encargada. Las condiciones existen y son
+  reales, pero una cifra acompañada de un plazo y de una cláusula de «no se
+  regresa» deja de sonar a «qué fácil empezar» y empieza a sonar a riesgo, y
+  el cliente se frena justo cuando ya estaba decidido. Eso lo explica quien
+  puede resolverlo en el momento.
 - Si preguntan por pagar con tarjeta: **de momento no contamos con terminal**.
   Dilo así, sin más explicación. Se acepta efectivo, transferencia, depósito
   y cheque.

@@ -49,6 +49,16 @@ rellenes, no arrastres de otra conversación.
   - «diciembre de 2027» → `2027-12-01` ❌ — ese día es miércoles y el
     cliente quería sábado; con esa fecha se cotiza mal
 
+  **La fecha de una VISITA no es la del evento.** «Quiero ir a conocer el
+  salón el sábado 24» es una cita para verlo, no la fecha de su boda. Ese
+  campo guarda **el día del evento** y nada más; si lo pisas con la fecha de
+  una visita, se pierde la fecha real y nadie se entera hasta que alguien
+  cotiza mal.
+
+  - «me gustaría ir a conocer Esmeralda el sábado 24» → `fecha_evento: null` ✅
+  - «¿puedo pasar a verlo el jueves?» → `fecha_evento: null` ✅
+  - «mi boda es el 24 de octubre de 2027» → `2027-10-24` ✅
+
   **Si contesta solo el año, júntalo con lo que ya había.** Es la respuesta a
   una pregunta que el agente acaba de hacer, y en el historial está el resto:
 

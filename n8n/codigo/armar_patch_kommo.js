@@ -131,6 +131,23 @@ let fechaPasada = null;  // el cliente escribio un anio que ya paso
 const loQueDijo = $('formatLead').first().json.chats;
 
 /**
+ * El cliente esta hablando de una VISITA, no de su evento.
+ *
+ * «Me gustaria ir a conocer Esmeralda el sabado 24 de octubre» y el Director
+ * devolvio eso como `fecha_evento`. Si el cliente hubiera dicho el anio, esa
+ * fecha se habria escrito en Kommo encima de la del evento —en esa misma
+ * conversacion la boda era el 12 de junio de 2027— y nadie se entera hasta
+ * que alguien cotiza con la fecha equivocada.
+ *
+ * El prompt del Director ya lo dice; esto es el seguro. Se pide que hable de
+ * visita Y que no nombre el evento, para no tragarse un «quiero ir a conocerlo
+ * antes de mi boda del 20 de marzo», donde la fecha SI es la del evento.
+ */
+const HABLA_DE_VISITA = /\b(ir a conocer|visitar|pasar a ver|conocer el sal[oó]n|agendar (una )?(cita|visita)|hacer (una )?cita)\b/i;
+const NOMBRA_EL_EVENTO = /\b(mi|nuestra|la) (boda|fiesta|evento|celebraci[oó]n|xv|quince)\b|\bes para\b/i;
+const esVisita = HABLA_DE_VISITA.test(loQueDijo) && !NOMBRA_EL_EVENTO.test(loQueDijo);
+
+/**
  * El cliente contesta solo el anio a la pregunta de arriba.
  *
  * «10 de diciembre» -> se le pregunta 2026 o 2027 -> contesta «2027». En ese
@@ -150,7 +167,8 @@ function contestoElAnio(iso, texto) {
     && Number(iso.slice(8, 10)) !== 1;
 }
 
-if (/^\d{4}-\d{2}-\d{2}$/.test(datos.fecha_evento ?? '')
+if (!esVisita
+    && /^\d{4}-\d{2}-\d{2}$/.test(datos.fecha_evento ?? '')
     && esFechaReal(datos.fecha_evento)
     && (dijoElDia(datos.fecha_evento, loQueDijo)
         || contestoElAnio(datos.fecha_evento, loQueDijo))) {

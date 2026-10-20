@@ -402,8 +402,13 @@ une("marcar_enviada", "cerrar_aviso")
 une("cerrar_aviso", "anotar_en_su_memoria")
 une("anotar_en_su_memoria", "acuse_en_grupo")
 
-con.setdefault("redactar", {})["ai_languageModel"] = [[
-    {"node": "modelo_redactor", "type": "ai_languageModel", "index": 0}]]
+# La conexion del modelo va del lado del SUB-NODO, no del agente: la clave es
+# `modelo_redactor` y apunta a `redactar`. Al reves n8n la guarda sin chistar y
+# el flujo se ve bien en el lienzo, pero al ejecutarse muere con «A Chat Model
+# sub-node must be connected and enabled». Asi lo hace salones_principal con
+# sus cuatro agentes.
+con.setdefault("modelo_redactor", {})["ai_languageModel"] = [[
+    {"node": "redactar", "type": "ai_languageModel", "index": 0}]]
 
 DESTINO = os.path.dirname(os.path.abspath(__file__))
 ruta = os.path.join(DESTINO, "salones_respuestas.json")

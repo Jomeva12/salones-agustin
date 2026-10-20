@@ -1438,13 +1438,19 @@ const rutas = {
     const mensaje = entero(u.searchParams.get('mensaje'));
     if (!chat || !mensaje) return { error: 'faltan chat y mensaje' };
 
+    // Se busca por `aviso_mensaje`, que tiene UNA FILA POR PUBLICACION, y no
+    // por la columna de `aviso`, que solo guarda la ultima. Un aviso se
+    // repite en el grupo mientras nadie lo atiende, y quien contesta responde
+    // al que tiene delante —no necesariamente al mas reciente—. Con la
+    // columna, tres de cada cuatro respuestas se habrian perdido en silencio.
     const a = db.prepare(
       `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada,
               c.fecha AS cita_fecha, c.hora AS cita_hora, c.estado AS cita_estado
-         FROM aviso a
+         FROM aviso_mensaje m
+         JOIN aviso a ON a.id = m.aviso_id
          LEFT JOIN salon s ON s.id = a.salon_id
          LEFT JOIN cita  c ON c.id = a.cita_id
-        WHERE a.telegram_chat_id = ? AND a.telegram_message_id = ?`)
+        WHERE m.chat_id = ? AND m.message_id = ?`)
       .get(chat, mensaje);
 
     // Que no haya aviso es la respuesta normal, no un fallo: en el grupo se
@@ -1524,9 +1530,16 @@ const rutas = {
     // recordatorio sin contar.
     let guardado = false;
     if (c?.telegram_message_id) {
+      const chat = String(c.telegram_chat_id ?? '');
+      const mensaje = entero(c.telegram_message_id);
+      // La columna guarda la ULTIMA publicacion: es lo que se mira para saber
+      // cuando se dijo por ultima vez.
       db.prepare(`UPDATE aviso SET telegram_chat_id = ?, telegram_message_id = ?
-                   WHERE id = ?`)
-        .run(String(c.telegram_chat_id ?? ''), entero(c.telegram_message_id), id);
+                   WHERE id = ?`).run(chat, mensaje, id);
+      // Y la tabla guarda TODAS, que es lo que permite contestar a cualquiera
+      // de las repeticiones y no solo a la ultima.
+      db.prepare(`INSERT OR IGNORE INTO aviso_mensaje (chat_id, message_id, aviso_id)
+                  VALUES (?,?,?)`).run(chat, mensaje, id);
       guardado = true;
     }
 

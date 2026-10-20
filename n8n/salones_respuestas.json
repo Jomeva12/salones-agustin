@@ -8,7 +8,7 @@
         ],
         "additionalFields": {}
       },
-      "id": "7ec083a6-5550-41ae-a1a7-fb3f37949586",
+      "id": "a248d152-5b7f-440f-8a84-b55f7c2e4685",
       "name": "escuchar_grupo",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
@@ -27,7 +27,7 @@
       "parameters": {
         "jsCode": "// Lo unico que interesa de lo que llega: a que mensaje contestaron.\n//\n// El bot solo recibe respuestas a sus propios mensajes (por la privacidad de\n// Telegram), pero tambien le llegan comandos y mensajes de servicio —alguien\n// entra al grupo, se cambia el titulo—. Nada de eso trae reply_to_message, y\n// aqui se descarta sin ruido.\nconst m = $json.message ?? $json;\nconst re = m.reply_to_message;\n\n// Quien contesta. Telegram no siempre manda apellido, y el usuario puede no\n// tener @, asi que se arma con lo que haya antes de caer en «alguien».\nconst q = m.from ?? {};\nconst quien = [q.first_name, q.last_name].filter(Boolean).join(' ')\n  || (q.username ? '@' + q.username : '')\n  || 'alguien del grupo';\n\nreturn [{\n  json: {\n    es_respuesta: Boolean(re && (m.text ?? '').trim()),\n    chat_id: String(m.chat?.id ?? ''),\n    // A QUE mensaje contesto: esta es la llave que identifica el aviso.\n    mensaje_respondido: re?.message_id ?? null,\n    // El id de SU mensaje, para colgarle el acuse debajo.\n    mi_mensaje: m.message_id ?? null,\n    texto: (m.text ?? '').trim(),\n    quien,\n    // El propio bot responde en el grupo (el acuse). Sin esto se contestaria\n    // a si mismo en bucle.\n    del_bot: Boolean(q.is_bot),\n  },\n}];"
       },
-      "id": "d586e52e-f4fe-4229-afe5-82bb7738b179",
+      "id": "85cbe36c-f113-4c75-b223-03faf9f6ded5",
       "name": "leer_respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -70,7 +70,7 @@
         },
         "options": {}
       },
-      "id": "caedf9a0-ba5b-496e-9bcc-e176d8d6c780",
+      "id": "ad2bfc2c-9407-4ca7-be03-87011c201ad6",
       "name": "es_respuesta",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -92,7 +92,7 @@
           }
         }
       },
-      "id": "868806a9-36a1-416f-ab84-8c7698795ebd",
+      "id": "8b86ad3c-8e3c-4787-b8d8-bee5dcff778f",
       "name": "buscar_aviso",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -131,7 +131,7 @@
         },
         "options": {}
       },
-      "id": "685a7add-b1ee-44f2-ab9b-4a2bc08b96df",
+      "id": "2d5f6428-987e-4a58-bb14-cb5af0d2cfee",
       "name": "era_un_aviso",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -144,7 +144,7 @@
       "parameters": {
         "jsCode": "// Lo que el redactor necesita saber, en texto plano.\nconst a = $json.aviso;\nconst r = $('leer_respuesta').first().json;\n\nconst DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];\nconst MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',\n               'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n\n// El dia de la semana se calcula, no se le pregunta al modelo: el Lic. pidio\n// que toda fecha venga con su dia, y un modelo haciendo calendario se\n// equivoca. Se parte la cadena a mano porque new Date('2027-03-03') se\n// interpreta en UTC y en Monterrey cae el dia anterior.\nfunction enLetras(iso) {\n  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(iso ?? '')) return iso ?? '';\n  const [y, m, d] = iso.split('-').map(Number);\n  const f = new Date(Date.UTC(y, m - 1, d));\n  return `${DIAS[f.getUTCDay()]} ${d} de ${MESES[m - 1]} de ${y}`;\n}\n\n// La hora en 12 h y con franja: es como habla la gente aqui, y como habla\n// Maya.\nfunction enPalabras(hhmm) {\n  const p = /^(\\d{1,2}):(\\d{2})/.exec(hhmm ?? '');\n  if (!p) return hhmm ?? '';\n  const h = Number(p[1]), min = p[2];\n  const doce = h % 12 === 0 ? 12 : h % 12;\n  const franja = h < 12 ? 'de la mañana' : (h < 19 ? 'de la tarde' : 'de la noche');\n  return `${doce}${min === '00' ? '' : ':' + min} ${franja}`;\n}\n\nconst lineas = [`Lo que le preguntaste al salón: ${a.texto}`];\nlineas.push(`Motivo: ${a.motivo}`);\nif (a.salon_nombre) lineas.push(`Salón: ${a.salon_nombre}`);\nif (a.cita_fecha) {\n  lineas.push(`La visita de la que se habla: ${enLetras(a.cita_fecha)}`\n    + (a.cita_hora ? ` a las ${enPalabras(a.cita_hora)}` : ' (sin hora)')\n    + ` — estado: ${a.cita_estado ?? 'solicitada'}`);\n}\n// Un aviso ya atendido no se oculta: quien contesta tarde merece que su\n// respuesta llegue igual, pero Maya tiene que saber que puede estar\n// repitiendole algo al cliente.\nif ($json.ya_atendido) {\n  lineas.push('OJO: este aviso ya estaba marcado como atendido. Puede que al '\n    + 'cliente ya se le haya dicho algo parecido.');\n}\n\nreturn [{\n  json: {\n    aviso_id: a.id,\n    lead_id: a.lead_id,\n    chat_id: r.chat_id,\n    mi_mensaje: r.mi_mensaje,\n    quien: r.quien,\n    respuesta: r.texto,\n    contexto: lineas.join('\\n'),\n  },\n}];"
       },
-      "id": "76c16554-a8ca-4f84-bf67-8f277ab034ee",
+      "id": "4462a72f-3f5c-4ec8-848f-920f7a61bddd",
       "name": "armar_contexto",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -161,7 +161,7 @@
           "systemMessage": "Eres Maya, la asistente de los Salones Agustin Barron. Le pediste un dato al salon por el grupo interno y acaban de contestarte. Tu trabajo ahora es pasarle eso al cliente por WhatsApp.\n\nLO QUE NO PUEDES HACER, y es lo unico que importa de verdad:\n\n**No anadas ni un dato que no te hayan dado.** Ni una hora, ni un precio, ni una condicion, ni un «ademas». Si la respuesta es escueta, tu mensaje es escueto. Inventar aqui es peor que en cualquier otro sitio: el cliente lo va a leer como una confirmacion del salon, y si no coincide con lo que la encargada tiene apuntado, alguien se presenta un dia que no es.\n\n**No confirmes lo que no te confirmaron.** «Lo estamos viendo» no es «esta listo». Si la respuesta es ambigua, o no contesta a lo que preguntaste, dilo tal cual: que te estan revisando el dato y en cuanto lo tengas se lo pasas.\n\nSi puedes —y debes— escribirlo como hablas tu: calida, de aqui, sin formalismos. La encargada escribe en taquigrafia («si jueves 4 ok») y el cliente no tiene por que leer eso.\n\nCuando des una fecha, **di el dia de la semana**: «el jueves 23 de octubre». Si en el contexto te viene ya calculada, usala como viene; no la recalcules tu.\n\nA veces lo que llega del grupo NO es una respuesta: es una pregunta de vuelta («¿para cuantos era?», «¿que salon?»). Entonces no le escribes al cliente: contestas tu en el grupo con lo que sabes, y el pendiente sigue abierto.\n\nResponde SIEMPRE con este JSON y nada mas, sin cercos de codigo:\n\n{\"tipo\": \"respuesta\", \"al_cliente\": \"el mensaje para el cliente\"}\n\no bien\n\n{\"tipo\": \"pregunta\", \"al_grupo\": \"lo que le contestas al salon\"}\n\no bien, si no sabes que hacer con lo que llego:\n\n{\"tipo\": \"ninguno\", \"al_grupo\": \"por que no lo pasaste\"}"
         }
       },
-      "id": "0afe5e6a-49f3-45a4-bb8a-3028c6b334f2",
+      "id": "2c035acf-f2a9-4cca-817c-b2c7d22dcdd6",
       "name": "redactar",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -180,7 +180,7 @@
         },
         "options": {}
       },
-      "id": "338aada4-0b18-4dea-8821-6b83f9fb49a7",
+      "id": "a7e6f45e-17be-410c-a76a-946c9b1ee0b2",
       "name": "modelo_redactor",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -199,7 +199,7 @@
       "parameters": {
         "jsCode": "// El modelo devuelve JSON, pero no siempre limpio: a veces lo envuelve en\n// cercos de codigo y a veces le cuelga una frase delante. Esto no es\n// desconfianza gratuita: pasa.\nconst bruto = String($json.output ?? '').trim();\n\nfunction leer(t) {\n  const sinCercos = t.replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\n  try { return JSON.parse(sinCercos); } catch (e) { /* se intenta recortar */ }\n  const a = sinCercos.indexOf('{'), b = sinCercos.lastIndexOf('}');\n  if (a >= 0 && b > a) {\n    try { return JSON.parse(sinCercos.slice(a, b + 1)); } catch (e) { /* nada */ }\n  }\n  return null;\n}\n\nconst o = leer(bruto);\nconst ctx = $('armar_contexto').first().json;\n\n// Si no se pudo leer el JSON, NO se le escribe al cliente a ciegas. Se avisa\n// en el grupo y el pendiente se queda abierto: es lo unico honesto, porque\n// aqui no sabemos si lo que el modelo queria decir era una confirmacion.\nif (!o || !o.tipo) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No supe interpretar esa respuesta. ¿Me la puedes escribir de otra forma? '\n              + 'El pendiente sigue abierto.' } }];\n}\n\nconst alCliente = String(o.al_cliente ?? '').trim();\nif (o.tipo === 'respuesta' && !alCliente) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No me quedó claro qué decirle al cliente. El pendiente sigue abierto.' } }];\n}\n\nreturn [{ json: { ...ctx, tipo: o.tipo,\n                  al_cliente: alCliente,\n                  al_grupo: String(o.al_grupo ?? '').trim() } }];"
       },
-      "id": "aae2f135-7f6f-462a-acf7-35a36a21852f",
+      "id": "d974d781-9333-48a5-b794-8e01cd1597a8",
       "name": "leer_lo_redactado",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -260,7 +260,7 @@
         },
         "options": {}
       },
-      "id": "3a6c7d65-8c81-4799-b4f2-908fbd55719d",
+      "id": "4a0f6730-2815-4a1e-b01a-de18e30fdf0f",
       "name": "que_hacer",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -277,7 +277,7 @@
           "queryReplacement": "={{ [ $('leer_lo_redactado').item.json.lead_id, null, 'grupo', $('leer_lo_redactado').item.json.quien, null, 0, 'respuesta_grupo', $('leer_lo_redactado').item.json.al_cliente, null, '{}', JSON.stringify([$('leer_lo_redactado').item.json.al_cliente]) ] }}"
         }
       },
-      "id": "cb2fd82c-c3af-4a88-9be9-71a2b73ca2ed",
+      "id": "5a2efa29-8210-402b-990d-ae4c87758971",
       "name": "registrar_turno",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -321,7 +321,7 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "a9684569-fbcc-48ab-9fa8-c3a89c1d4667",
+      "id": "005e27c4-83c3-4158-859a-7799442ad73d",
       "name": "enviar_al_cliente",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
@@ -338,7 +338,7 @@
           "queryReplacement": "={{ [$('registrar_turno').first().json.id] }}"
         }
       },
-      "id": "552ee45b-4043-4408-acc4-d13238cc8eb8",
+      "id": "b43df6cb-8b78-4326-a8a0-0b01865c3098",
       "name": "marcar_enviada",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -370,7 +370,7 @@
           }
         }
       },
-      "id": "f9dbbc5b-c50f-48df-8ca2-2254b266b37b",
+      "id": "41857878-4780-4c8a-a32f-2cd112d25843",
       "name": "cerrar_aviso",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -393,7 +393,7 @@
           "queryReplacement": "={{ [ $('leer_lo_redactado').item.json.lead_id + '-ventas-v9', JSON.stringify({ type: 'ai', data: { content: $('leer_lo_redactado').item.json.al_cliente, additional_kwargs: {}, response_metadata: {} } }) ] }}"
         }
       },
-      "id": "527dcfc0-fec5-4664-b613-1f4a942cc301",
+      "id": "e77b6543-e21f-4c37-92c0-c758d590fd01",
       "name": "anotar_en_su_memoria",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -419,7 +419,7 @@
           "reply_to_message_id": "={{ $('leer_lo_redactado').item.json.mi_mensaje }}"
         }
       },
-      "id": "cad2ded3-9d07-4c4f-ac9e-3d9542f84c45",
+      "id": "2b3b578e-49f5-45af-adbf-c0d60f714668",
       "name": "acuse_en_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -445,7 +445,7 @@
           "reply_to_message_id": "={{ $json.mi_mensaje }}"
         }
       },
-      "id": "63393ecf-c2d0-4d79-96d1-57f4e6336cdf",
+      "id": "84a00e6d-5b50-4e4d-a248-0c5e588a0a54",
       "name": "contestar_en_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -538,15 +538,6 @@
             "index": 0
           }
         ]
-      ],
-      "ai_languageModel": [
-        [
-          {
-            "node": "modelo_redactor",
-            "type": "ai_languageModel",
-            "index": 0
-          }
-        ]
       ]
     },
     "leer_lo_redactado": {
@@ -628,6 +619,17 @@
           {
             "node": "acuse_en_grupo",
             "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "modelo_redactor": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "redactar",
+            "type": "ai_languageModel",
             "index": 0
           }
         ]

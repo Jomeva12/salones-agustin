@@ -115,6 +115,56 @@ if (especial && especial.aviso) {
     + 'nada que avisar. Si el cliente da por hecho que si, corrigelo.');
 }
 
+// El calendario de la semana, siempre. Esto no es relleno.
+//
+// El 20-oct-2026 el cliente dijo «quiero ir a conocer el salon el jueves a
+// las 4». Era martes 20; el jueves era el 22. Maya mando `fecha: 2026-10-26`
+// a `pedir_cita` —lunes— y le escribio «el jueves 26 de octubre». Se creo una
+// cita el dia equivocado y el cliente leyo un dia y una fecha que no son el
+// mismo dia. Alguien se presenta cuando no toca, o no se presenta cuando si.
+//
+// Las guardias de fecha que ya existian miran la fecha del EVENTO, que el
+// Director normaliza. La fecha de la VISITA no pasa por ahi: el agente la
+// resuelve de cabeza, y resolver «el jueves» es aritmetica de calendario, que
+// es justo lo que un modelo hace mal y con total aplomo.
+//
+// Asi que no se le pide que calcule: se le da calculado. Y va SIEMPRE, sin
+// mirar si el cliente nombro un dia o no, porque detectarlo seria otro regex
+// persiguiendo redacciones —«el jueves», «este jueves», «el proximo jueves»,
+// «juebes»— y cada hueco de ese regex es una cita en el dia equivocado.
+const DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];
+const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+               'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+
+// La fecha de hoy EN MONTERREY. Con la del servidor, de madrugada el
+// calendario entero sale corrido un dia.
+const HOY_ISO = new Intl.DateTimeFormat('en-CA', {
+  timeZone: 'America/Monterrey', year: 'numeric', month: '2-digit', day: '2-digit',
+}).format(new Date());
+
+// Se parte la cadena a mano: new Date('2026-10-20') se interpreta en UTC y en
+// Monterrey eso es el dia anterior.
+const [ay, am, ad] = HOY_ISO.split('-').map(Number);
+const hoy = new Date(Date.UTC(ay, am - 1, ad));
+
+function largo(f) {
+  return `${DIAS[f.getUTCDay()]} ${f.getUTCDate()} de ${MESES[f.getUTCMonth()]}`
+    + ` de ${f.getUTCFullYear()}`;
+}
+
+// Los proximos siete dias, empezando por mañana: «el jueves» nunca es hoy.
+const semana = [];
+for (let i = 1; i <= 7; i++) {
+  const f = new Date(hoy.getTime() + i * 86400000);
+  semana.push(largo(f));
+}
+
+partes.push(`Hoy es ${largo(hoy)}. Si el cliente nombra un dia de la semana `
+  + 'sin darte la fecha, es uno de estos y no lo calcules tu: '
+  + semana.join('; ') + '. '
+  + 'Y si dice «el proximo» o nombra un dia que ya paso esta semana, '
+  + 'preguntale la fecha en vez de suponerla.');
+
 return [{
   json: {
     // Todo lo de armar_patch sigue viaje: `hay_datos` y `guardar_en_kommo`

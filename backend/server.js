@@ -1624,17 +1624,26 @@ const rutas = {
     // Cuando la pide el agente, el aviso se crea AQUI y no en otra llamada.
     // Si fueran dos, tarde o temprano haria una sola y quedaria una cita que
     // nadie sabe que existe, o un recado sin cita que capturar.
+    // El dia de la semana se calcula aqui y se DEVUELVE, no solo se usa para
+    // el aviso. El 20-oct-2026 el agente resolvio «el jueves» como 2026-10-26
+    // —lunes— y le escribio al cliente «el jueves 26 de octubre»: un dia y una
+    // fecha que no son el mismo dia. El calendario de la semana que ahora va
+    // en la nota del turno evita que elija mal la fecha; esto evita que la
+    // nombre mal una vez elegida. Son dos fallos distintos y hacen falta los
+    // dos arreglos.
+    const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
+                   'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
+    const DIAS_SEM = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves',
+                      'viernes', 'sábado'];
+    const [anio, mes, diaMes] = c.fecha.split('-').map(Number);
+    const diaSemana = DIAS_SEM[L.diaSemana(c.fecha)];
+    // Lo lee una persona en WhatsApp: «Norma Eventos» y «jueves 18 de marzo»,
+    // no la clave ni la fecha como la guarda la base.
+    const cuando = `${diaSemana} ${diaMes} de ${MESES[mes - 1]}` +
+                   (anio !== new Date().getFullYear() ? ` de ${anio}` : '');
+
     let avisoId = null;
     if (c.avisar) {
-      // Lo lee una persona en WhatsApp: «Norma Eventos» y «jueves 18 de marzo»,
-      // no la clave ni la fecha como la guarda la base.
-      const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',
-                     'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];
-      const DIAS_SEM = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves',
-                        'viernes', 'sábado'];
-      const [anio, mes, diaMes] = c.fecha.split('-').map(Number);
-      const cuando = `${DIAS_SEM[L.diaSemana(c.fecha)]} ${diaMes} de ${MESES[mes - 1]}` +
-                     (anio !== new Date().getFullYear() ? ` de ${anio}` : '');
       const comoSeLlama = db.prepare('SELECT nombre FROM salon WHERE id = ?').get(s.id)?.nombre ?? c.salon;
       const quien = (c.nombre ?? '').trim();
       const texto = [
@@ -1650,7 +1659,11 @@ const rutas = {
       avisoId = Number(ra.lastInsertRowid);
     }
 
-    return { ok: true, id: citaId, libre, aviso, aviso_id: avisoId };
+    // `fecha_larga` y `dia_semana` van de vuelta para que el agente nombre el
+    // dia con lo calculado y no con lo que cree recordar.
+    return { ok: true, id: citaId, libre, aviso, aviso_id: avisoId,
+             fecha: c.fecha, hora: c.hora, dia_semana: diaSemana,
+             fecha_larga: cuando };
   },
 
   'PUT /api/citas': (_u, c, ctx) => {

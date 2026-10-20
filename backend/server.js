@@ -1418,6 +1418,48 @@ const rutas = {
     return { pendientes, avisos: filas };
   },
 
+  /**
+   * El aviso al que alguien acaba de responder en el grupo.
+   *
+   * Lo llama el flujo que escucha el grupo. Un bot de Telegram, por
+   * privacidad, NO recibe la conversacion de un grupo: recibe los comandos,
+   * las menciones y las respuestas a sus propios mensajes. Resulta que el
+   * gesto que el Lic. queria hacer —«Responder a este mensaje»— es justo el
+   * unico que Telegram deja pasar, asi que esto funciona sin abrirle el grupo
+   * al bot y sin riesgo de confundir un comentario suelto con una respuesta.
+   *
+   * Devuelve tambien el contexto que Maya necesita para redactar: que pregunto
+   * ella, de que lead, de que salon y si habia una cita de por medio. Sin eso,
+   * un «si, el jueves a las 4» no se puede convertir en un mensaje que el
+   * cliente entienda.
+   */
+  'GET /api/avisos/por-mensaje': (u) => {
+    const chat = (u.searchParams.get('chat') ?? '').trim();
+    const mensaje = entero(u.searchParams.get('mensaje'));
+    if (!chat || !mensaje) return { error: 'faltan chat y mensaje' };
+
+    const a = db.prepare(
+      `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada,
+              c.fecha AS cita_fecha, c.hora AS cita_hora, c.estado AS cita_estado
+         FROM aviso a
+         LEFT JOIN salon s ON s.id = a.salon_id
+         LEFT JOIN cita  c ON c.id = a.cita_id
+        WHERE a.telegram_chat_id = ? AND a.telegram_message_id = ?`)
+      .get(chat, mensaje);
+
+    // Que no haya aviso es la respuesta normal, no un fallo: en el grupo se
+    // responde tambien a mensajes que no son avisos. Se dice en claro para
+    // que el flujo no tenga que interpretar un hueco.
+    if (!a) return { encontrado: false, motivo: 'ese mensaje no es un aviso' };
+    return {
+      encontrado: true,
+      // Un aviso ya atendido se devuelve igual, con la marca: quien contesta
+      // tarde merece saber que llega tarde, y el flujo decide que hacer.
+      ya_atendido: a.estado === 'atendido',
+      aviso: a,
+    };
+  },
+
   'POST /api/avisos': (_u, c) => {
     const motivo = String(c?.motivo ?? '').trim();
     const texto = String(c?.texto ?? '').trim();
@@ -1472,6 +1514,39 @@ const rutas = {
       anotar('aviso', id, 'cambio', c._autor, 'atendido');
       return { ok: true };
     }
+    // Al publicar el aviso en el grupo se guarda el message_id que devolvio
+    // Telegram. Es la unica forma de reconocer, mas tarde, a QUE aviso esta
+    // contestando quien usa «Responder a este mensaje». Va junto al
+    // `recordado` porque lo manda la misma llamada del flujo de avisos.
+    //
+    // Nota: no devuelve aqui. El flujo de avisos manda `telegram_message_id` y
+    // `recordado` en la MISMA llamada, asi que cortar aqui dejaria el
+    // recordatorio sin contar.
+    let guardado = false;
+    if (c?.telegram_message_id) {
+      db.prepare(`UPDATE aviso SET telegram_chat_id = ?, telegram_message_id = ?
+                   WHERE id = ?`)
+        .run(String(c.telegram_chat_id ?? ''), entero(c.telegram_message_id), id);
+      guardado = true;
+    }
+
+    // La respuesta llegada del grupo. Cierra el aviso y guarda LAS DOS
+    // versiones: lo que escribio la encargada, palabra por palabra, y lo que
+    // Maya acabo diciendole al cliente. Si manana alguien discute que se le
+    // dijo, lo que vale es la primera.
+    if (c?.respuesta) {
+      db.prepare(
+        `UPDATE aviso SET estado='atendido', atendido_en=datetime('now'),
+                atendido_por=?, respuesta=?, respondido_por=?,
+                respondido_en=datetime('now'), respuesta_al_cliente=?
+          WHERE id=?`)
+        .run(c.respondido_por ?? 'grupo', String(c.respuesta),
+             c.respondido_por ?? null, c.respuesta_al_cliente ?? null, id);
+      anotar('aviso', id, 'cambio', c.respondido_por ?? 'grupo',
+             'respondido desde el grupo');
+      return { ok: true, atendido: true };
+    }
+
     // Lo usa el motor de recordatorios: deja constancia de que volvio a
     // insistir, sin tocar el estado.
     if (c.recordado) {
@@ -1479,6 +1554,10 @@ const rutas = {
                   recordatorios = recordatorios + 1 WHERE id=?`).run(id);
       return { ok: true };
     }
+    // Guardar el message_id a secas es un cambio valido. Antes caia en el
+    // error de abajo: guardaba el dato y devolvia «nada que cambiar», que es
+    // la clase de respuesta que enmascara un fallo de verdad.
+    if (guardado) return { ok: true };
     return { error: 'nada que cambiar' };
   },
 

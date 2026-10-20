@@ -171,7 +171,17 @@ add("marcar_avisado", "n8n-nodes-base.httpRequest", 4.2,
     {"method": "PUT", "url": PANEL + "/api/avisos",
      "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
      "sendBody": True, "specifyBody": "json",
-     "jsonBody": "={{ JSON.stringify({ id: $('a_quien_toca').item.json.id, recordado: true }) }}",
+     # Se guarda el message_id que devolvio Telegram. Es lo que permite
+     # reconocer, mas tarde, a QUE aviso esta contestando quien usa
+     # «Responder a este mensaje» en el grupo. El chat_id va tambien porque el
+     # message_id es unico dentro de un chat, no entre chats: cuando cada
+     # salon tenga su grupo, el 923 de Norma y el 923 de Esmeralda serian el
+     # mismo numero apuntando a dos leads distintos.
+     "jsonBody": ("={{ JSON.stringify({ id: $('a_quien_toca').item.json.id,"
+                  " recordado: true,"
+                  " telegram_chat_id: $('mandar_al_grupo').item.json.result?.chat?.id,"
+                  " telegram_message_id: $('mandar_al_grupo').item.json.result?.message_id"
+                  " }) }}"),
      "options": {"response": {"response": {"responseFormat": "json"}}}},
     [460, 0], cred=CRED_PANEL)
 

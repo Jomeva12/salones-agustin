@@ -39,6 +39,58 @@ function quitarEnlacesDeImagen(t) {
 }
 texto = quitarEnlacesDeImagen(texto);
 
+// Cuando Maya escala, el mensaje se acaba ahi.
+//
+// El prompt lo dice en dos sitios —«no le cuelgues una pregunta de relleno» y
+// «no cierres con ¿quieres que te pase informacion sobre servicios
+// adicionales?»— y el 20-oct-2026 lo hizo cuatro veces seguidas, las cuatro
+// justo despues de escalar. El patron: al escalar no tiene nada que
+// preguntar, pero la regla de «termina con una pregunta» le pesa mas, y lo
+// que tiene a mano para rellenar es la lista de extras. El Lic. pidio que los
+// servicios aparte no se ofrezcan.
+//
+// El primer intento de arreglo buscaba la frase («servicios adicionales»,
+// «servicios extra»). Dio 7 de 7 en banco y fallo en vivo al segundo mensaje:
+// el modelo escribio «te puedo pasar info de OTROS SERVICIOS... ¿Que te
+// interesa?» — ni la palabra prohibida, ni la interrogacion en la misma
+// frase. Perseguir la redaccion es perseguir un blanco movil.
+//
+// Asi que el candado no mira COMO lo dice, mira DONDE lo dice: en un mensaje
+// que anuncia que algo se esta confirmando con la encargada, cualquier frase
+// POSTERIOR que ofrezca mandar algo es relleno por definicion — el cliente
+// espera un dato, no una oferta. Un mensaje que no menciona a la encargada no
+// se toca jamas, asi que una cotizacion normal sale intacta.
+const ANUNCIA_ESCALADO = /encargada/i;
+const OFRECE = /\b(quieres|quisieras|gustar[ií]a|interesa|te paso|te pasar|pasarte|te mando|mandarte|te comparto|compartirte|te env[ií]o|enviarte|te cuento|contarte|te apunto)\b/i;
+
+function cortarRellenoTrasEscalar(t) {
+  // Frases con su signo de cierre pegado. En espanol la interrogacion abre
+  // con ¿ a media frase, asi que se corta por el signo que cierra la
+  // anterior, no por el que abre esta.
+  const frases = t.match(/[^.!?]+[.!?]+["»']?\s*|[^.!?]+$/g);
+  if (!frases) return t;
+
+  const donde = frases.findIndex((f) => ANUNCIA_ESCALADO.test(f));
+  if (donde < 0) return t;   // no esta escalando: aqui no se toca nada
+
+  const quedan = [];
+  let cortada = false;
+  frases.forEach((f, i) => {
+    if (i <= donde) { quedan.push(f); return; }
+    if (OFRECE.test(f)) { cortada = true; return; }
+    // Una pregunta corta pegada a la oferta que acabamos de quitar es su
+    // coletilla: «...te puedo pasar info de otros servicios. ¿Que te
+    // interesa?». Sola no dice nada, asi que se va con ella.
+    if (cortada && f.includes('?') && f.trim().split(/\s+/).length <= 7) return;
+    cortada = false;
+    quedan.push(f);
+  });
+
+  const limpio = quedan.join('').replace(/\s+$/, '').trim();
+  return limpio || t;   // antes dejarlo mudo, que salga entero
+}
+texto = cortarRellenoTrasEscalar(texto);
+
 const MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro
 
 // Se corta por ritmo de WhatsApp, no por longitud: la informacion en un

@@ -135,6 +135,21 @@ CREATE TABLE tarifa (
   precio_vie      REAL, precio_sab REAL, precio_dom REAL,
   vigente_desde   TEXT NOT NULL DEFAULT (date('now')),
   vigente_hasta   TEXT,
+  -- Ventana de calendario, para las tarifas que NO dependen de la
+  -- anticipacion sino del mes en que cae el evento. Las trajo el anexo del
+  -- 20-oct-2026: «se ofrece cuando estemos entre octubre de 2026 y marzo de
+  -- 2027 y el evento se lleve a cabo en enero, febrero o marzo de 2027».
+  --
+  -- `evento_*` acota la fecha del EVENTO; `cotiza_*` acota el dia en que se
+  -- cotiza. Son cosas distintas y por eso son cuatro columnas: una promocion
+  -- puede abrirse y cerrarse sin mover las fechas que cubre.
+  --
+  -- Una fila con ventana lleva `escalon_id` NULL y GANA sobre la del escalon
+  -- cuando las dos aplican: es una regla mas especifica.
+  evento_desde    TEXT,
+  evento_hasta    TEXT,
+  cotiza_desde    TEXT,
+  cotiza_hasta    TEXT,
   -- 1 = la fila viene de una nota que no se pudo decodificar, o choca con
   -- otra. El API NO la usa para cotizar en firme: deriva a la encargada.
   requiere_revision INTEGER NOT NULL DEFAULT 0 CHECK (requiere_revision IN (0,1)),

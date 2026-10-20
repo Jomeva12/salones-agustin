@@ -1,0 +1,142 @@
+{
+ "ventana_ene_mar_2027": {
+  "filas": [
+   {
+    "fila_excel": 67,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 100,
+    "anio": 2027,
+    "precio_vie": 36400,
+    "precio_sab": 37400,
+    "precio_dom": 35400,
+    "precio_semana": 34400,
+    "nota": "El Paquete Bronce de este costo se ofrece cuando estemos en los meses de Octubre, Noviembre y Diciembre del 2026 y en Enero, Febrero y Marzo del 2027 y que el evento se lleve a cabo en los meses de Enero, Febrero y Marzo del 2027. En este paquete las cortesías son las siguientes: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 68,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 150,
+    "anio": 2027,
+    "precio_vie": 39900,
+    "precio_sab": 40900,
+    "precio_dom": 38900,
+    "precio_semana": 37900,
+    "nota": "El Paquete Bronce de este costo se ofrece cuando estemos en los meses de Octubre, Noviembre y Diciembre del 2026 y en Enero, Febrero y Marzo del 2027 y que el evento se lleve a cabo en los meses de Enero, Febrero y Marzo del 2027. En este paquete las cortesías son las siguientes: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 69,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 200,
+    "anio": 2027,
+    "precio_vie": 43400,
+    "precio_sab": 44400,
+    "precio_dom": 42400,
+    "precio_semana": 41400,
+    "nota": "El Paquete Bronce de este costo se ofrece cuando estemos en los meses de Octubre, Noviembre y Diciembre del 2026 y en Enero, Febrero y Marzo del 2027 y que el evento se lleve a cabo en los meses de Enero, Febrero y Marzo del 2027. En este paquete las cortesías son las siguientes: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 70,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 250,
+    "anio": 2027,
+    "precio_vie": 46900,
+    "precio_sab": 47900,
+    "precio_dom": 45900,
+    "precio_semana": 44900,
+    "nota": "El Paquete Bronce de este costo se ofrece cuando estemos en los meses de Octubre, Noviembre y Diciembre del 2026 y en Enero, Febrero y Marzo del 2027 y que el evento se lleve a cabo en los meses de Enero, Febrero y Marzo del 2027. En este paquete las cortesías son las siguientes: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 71,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 300,
+    "anio": 2027,
+    "precio_vie": 50400,
+    "precio_sab": 51400,
+    "precio_dom": 49400,
+    "precio_semana": 48400,
+    "nota": "El Paquete Bronce de este costo se ofrece cuando estemos en los meses de Octubre, Noviembre y Diciembre del 2026 y en Enero, Febrero y Marzo del 2027 y que el evento se lleve a cabo en los meses de Enero, Febrero y Marzo del 2027. En este paquete las cortesías son las siguientes: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   }
+  ],
+  "evento_desde": "2027-01-01",
+  "evento_hasta": "2027-03-31",
+  "cotiza_desde": "2026-10-01",
+  "cotiza_hasta": "2027-03-31",
+  "escalon": null,
+  "cortesias": "Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado"
+ },
+ "escalon_6_o_mas": {
+  "filas": [
+   {
+    "fila_excel": 92,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 100,
+    "anio": 2027,
+    "precio_vie": 63900,
+    "precio_sab": 65400,
+    "precio_dom": 62400,
+    "precio_semana": 60900,
+    "nota": "Este Paquete Bronce de este costo  se ofrece a partir del septimo mes en adelante del mes en curso. Por ejemplo, si estamos en Octubre de 2026, este paquete y este costo se ofrece en los eventos que se lleven a cabo en los meses de Abril del 2027 en adelante. Cuando estemos en Noviembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Mayo del 2027 en adelante. Cuando estemos en Diciembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Junio del 2027 en adelante. Cuando estemos en Enero de 2027 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Julio de 2027 en adelante. Así se seguirá el mismo procedimiento en los meses siguientes. En este paquete se ofrecen las siguientes cortesías: Uso de tu vestido de xv años o boda durante tu evento y el Espejo de Bienvenida. Además también incluirá los siguiente obsequios: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 93,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 150,
+    "anio": 2027,
+    "precio_vie": 67900,
+    "precio_sab": 69400,
+    "precio_dom": 66400,
+    "precio_semana": 64900,
+    "nota": "Este Paquete Bronce de este costo  se ofrece a partir del septimo mes en adelante del mes en curso. Por ejemplo, si estamos en Octubre de 2026, este paquete y este costo se ofrece en los eventos que se lleven a cabo en los meses de Abril del 2027 en adelante. Cuando estemos en Noviembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Mayo del 2027 en adelante. Cuando estemos en Diciembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Junio del 2027 en adelante. Cuando estemos en Enero de 2027 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Julio de 2027 en adelante. Así se seguirá el mismo procedimiento en los meses siguientes. En este paquete se ofrecen las siguientes cortesías: Uso de tu vestido de xv años o boda durante tu evento y el Espejo de Bienvenida. Además también incluirá los siguiente obsequios: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 94,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 200,
+    "anio": 2027,
+    "precio_vie": 71900,
+    "precio_sab": 73400,
+    "precio_dom": 70400,
+    "precio_semana": 68900,
+    "nota": "Este Paquete Bronce de este costo  se ofrece a partir del septimo mes en adelante del mes en curso. Por ejemplo, si estamos en Octubre de 2026, este paquete y este costo se ofrece en los eventos que se lleven a cabo en los meses de Abril del 2027 en adelante. Cuando estemos en Noviembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Mayo del 2027 en adelante. Cuando estemos en Diciembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Junio del 2027 en adelante. Cuando estemos en Enero de 2027 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Julio de 2027 en adelante. Así se seguirá el mismo procedimiento en los meses siguientes. En este paquete se ofrecen las siguientes cortesías: Uso de tu vestido de xv años o boda durante tu evento y el Espejo de Bienvenida. Además también incluirá los siguiente obsequios: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 95,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 250,
+    "anio": 2027,
+    "precio_vie": 75900,
+    "precio_sab": 77400,
+    "precio_dom": 74400,
+    "precio_semana": 72900,
+    "nota": "Este Paquete Bronce de este costo  se ofrece a partir del septimo mes en adelante del mes en curso. Por ejemplo, si estamos en Octubre de 2026, este paquete y este costo se ofrece en los eventos que se lleven a cabo en los meses de Abril del 2027 en adelante. Cuando estemos en Noviembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Mayo del 2027 en adelante. Cuando estemos en Diciembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Junio del 2027 en adelante. Cuando estemos en Enero de 2027 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Julio de 2027 en adelante. Así se seguirá el mismo procedimiento en los meses siguientes. En este paquete se ofrecen las siguientes cortesías: Uso de tu vestido de xv años o boda durante tu evento y el Espejo de Bienvenida. Además también incluirá los siguiente obsequios: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   },
+   {
+    "fila_excel": 96,
+    "salon": "norma",
+    "paquete": "Paquete Bronce",
+    "personas": 300,
+    "anio": 2027,
+    "precio_vie": 79900,
+    "precio_sab": 81400,
+    "precio_dom": 77400,
+    "precio_semana": 76900,
+    "nota": "Este Paquete Bronce de este costo  se ofrece a partir del septimo mes en adelante del mes en curso. Por ejemplo, si estamos en Octubre de 2026, este paquete y este costo se ofrece en los eventos que se lleven a cabo en los meses de Abril del 2027 en adelante. Cuando estemos en Noviembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Mayo del 2027 en adelante. Cuando estemos en Diciembre de 2026 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Junio del 2027 en adelante. Cuando estemos en Enero de 2027 se ofrecerá este paquete y este costo en los eventos que se lleven a cabo en los meses de Julio de 2027 en adelante. Así se seguirá el mismo procedimiento en los meses siguientes. En este paquete se ofrecen las siguientes cortesías: Uso de tu vestido de xv años o boda durante tu evento y el Espejo de Bienvenida. Además también incluirá los siguiente obsequios: Arreglo de la escalera de presentación, Arreglo de la mesa principal y el Aro iluminado. Si acudes a tu cita y contratas en tu visita te obsequiamos un cartón de cerveza extra para tu evento. Si el cliente desea algún paquete mas completo le podemos ofrecer el que sigue en costo."
+   }
+  ],
+  "evento_desde": null,
+  "evento_hasta": null,
+  "cotiza_desde": null,
+  "cotiza_hasta": null,
+  "escalon": "Faltan 6 meses o más",
+  "cortesias": "Uso de tu vestido de xv años o boda durante tu evento y el Espejo de Bienvenida, más de obsequio el Arreglo de la escalera de presentación, el Arreglo de la mesa principal y el Aro iluminado"
+ }
+}

@@ -608,6 +608,7 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
            p.fecha_fija,
            p.nombre AS paquete, p.unidad_precio, e.nombre AS escalon,
            t.contenido_id, pc.cortesias, pc.horas_salon, pc.minutos_estancia,
+           t.evento_desde, t.evento_hasta,
            ${col} AS precio
       FROM tarifa t
       JOIN paquete p              ON p.id = t.paquete_id
@@ -625,13 +626,27 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
        -- Sin escalón: solo vale si ese paquete no tiene escalera en ese año.
        -- Si la tiene, una fila sin clasificar aplicaría a CUALQUIER anticipación
        -- y ganaría por barata, subcotizando el evento.
-       AND (CASE WHEN t.escalon_id IS NOT NULL
+       -- Tres clases de fila, y el orden del CASE importa:
+       --
+       -- 1. Con VENTANA de calendario: vale si el evento cae dentro y si hoy
+       --    estamos dentro del periodo en que se puede ofrecer. No mira la
+       --    anticipacion — esa es justo la diferencia.
+       -- 2. Con ESCALON: la anticipacion tiene que caer en su ventana.
+       -- 3. Sin ninguna de las dos: solo si ese paquete no tiene escalera ese
+       --    año. Si la tiene, una fila sin clasificar aplicaria a CUALQUIER
+       --    anticipacion y ganaria por barata, subcotizando el evento.
+       AND (CASE WHEN t.evento_desde IS NOT NULL
+                 THEN (? BETWEEN t.evento_desde AND t.evento_hasta
+                       AND (t.cotiza_desde IS NULL OR ? >= t.cotiza_desde)
+                       AND (t.cotiza_hasta IS NULL OR ? <= t.cotiza_hasta))
+                 WHEN t.escalon_id IS NOT NULL
                  THEN (? >= e.meses_min AND (e.meses_max IS NULL OR ? <= e.meses_max))
                  ELSE NOT EXISTS (SELECT 1 FROM tarifa t2
                                    WHERE t2.salon_id = t.salon_id
                                      AND t2.paquete_id = t.paquete_id
                                      AND t2.anio = t.anio
                                      AND t2.escalon_id IS NOT NULL
+                                     AND t2.evento_desde IS NULL
                                      AND t2.vigente_hasta IS NULL)
             END)
        AND t.vigente_hasta IS NULL
@@ -641,7 +656,17 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
 
   const resultados = salones.map((s) => {
     const disp = disponibilidadSalon(db, s.id, fecha_evento, turno);
-    let filas = st.all(s.id, tipoRow.id, anio, personas, meses, meses);
+    let filas = st.all(s.id, tipoRow.id, anio, personas,
+      fecha_evento, HOY, HOY, meses, meses);
+
+    // Una tarifa de ventana GANA sobre la del escalon del mismo paquete: es
+    // una regla mas especifica, escrita para esos eventos concretos. Sin
+    // esto el agente veria dos «Paquete Bronce» con precios distintos en la
+    // misma cotizacion y elegiria uno de los dos a su criterio.
+    const conVentana = new Set(filas.filter((f) => f.evento_desde).map((f) => f.paquete));
+    if (conVentana.size) {
+      filas = filas.filter((f) => f.evento_desde || !conVentana.has(f.paquete));
+    }
     // Fuera los paquetes de fecha fija que no son de ESTE dia. Va ANTES de la
     // comprobacion de abajo: si el filtro deja la lista vacia, la respuesta
     // correcta es «no hay paquete», no reventar buscando el primero.
@@ -672,7 +697,12 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
       precio: f.precio,
       total: f.unidad_precio === 'por_persona' ? Math.round(f.precio * personas) : f.precio,
       tramo_personas: `${f.personas_desde}-${f.personas_hasta}`,
-      escalon: f.escalon ?? 'aplica todo el año',
+      // Una fila de ventana no tiene escalon, y «aplica todo el año» seria
+      // mentira: aplica justo a los meses que dice. Quien lea la cotizacion
+      // tiene que poder saber por que ese precio y no otro.
+      escalon: f.escalon ?? (f.evento_desde
+        ? `Solo para eventos del ${f.evento_desde} al ${f.evento_hasta}`
+        : 'aplica todo el año'),
       // Las cortesías van siempre: en las conversaciones reales el equipo
       // las menciona en todas las cotizaciones.
       cortesias: f.cortesias ?? null,

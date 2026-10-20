@@ -61,6 +61,12 @@ def condiciones(*conds):
             "combinator": "and", "conditions": list(conds)}
 
 
+# En todo este flujo se usa `.first()` y no `.item`. `.item` resuelve de que
+# item viene el dato rastreando el emparejado, y un Code node que devuelve un
+# objeto nuevo rompe esa cadena: el nodo de despues muere con «can't determine
+# which item to use». Aqui SIEMPRE hay un solo mensaje —una respuesta del
+# grupo— asi que `.first()` dice exactamente lo mismo y no depende de nada.
+
 add("escuchar_grupo", "n8n-nodes-base.telegramTrigger", 1.2,
     {"updates": ["message"], "additionalFields": {}},
     [-760, 0], cred=CRED_TG)
@@ -258,6 +264,15 @@ if (o.tipo === 'respuesta' && !alCliente) {
   return [{ json: { ...ctx, tipo: 'ninguno',
     al_grupo: 'No me quedó claro qué decirle al cliente. El pendiente sigue abierto.' } }];
 }
+// Sin lead no hay a quien escribirle. Deberia venir siempre —el aviso lo trae—
+// pero un aviso creado a mano desde el panel puede no tenerlo, y mandar al
+// subflujo de envio un lead vacio no da error: no manda nada y termina en
+// verde.
+if (o.tipo === 'respuesta' && !String(ctx.lead_id ?? '').trim()) {
+  return [{ json: { ...ctx, tipo: 'ninguno',
+    al_grupo: 'Ese aviso no tiene un cliente asociado, así que no tengo a quién '
+              + 'escribirle. Lo dejo abierto.' } }];
+}
 
 return [{ json: { ...ctx, tipo: o.tipo,
                   al_cliente: alCliente,
@@ -303,25 +318,61 @@ add("registrar_turno", "n8n-nodes-base.postgres", 2.6,
                "VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10::jsonb,$11::jsonb)\n"
                "RETURNING id;"),
      "options": {"queryReplacement":
-                 "={{ [ $('leer_lo_redactado').item.json.lead_id, null, 'grupo',"
-                 " $('leer_lo_redactado').item.json.quien, null, 0, 'respuesta_grupo',"
-                 " $('leer_lo_redactado').item.json.al_cliente, null, '{}',"
-                 " JSON.stringify([$('leer_lo_redactado').item.json.al_cliente]) ] }}"}},
+                 "={{ [ $('leer_lo_redactado').first().json.lead_id, null, 'grupo',"
+                 " $('leer_lo_redactado').first().json.quien, null, 0, 'respuesta_grupo',"
+                 " $('leer_lo_redactado').first().json.al_cliente, null, '{}',"
+                 " JSON.stringify([$('leer_lo_redactado').first().json.al_cliente]) ] }}"}},
     [1060, -320], cred=CRED_PG)
 
 add("enviar_al_cliente", "n8n-nodes-base.executeWorkflow", 1.2,
     {"workflowId": {"__rl": True, "value": ENVIAR, "mode": "list",
                     "cachedResultName": "enviar_mensaje_salones"},
+     # Se nombra el nodo, NO se usa $json.
+     #
+     # Al principio ponia `$json.al_cliente`, y entre medias entro
+     # `registrar_turno`: a partir de ahi $json era la salida de Postgres
+     # —{id:'403'}—, que no tiene ni al_cliente ni lead_id. n8n mando los dos
+     # campos vacios sin chistar, el subflujo no produjo ningun item y la
+     # ejecucion acabo en verde con el cliente sin recibir nada. Nombrando el
+     # nodo, meter algo en medio deja de poder romperlo.
      "workflowInputs": {"mappingMode": "defineBelow", "value": {
          "cuantas_partes": "={{ 1 }}",
-         "parte1": "={{ $json.al_cliente }}",
+         "parte1": "={{ $('leer_lo_redactado').first().json.al_cliente }}",
          "parte2": "", "parte3": "", "parte4": "",
-         "lead_id": "={{ $json.lead_id }}",
+         "lead_id": "={{ $('leer_lo_redactado').first().json.lead_id }}",
          "imagen_url": "", "mensaje_cliente": "",
          "proximo_paso": "={{ 0 }}", "status_id": "={{ 0 }}",
          "imagenes": "[]", "partes": "[]"}},
      "options": {"waitForSubWorkflow": True}},
-    [1060, -200])
+    [1060, -200], extra={"alwaysOutputData": True})
+
+# Que un envio mudo no pase por bueno.
+#
+# El subflujo de envio termina en verde aunque no haya mandado nada: coge una
+# fila del pool de plantillas, y si lo que recibe viene vacio —o si el pool
+# esta agotado— simplemente no produce items y ahi se acaba. Sin esto, la
+# cadena se detenia sin decir nada: el aviso se quedaba abierto repitiendose en
+# el grupo y nadie sabia por que.
+COMPROBAR = r'''const llego = $input.all().filter(
+  (i) => i.json && Object.keys(i.json).length > 0);
+const ctx = $('leer_lo_redactado').first().json;
+return [{ json: { ...ctx, se_envio: llego.length > 0 } }];'''
+add("comprobar_envio", "n8n-nodes-base.code", 2, {"jsCode": COMPROBAR}, [1160, -200])
+
+add("llego_al_cliente", "n8n-nodes-base.if", 2.2,
+    {"conditions": condiciones(booleana("env", "={{ $json.se_envio }}", True)),
+     "options": {}},
+    [1210, -200])
+
+add("aviso_de_fallo", "n8n-nodes-base.telegram", 1.2,
+    {"chatId": "={{ $json.chat_id }}",
+     "text": ("=No pude mandarle tu respuesta al cliente. El pendiente sigue "
+              "abierto y lo voy a volver a sacar aquí.\n\nLo que le iba a decir:\n"
+              "{{ $json.al_cliente }}"),
+     "replyToMessageId": "={{ $json.mi_mensaje }}",
+     "additionalFields": {"appendAttribution": False,
+                          "reply_to_message_id": "={{ $json.mi_mensaje }}"}},
+    [1210, 200], cred=CRED_TG, extra={"onError": "continueRegularOutput"})
 
 add("marcar_enviada", "n8n-nodes-base.postgres", 2.6,
     {"operation": "executeQuery",
@@ -335,10 +386,10 @@ add("cerrar_aviso", "n8n-nodes-base.httpRequest", 4.2,
      "authentication": "genericCredentialType", "genericAuthType": "httpHeaderAuth",
      "sendBody": True, "specifyBody": "json",
      "jsonBody": ("={{ JSON.stringify({"
-                  " id: $('leer_lo_redactado').item.json.aviso_id,"
-                  " respuesta: $('leer_lo_redactado').item.json.respuesta,"
-                  " respondido_por: $('leer_lo_redactado').item.json.quien,"
-                  " respuesta_al_cliente: $('leer_lo_redactado').item.json.al_cliente"
+                  " id: $('leer_lo_redactado').first().json.aviso_id,"
+                  " respuesta: $('leer_lo_redactado').first().json.respuesta,"
+                  " respondido_por: $('leer_lo_redactado').first().json.quien,"
+                  " respuesta_al_cliente: $('leer_lo_redactado').first().json.al_cliente"
                   " }) }}"),
      "options": {"response": {"response": {"responseFormat": "json"}}}},
     [1260, -200], cred=CRED_PANEL)
@@ -360,20 +411,20 @@ add("anotar_en_su_memoria", "n8n-nodes-base.postgres", 2.6,
      # segundo valor es un JSON, y sus propias comas lo habrian partido en
      # trozos.
      "options": {"queryReplacement":
-                 "={{ [ $('leer_lo_redactado').item.json.lead_id + '-ventas-v9',"
+                 "={{ [ $('leer_lo_redactado').first().json.lead_id + '-ventas-v9',"
                  " JSON.stringify({ type: 'ai', data: {"
-                 " content: $('leer_lo_redactado').item.json.al_cliente,"
+                 " content: $('leer_lo_redactado').first().json.al_cliente,"
                  " additional_kwargs: {}, response_metadata: {} } }) ] }}"}},
     [1460, -200], cred=CRED_PG, extra={"onError": "continueRegularOutput"})
 
 add("acuse_en_grupo", "n8n-nodes-base.telegram", 1.2,
-    {"chatId": "={{ $('leer_lo_redactado').item.json.chat_id }}",
+    {"chatId": "={{ $('leer_lo_redactado').first().json.chat_id }}",
      "text": ("=Listo, ya se lo dije al cliente:\n\n"
-              "{{ $('leer_lo_redactado').item.json.al_cliente }}"),
-     "replyToMessageId": "={{ $('leer_lo_redactado').item.json.mi_mensaje }}",
+              "{{ $('leer_lo_redactado').first().json.al_cliente }}"),
+     "replyToMessageId": "={{ $('leer_lo_redactado').first().json.mi_mensaje }}",
      "additionalFields": {"appendAttribution": False,
                           "reply_to_message_id":
-                          "={{ $('leer_lo_redactado').item.json.mi_mensaje }}"}},
+                          "={{ $('leer_lo_redactado').first().json.mi_mensaje }}"}},
     [1660, -200], cred=CRED_TG, extra={"onError": "continueRegularOutput"})
 
 # La otra rama: lo que llega no es una respuesta para el cliente, asi que se
@@ -397,7 +448,10 @@ une("leer_lo_redactado", "que_hacer")
 une("que_hacer", "registrar_turno", salida=0)
 une("que_hacer", "contestar_en_grupo", salida=1)
 une("registrar_turno", "enviar_al_cliente")
-une("enviar_al_cliente", "marcar_enviada")
+une("enviar_al_cliente", "comprobar_envio")
+une("comprobar_envio", "llego_al_cliente")
+une("llego_al_cliente", "marcar_enviada", salida=0)
+une("llego_al_cliente", "aviso_de_fallo", salida=1)
 une("marcar_enviada", "cerrar_aviso")
 une("cerrar_aviso", "anotar_en_su_memoria")
 une("anotar_en_su_memoria", "acuse_en_grupo")

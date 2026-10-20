@@ -246,7 +246,7 @@ function laminas() {
     // Ante cualquier duda, ese par se va sin imagen. La lámina equivocada el
     // cliente la lee como la oferta.
     if (!url) continue;
-    out.push({ url, pie: `${g.paquete_nombre} · ${g.salon_nombre}` });
+    out.push({ url, pie: `${g.paquete_nombre} · ${g.salon_nombre}`, salon: par.salon });
     if (out.length === MAX_LAMINAS) break;
   }
   return out;
@@ -286,11 +286,15 @@ function cortesia() {
 
 // Las fotos del salon: como se ve el lugar.
 //
-// Van DESPUES de la lamina del paquete, cuando el cliente dijo que si quiere
-// verlas. El disparo es la frase con la que Maya las anuncia —«te paso unas
-// fotos del salon»—, igual que la lamina se dispara con el paquete que
-// nombra. Lo que ella no decide nunca es CUALES: eso sale del orden que tenga
-// el salon en el panel.
+// Van solas DETRAS de la lamina cuando se cotiza un salon (20 de octubre,
+// pedido de Agustin: «que no pregunte si pasa fotos, que las pase despues de
+// dar la informacion»). Antes Maya cerraba la cotizacion preguntando «¿te
+// gustaria ver unas fotos del salon?» y esperaba el si.
+//
+// Fuera de una cotizacion, el disparo sigue siendo la frase con la que Maya
+// las anuncia —«te paso unas fotos del salon»—, para cuando el cliente las
+// pide despues. Lo que ella no decide nunca es CUALES: eso sale del orden que
+// tenga el salon en el panel.
 const ANUNCIA_FOTOS =
   /\b(te (paso|mando|comparto|envio|dejo)|aqui (te dejo|van)|mira)\b[^.]{0,40}\b(fotos?|imagenes?)\b/;
 
@@ -305,8 +309,10 @@ function fotosDelSalon() {
   const salon = nombrados.length === 1
     ? nombrados[0]
     : (nombrados.length ? null : sinEventos(fl.campos?.['Salón']) || null);
-  if (!salon) return [];
+  return salon ? fotosDe(salon) : [];
+}
 
+function fotosDe(salon) {
   const suyas = ($json.fotos ?? [])
     .filter((f) => sinEventos(f.salon_nombre || f.salon) === salon)
     .slice(0, MAX_FOTOS);
@@ -324,8 +330,13 @@ function fotosDelSalon() {
 
 let fotos = [];
 try {
-  // La cotizacion manda sobre todo lo demas: si hay lamina, va la lamina.
+  // La cotizacion manda sobre todo lo demas: si hay lamina, va la lamina, y
+  // detras las fotos de ese salon. Solo si la cotizacion es de UN salon: con
+  // dos o tres no se sabe de cual querria verlas, y treinta fotos seguidas
+  // no las ve nadie.
   fotos = laminas();
+  const cotizados = [...new Set(fotos.map((f) => f.salon))];
+  if (cotizados.length === 1) fotos = [...fotos, ...fotosDe(cotizados[0])];
   if (!fotos.length) fotos = cortesia();
   if (!fotos.length) fotos = fotosDelSalon();
 } catch (e) { fotos = []; }
@@ -353,7 +364,7 @@ for (const [i, foto] of fotos.slice(1).entries()) {
 
 // Si no habia pregunta que mover —el agente mando un solo parrafo— se le
 // pone una: diez fotos sin nada detras dejan la conversacion muerta.
-if (fotos.length > 1 && !cierre && fotos[0].esFoto) {
+if (fotos.length > 1 && !cierre && fotos.some((f) => f.esFoto)) {
   partes.push('¿Qué te parece el salón?');
   porParte.push('');
 }

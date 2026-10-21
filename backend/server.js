@@ -96,6 +96,27 @@ const db = new DatabaseSync(DB_PATH);
 db.exec('PRAGMA foreign_keys = ON');
 db.exec('PRAGMA journal_mode = WAL');
 
+/**
+ * Columnas que este codigo da por hechas, creadas al arrancar si faltan.
+ *
+ * El esquema viaja con el codigo; los DATOS siguen yendo en migraciones. La
+ * razon es de orden: el despliegue trae a la vez el servidor nuevo y el
+ * archivo de migracion, pero la migracion la corre una persona despues. En
+ * ese hueco el servidor nuevo consultaba una columna que todavia no existia,
+ * la consulta reventaba y `GET /api/avisos` devolvia 500 — o sea que dejaban
+ * de salir avisos al grupo hasta que alguien se acordara del comando.
+ *
+ * Añadir una columna vacia es la unica operacion de esquema que se hace sola:
+ * no toca ni un dato y es idempotente. Rellenarla sigue siendo trabajo de una
+ * migracion, que se lee y se puede revisar.
+ */
+for (const [tabla, col, tipo] of [
+  ['salon', 'telegram_grupo', 'TEXT'],
+]) {
+  const hay = db.prepare(`PRAGMA table_info(${tabla})`).all().some((c) => c.name === col);
+  if (!hay) db.exec(`ALTER TABLE ${tabla} ADD COLUMN ${col} ${tipo}`);
+}
+
 const TIPOS_MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8',
   '.mjs': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
@@ -541,6 +562,11 @@ const rutas = {
       horario_visitas: texto('horario_visitas'),
       estacionamiento: texto('estacionamiento'),
       diferenciador: texto('diferenciador'),
+      // El grupo de Telegram donde caen los avisos de este salon. Se edita
+      // aqui y no en un archivo para que cambiarlo no dependa de un
+      // despliegue: un grupo se convierte en supergrupo y su id cambia solo,
+      // y entonces los avisos dejan de entregarse sin que nadie se entere.
+      telegram_grupo: texto('telegram_grupo'),
     };
     if (n.nombre.length < 3) return { error: 'falta el nombre' };
 
@@ -579,11 +605,13 @@ const rutas = {
       `UPDATE salon SET nombre=?, direccion=?, maps_url=?, fanpage=?, instagram=?,
               tiktok=?, whatsapp=?,
               encargada=?, encargada_wa=?, horario_visitas=?, estacionamiento=?,
-              diferenciador=?, capacidad_min=?, capacidad_max=?, minutos_aseo=?, cierre_maximo=?
+              diferenciador=?, telegram_grupo=?,
+              capacidad_min=?, capacidad_max=?, minutos_aseo=?, cierre_maximo=?
         WHERE id=?`
     ).run(n.nombre, n.direccion, n.maps_url, n.fanpage, n.instagram, n.tiktok, n.whatsapp,
           n.encargada, n.encargada_wa, n.horario_visitas, n.estacionamiento,
-          n.diferenciador, op.capacidad_min, op.capacidad_max, op.minutos_aseo, op.cierre_maximo,
+          n.diferenciador, n.telegram_grupo,
+          op.capacidad_min, op.capacidad_max, op.minutos_aseo, op.cierre_maximo,
           s.id);
 
     const todos = { ...n, ...op };
@@ -1398,6 +1426,7 @@ const rutas = {
     // aparece en ninguna pantalla.
     const filas = db.prepare(
       `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada,
+              s.telegram_grupo AS grupo,
               c.fecha AS cita_fecha, c.hora AS cita_hora, c.estado AS cita_estado
          FROM aviso a
          LEFT JOIN salon s ON s.id = a.salon_id
@@ -1445,6 +1474,7 @@ const rutas = {
     // columna, tres de cada cuatro respuestas se habrian perdido en silencio.
     const a = db.prepare(
       `SELECT a.*, s.clave AS salon, s.nombre AS salon_nombre, s.encargada,
+              s.telegram_grupo AS grupo,
               c.fecha AS cita_fecha, c.hora AS cita_hora, c.estado AS cita_estado
          FROM aviso_mensaje m
          JOIN aviso a ON a.id = m.aviso_id

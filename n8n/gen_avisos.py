@@ -10,7 +10,11 @@ import json, io, uuid, os
 CRED_PANEL = {"httpHeaderAuth": {"id": "NmEwnWxyfdqJcNvw", "name": "panel_salones"}}
 CRED_TG    = {"telegramApi":   {"id": "GDSbyhs4W4QvYa4P", "name": "salones_bot"}}
 PANEL = "http://automatizaciones_salones-panel:4300"
-GRUPO = "-5410906335"   # por ahora uno solo; el Lic. tiene cuatro oficinas
+GENERAL = "-5410906335"   # los avisos que no son de ningun salon
+# Cada salon tiene el suyo en la columna `telegram_grupo`, que viaja con el
+# aviso desde el panel. Se edita alli y no aqui: un grupo que se convierte en
+# supergrupo cambia de id solo, y entonces los avisos dejan de entregarse sin
+# que nadie se entere.
 
 nodos, con = [], {}
 
@@ -101,6 +105,9 @@ const enPalabras = (min) => {
   return h < 24 ? `${h} h ${min % 60} min` : `${Math.floor(h / 24)} d`;
 };
 
+// El grupo de los avisos que no son de ningun salon.
+const GENERAL = '__GENERAL__';
+
 const salida = [];
 for (const a of ($input.first().json.avisos ?? [])) {
   const primero = !a.ultimo_aviso_en;
@@ -135,15 +142,26 @@ for (const a of ($input.first().json.avisos ?? [])) {
       : null,
   ].filter((x) => x !== null);
 
-  salida.push({ json: { id: a.id, primero, texto: lineas.join('\n') } });
+  // Cada aviso sale por el grupo de SU salon. El general queda de red: un
+  // aviso puede no tener salon —el cliente escribio algo que hay que escalar
+  // antes de decir a cual va— y sin destino no lo veria nadie. Un aviso que no
+  // aparece en ninguna pantalla es un cliente esperando en el vacio.
+  salida.push({ json: {
+    id: a.id,
+    primero,
+    grupo: a.grupo || GENERAL,
+    sin_grupo_propio: !a.grupo,
+    texto: lineas.join('\n'),
+  } });
 }
 
 return salida;'''
 
-add("a_quien_toca", "n8n-nodes-base.code", 2, {"jsCode": DECIDIR}, [0, 0])
+add("a_quien_toca", "n8n-nodes-base.code", 2,
+    {"jsCode": DECIDIR.replace("__GENERAL__", GENERAL)}, [0, 0])
 
 add("mandar_al_grupo", "n8n-nodes-base.telegram", 1.2,
-    {"chatId": GRUPO,
+    {"chatId": "={{ $json.grupo }}",
      "text": "={{ $json.texto }}",
      "additionalFields": {"parse_mode": "Markdown",
                           "appendAttribution": False}},

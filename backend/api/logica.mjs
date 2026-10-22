@@ -714,8 +714,12 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
     })).sort((a, b) => a.total - b.total);
 
     // El orden de venta manda siempre: Plata primero, aunque no sea el mas
-    // barato. Antes esto solo pasaba a 6 meses o mas, pero en Quetzal los
-    // paquetes no tienen escalera y ahi tambien debe aplicar.
+    // barato. Se aplica a cualquier anticipacion y no solo a 6 meses o mas.
+    //
+    // (El motivo original era que los paquetes de Quetzal no tenian escalera.
+    // Desde el 22-oct-2026 si la tienen —el Lic. puso el Bronce a 0-5 meses y
+    // el Onix y el Plata a 6 o mas— pero la regla se queda: el orden de venta
+    // no depende de que haya escalera.)
     ordenarParaVender(opciones);
 
     // El Bronce con recargo, en cambio, SOLO existe a 6 meses o mas: es el

@@ -21,7 +21,7 @@ guardo al publicar el aviso. Sin adivinar de que cliente se hablaba.
 import json, io, uuid, os
 
 CRED_PANEL = {"httpHeaderAuth": {"id": "NmEwnWxyfdqJcNvw", "name": "panel_salones"}}
-CRED_TG    = {"telegramApi":    {"id": "GDSbyhs4W4QvYa4P", "name": "salones_bot"}}
+CRED_TG    = {"telegramApi":    {"id": "AY1IgMOTyaZAKGvU", "name": "salones_avisos_bot"}}
 CRED_AI    = {"openAiApi":      {"id": "aLFrGO9FtcPzpgXL", "name": "INCAD"}}
 CRED_PG    = {"postgres":       {"id": "NaGMrunSEarhp4cc", "name": "postgres_salones"}}
 PANEL = "http://automatizaciones_salones-panel:4300"

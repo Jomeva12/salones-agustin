@@ -12,7 +12,7 @@
           ]
         }
       },
-      "id": "27b09fcc-d832-48ae-a10c-4a319af65509",
+      "id": "bdf3a806-32ec-4311-90f9-2e3bf9115fa0",
       "name": "cada_5_min",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
@@ -34,7 +34,7 @@
           }
         }
       },
-      "id": "f2d39529-4d63-4294-8c13-6b61b47c4aba",
+      "id": "7ec625ab-bb84-43a6-83ba-e1050c2158be",
       "name": "traer_pendientes",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -53,7 +53,7 @@
       "parameters": {
         "jsCode": "// Cuales toca avisar ahora, y con que texto.\n//\n// El primer aviso sale a CUALQUIER hora: el Lic. dijo que si entra algo a las\n// 2 de la madrugada quiere verlo. Los recordatorios, en cambio, solo en\n// horario laboral — a nadie se le pica costillas mientras duerme.\n//\n// Miercoles a lunes de 12 a 20. El martes cierran, asi que ese dia no se\n// insiste ni una vez.\n//\n// Y la espera CRECE. Al principio no habia techo: un aviso que nadie atendio\n// llego a 71 recordatorios en cuatro dias, el mismo texto cada media hora. Eso\n// ya no es insistir, es ruido — y lo que se gasta es la atencion al resto: un\n// grupo que repite lo mismo 71 veces se deja de mirar, y el aviso bueno se\n// pierde entre los malos.\n//\n// Las primeras dos horas cada media, que es cuando de verdad se puede\n// reaccionar. El resto del dia cada dos. De ahi en adelante, una vez al dia,\n// para que no desaparezca: sigue habiendo alguien esperando.\nfunction esperaMin(veces) {\n  if (veces < 4) return 30;\n  if (veces < 10) return 120;\n  return 1440;\n}\n\nconst ahora = $now;                 // ya viene en la zona del flujo (Monterrey)\nconst laboral = ahora.weekday !== 2 && ahora.hour >= 12 && ahora.hour < 20;\n\nconst MOTIVO = {\n  sin_dato: 'Falta un dato',\n  cita: 'Quiere agendar una visita',\n  disponibilidad: 'Pregunta por disponibilidad',\n  apartado: 'Quiere apartar la fecha',\n  descuento: 'Pide descuento',\n  contratar: 'Quiere contratar',\n  queja: 'Se queja o reclama',\n  humano: 'Pide hablar con una persona',\n  // Nace con Semana Santa: el cliente duda por la fecha y el asesor\n  // tiene margen para mejorarle la oferta. No es un problema, es una\n  // venta que todavia se puede cerrar.\n  oportunidad: 'Se puede mejorar la oferta',\n};\n\nconst minutosDesde = (iso) => {\n  if (!iso) return null;\n  const t = Date.parse(iso.replace(' ', 'T') + 'Z');\n  return Number.isFinite(t) ? Math.round((Date.now() - t) / 60000) : null;\n};\n\nconst enPalabras = (min) => {\n  if (min === null) return '';\n  if (min < 60) return `${min} min`;\n  const h = Math.floor(min / 60);\n  return h < 24 ? `${h} h ${min % 60} min` : `${Math.floor(h / 24)} d`;\n};\n\n// El grupo de los avisos que no son de ningun salon.\nconst GENERAL = '-5410906335';\n\nconst salida = [];\nfor (const a of ($input.first().json.avisos ?? [])) {\n  const primero = !a.ultimo_aviso_en;\n  const desdeUltimo = minutosDesde(a.ultimo_aviso_en);\n\n  if (!primero) {\n    if (!laboral) continue;\n    if (desdeUltimo === null || desdeUltimo < esperaMin(Number(a.recordatorios ?? 0))) continue;\n  }\n\n  const espera = enPalabras(minutosDesde(a.creado_en));\n  const encabezado = primero\n    ? `🔔 *${MOTIVO[a.motivo] ?? a.motivo}*`\n    : `⏰ *Sigue pendiente* — ${MOTIVO[a.motivo] ?? a.motivo}`;\n\n  const lineas = [\n    encabezado,\n    a.salon_nombre ? `_${a.salon_nombre}_${a.encargada ? ' · ' + a.encargada : ''}` : null,\n    '',\n    a.texto,\n    '',\n    primero ? null : `La clienta lleva ${espera} esperando.`,\n    // Pasado un dia sin que nadie lo toque, lo probable es que ya no aplique\n    // —la conversacion siguio, o se atendio por fuera— y nadie se acuerda de\n    // cerrarlo. Decir COMO se cierra es lo unico que rompe el bucle.\n    Number(a.recordatorios ?? 0) >= 10\n      ? 'Van ' + a.recordatorios + ' recordatorios. Si ya se atendio o ya no aplica, '\n        + 'cierralo en el panel con «Ya lo atendi» y deja de aparecer.'\n      : null,\n    a.lead_id\n      ? `https://administracioneventos6.kommo.com/leads/detail/${a.lead_id}`\n      : null,\n  ].filter((x) => x !== null);\n\n  // Cada aviso sale por el grupo de SU salon. El general queda de red: un\n  // aviso puede no tener salon —el cliente escribio algo que hay que escalar\n  // antes de decir a cual va— y sin destino no lo veria nadie. Un aviso que no\n  // aparece en ninguna pantalla es un cliente esperando en el vacio.\n  salida.push({ json: {\n    id: a.id,\n    primero,\n    grupo: a.grupo || GENERAL,\n    sin_grupo_propio: !a.grupo,\n    texto: lineas.join('\\n'),\n  } });\n}\n\nreturn salida;"
       },
-      "id": "45e3b12e-3883-4419-a853-6382e003f590",
+      "id": "c918d18d-17f2-4ba5-989a-bc0aa73d8b00",
       "name": "a_quien_toca",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -71,7 +71,7 @@
           "appendAttribution": false
         }
       },
-      "id": "0d7dc908-3f06-4c9a-a982-63f567f32a3c",
+      "id": "417fb81d-1eea-4c9f-93c7-2e878b12c3c9",
       "name": "mandar_al_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -81,8 +81,8 @@
       ],
       "credentials": {
         "telegramApi": {
-          "id": "GDSbyhs4W4QvYa4P",
-          "name": "salones_bot"
+          "id": "AY1IgMOTyaZAKGvU",
+          "name": "salones_avisos_bot"
         }
       },
       "onError": "continueRegularOutput"
@@ -111,7 +111,7 @@
         },
         "options": {}
       },
-      "id": "9259d0de-f188-4d39-9c06-bda4609a47b3",
+      "id": "d8c02d15-c909-47dc-baca-5c886b677aef",
       "name": "se_entrego",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -137,7 +137,7 @@
           }
         }
       },
-      "id": "50fdf47c-2043-4808-a3b9-604e3651e4ab",
+      "id": "d7a9cebc-fcb6-4d27-8d64-7d30a46b7ce9",
       "name": "marcar_avisado",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,

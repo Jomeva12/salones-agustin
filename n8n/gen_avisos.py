@@ -8,7 +8,17 @@ crones contra la misma tabla seria dos formas de equivocarse.
 import json, io, uuid, os
 
 CRED_PANEL = {"httpHeaderAuth": {"id": "NmEwnWxyfdqJcNvw", "name": "panel_salones"}}
-CRED_TG    = {"telegramApi":   {"id": "GDSbyhs4W4QvYa4P", "name": "salones_bot"}}
+# OJO: este NO es el bot de los clientes.
+#
+# Un bot de Telegram admite UN SOLO webhook, y registrarlo revoca el anterior
+# sin avisar a nadie. Los avisos salian por `salones_bot`, que es tambien el
+# canal de clientes de Kommo; el 20-oct-2026 se le engancho un Telegram
+# Trigger para leer las respuestas del grupo y Kommo se quedo 22 horas sin
+# recibir un solo mensaje, sin un error en ningun sitio.
+#
+# Desde entonces los grupos van por un bot propio que NO esta en Kommo y que
+# no debe estarlo nunca.
+CRED_TG    = {"telegramApi":   {"id": "AY1IgMOTyaZAKGvU", "name": "salones_avisos_bot"}}
 PANEL = "http://automatizaciones_salones-panel:4300"
 GENERAL = "-5410906335"   # los avisos que no son de ningun salon
 # Cada salon tiene el suyo en la columna `telegram_grupo`, que viaja con el

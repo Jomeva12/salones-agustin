@@ -8,7 +8,7 @@
         ],
         "additionalFields": {}
       },
-      "id": "6135e295-a249-4ebe-837b-474d948cca8f",
+      "id": "371a74af-0c3a-4f0a-bdd1-db9e53bfb993",
       "name": "escuchar_grupo",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
@@ -18,8 +18,8 @@
       ],
       "credentials": {
         "telegramApi": {
-          "id": "GDSbyhs4W4QvYa4P",
-          "name": "salones_bot"
+          "id": "AY1IgMOTyaZAKGvU",
+          "name": "salones_avisos_bot"
         }
       }
     },
@@ -27,7 +27,7 @@
       "parameters": {
         "jsCode": "// Lo unico que interesa de lo que llega: a que mensaje contestaron.\n//\n// El bot solo recibe respuestas a sus propios mensajes (por la privacidad de\n// Telegram), pero tambien le llegan comandos y mensajes de servicio —alguien\n// entra al grupo, se cambia el titulo—. Nada de eso trae reply_to_message, y\n// aqui se descarta sin ruido.\nconst m = $json.message ?? $json;\nconst re = m.reply_to_message;\n\n// Quien contesta. Telegram no siempre manda apellido, y el usuario puede no\n// tener @, asi que se arma con lo que haya antes de caer en «alguien».\nconst q = m.from ?? {};\nconst quien = [q.first_name, q.last_name].filter(Boolean).join(' ')\n  || (q.username ? '@' + q.username : '')\n  || 'alguien del grupo';\n\nreturn [{\n  json: {\n    es_respuesta: Boolean(re && (m.text ?? '').trim()),\n    chat_id: String(m.chat?.id ?? ''),\n    // A QUE mensaje contesto: esta es la llave que identifica el aviso.\n    mensaje_respondido: re?.message_id ?? null,\n    // El id de SU mensaje, para colgarle el acuse debajo.\n    mi_mensaje: m.message_id ?? null,\n    texto: (m.text ?? '').trim(),\n    quien,\n    // El propio bot responde en el grupo (el acuse). Sin esto se contestaria\n    // a si mismo en bucle.\n    del_bot: Boolean(q.is_bot),\n  },\n}];"
       },
-      "id": "d092fd2f-fac7-45d5-8d54-f9051ac192c0",
+      "id": "0a829579-582d-4fd6-b87b-828a3103a21a",
       "name": "leer_respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -70,7 +70,7 @@
         },
         "options": {}
       },
-      "id": "7a53b233-5045-445a-9acd-5a10e1192225",
+      "id": "5f8e424c-9c98-4bd0-af23-fd38e4155300",
       "name": "es_respuesta",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -92,7 +92,7 @@
           }
         }
       },
-      "id": "f0b981b7-a019-4b7c-a1e6-4b6defa70bdf",
+      "id": "45f038eb-1e9c-4f91-bb82-a2c9b18387ab",
       "name": "buscar_aviso",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -131,7 +131,7 @@
         },
         "options": {}
       },
-      "id": "fa2f98eb-51ab-4cb8-9fc7-a9060d085885",
+      "id": "7737544c-9131-4ccc-b0b6-08c14b84a749",
       "name": "era_un_aviso",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -144,7 +144,7 @@
       "parameters": {
         "jsCode": "// Lo que el redactor necesita saber, en texto plano.\nconst a = $json.aviso;\nconst r = $('leer_respuesta').first().json;\n\nconst DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];\nconst MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',\n               'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n\n// El dia de la semana se calcula, no se le pregunta al modelo: el Lic. pidio\n// que toda fecha venga con su dia, y un modelo haciendo calendario se\n// equivoca. Se parte la cadena a mano porque new Date('2027-03-03') se\n// interpreta en UTC y en Monterrey cae el dia anterior.\nfunction enLetras(iso) {\n  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(iso ?? '')) return iso ?? '';\n  const [y, m, d] = iso.split('-').map(Number);\n  const f = new Date(Date.UTC(y, m - 1, d));\n  return `${DIAS[f.getUTCDay()]} ${d} de ${MESES[m - 1]} de ${y}`;\n}\n\n// La hora en 12 h y con franja: es como habla la gente aqui, y como habla\n// Maya.\nfunction enPalabras(hhmm) {\n  const p = /^(\\d{1,2}):(\\d{2})/.exec(hhmm ?? '');\n  if (!p) return hhmm ?? '';\n  const h = Number(p[1]), min = p[2];\n  const doce = h % 12 === 0 ? 12 : h % 12;\n  const franja = h < 12 ? 'de la mañana' : (h < 19 ? 'de la tarde' : 'de la noche');\n  return `${doce}${min === '00' ? '' : ':' + min} ${franja}`;\n}\n\nconst lineas = [`Lo que le preguntaste al salón: ${a.texto}`];\nlineas.push(`Motivo: ${a.motivo}`);\nif (a.salon_nombre) lineas.push(`Salón: ${a.salon_nombre}`);\nif (a.cita_fecha) {\n  lineas.push(`La visita de la que se habla: ${enLetras(a.cita_fecha)}`\n    + (a.cita_hora ? ` a las ${enPalabras(a.cita_hora)}` : ' (sin hora)')\n    + ` — estado: ${a.cita_estado ?? 'solicitada'}`);\n}\n// Un aviso ya atendido no se oculta: quien contesta tarde merece que su\n// respuesta llegue igual, pero Maya tiene que saber que puede estar\n// repitiendole algo al cliente.\nif ($json.ya_atendido) {\n  lineas.push('OJO: este aviso ya estaba marcado como atendido. Puede que al '\n    + 'cliente ya se le haya dicho algo parecido.');\n}\n\nreturn [{\n  json: {\n    aviso_id: a.id,\n    lead_id: a.lead_id,\n    chat_id: r.chat_id,\n    mi_mensaje: r.mi_mensaje,\n    quien: r.quien,\n    respuesta: r.texto,\n    contexto: lineas.join('\\n'),\n  },\n}];"
       },
-      "id": "8100efb8-f942-4c72-b78d-f2a53497cd29",
+      "id": "85ce9300-a472-4e8d-886d-71581cdd9d4f",
       "name": "armar_contexto",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -161,7 +161,7 @@
           "systemMessage": "Eres Maya, la asistente de los Salones Agustin Barron. Le pediste un dato al salon por el grupo interno y acaban de contestarte. Tu trabajo ahora es pasarle eso al cliente por WhatsApp.\n\nLO QUE NO PUEDES HACER, y es lo unico que importa de verdad:\n\n**No anadas ni un dato que no te hayan dado.** Ni una hora, ni un precio, ni una condicion, ni un «ademas». Si la respuesta es escueta, tu mensaje es escueto. Inventar aqui es peor que en cualquier otro sitio: el cliente lo va a leer como una confirmacion del salon, y si no coincide con lo que la encargada tiene apuntado, alguien se presenta un dia que no es.\n\n**No confirmes lo que no te confirmaron.** «Lo estamos viendo» no es «esta listo». Si la respuesta es ambigua, o no contesta a lo que preguntaste, dilo tal cual: que te estan revisando el dato y en cuanto lo tengas se lo pasas.\n\nSi puedes —y debes— escribirlo como hablas tu: calida, de aqui, sin formalismos. La encargada escribe en taquigrafia («si jueves 4 ok») y el cliente no tiene por que leer eso.\n\nCuando des una fecha, **di el dia de la semana**: «el jueves 23 de octubre». Si en el contexto te viene ya calculada, usala como viene; no la recalcules tu.\n\nA veces lo que llega del grupo NO es una respuesta: es una pregunta de vuelta («¿para cuantos era?», «¿que salon?»). Entonces no le escribes al cliente: contestas tu en el grupo con lo que sabes, y el pendiente sigue abierto.\n\nResponde SIEMPRE con este JSON y nada mas, sin cercos de codigo:\n\n{\"tipo\": \"respuesta\", \"al_cliente\": \"el mensaje para el cliente\"}\n\no bien\n\n{\"tipo\": \"pregunta\", \"al_grupo\": \"lo que le contestas al salon\"}\n\no bien, si no sabes que hacer con lo que llego:\n\n{\"tipo\": \"ninguno\", \"al_grupo\": \"por que no lo pasaste\"}"
         }
       },
-      "id": "af883dc3-8cfd-4d0c-8c03-b5581fbc6262",
+      "id": "099f2915-249f-4731-9495-099db6f970a6",
       "name": "redactar",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -180,7 +180,7 @@
         },
         "options": {}
       },
-      "id": "014305d3-6147-4535-83ff-4551e857a539",
+      "id": "dee001c9-84d6-426e-ba54-53c97c3f824a",
       "name": "modelo_redactor",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -199,7 +199,7 @@
       "parameters": {
         "jsCode": "// El modelo devuelve JSON, pero no siempre limpio: a veces lo envuelve en\n// cercos de codigo y a veces le cuelga una frase delante. Esto no es\n// desconfianza gratuita: pasa.\nconst bruto = String($json.output ?? '').trim();\n\nfunction leer(t) {\n  const sinCercos = t.replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\n  try { return JSON.parse(sinCercos); } catch (e) { /* se intenta recortar */ }\n  const a = sinCercos.indexOf('{'), b = sinCercos.lastIndexOf('}');\n  if (a >= 0 && b > a) {\n    try { return JSON.parse(sinCercos.slice(a, b + 1)); } catch (e) { /* nada */ }\n  }\n  return null;\n}\n\nconst o = leer(bruto);\nconst ctx = $('armar_contexto').first().json;\n\n// Si no se pudo leer el JSON, NO se le escribe al cliente a ciegas. Se avisa\n// en el grupo y el pendiente se queda abierto: es lo unico honesto, porque\n// aqui no sabemos si lo que el modelo queria decir era una confirmacion.\nif (!o || !o.tipo) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No supe interpretar esa respuesta. ¿Me la puedes escribir de otra forma? '\n              + 'El pendiente sigue abierto.' } }];\n}\n\nconst alCliente = String(o.al_cliente ?? '').trim();\nif (o.tipo === 'respuesta' && !alCliente) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No me quedó claro qué decirle al cliente. El pendiente sigue abierto.' } }];\n}\n// Sin lead no hay a quien escribirle. Deberia venir siempre —el aviso lo trae—\n// pero un aviso creado a mano desde el panel puede no tenerlo, y mandar al\n// subflujo de envio un lead vacio no da error: no manda nada y termina en\n// verde.\nif (o.tipo === 'respuesta' && !String(ctx.lead_id ?? '').trim()) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'Ese aviso no tiene un cliente asociado, así que no tengo a quién '\n              + 'escribirle. Lo dejo abierto.' } }];\n}\n\nreturn [{ json: { ...ctx, tipo: o.tipo,\n                  al_cliente: alCliente,\n                  al_grupo: String(o.al_grupo ?? '').trim() } }];"
       },
-      "id": "c66a06cc-5d97-4249-abaa-4388a263dea5",
+      "id": "b8cb7cd3-8853-4bd6-8884-fefb43d566bc",
       "name": "leer_lo_redactado",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -260,7 +260,7 @@
         },
         "options": {}
       },
-      "id": "7638973c-95e1-42b0-ab89-8c54591ac51e",
+      "id": "e3dd8d7c-4d82-486c-b31b-e381eaa436fd",
       "name": "que_hacer",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -277,7 +277,7 @@
           "queryReplacement": "={{ [ $('leer_lo_redactado').first().json.lead_id, null, 'grupo', $('leer_lo_redactado').first().json.quien, null, 0, 'respuesta_grupo', $('leer_lo_redactado').first().json.al_cliente, null, '{}', JSON.stringify([$('leer_lo_redactado').first().json.al_cliente]) ] }}"
         }
       },
-      "id": "8175bbea-b14c-4260-903f-8836e462b4db",
+      "id": "554aefd3-1afa-4d3d-8989-65f7a64c1c51",
       "name": "registrar_turno",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -321,7 +321,7 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "fbefa2a7-04c9-4a83-946c-51e01f60fbde",
+      "id": "736e727c-75bd-4fde-adbb-bc4dc551a05f",
       "name": "enviar_al_cliente",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
@@ -335,7 +335,7 @@
       "parameters": {
         "jsCode": "const llego = $input.all().filter(\n  (i) => i.json && Object.keys(i.json).length > 0);\nconst ctx = $('leer_lo_redactado').first().json;\nreturn [{ json: { ...ctx, se_envio: llego.length > 0 } }];"
       },
-      "id": "1dea948c-e350-431a-bfa8-52399b747345",
+      "id": "26297404-14bb-4a66-a1da-b534db39a6d9",
       "name": "comprobar_envio",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -368,7 +368,7 @@
         },
         "options": {}
       },
-      "id": "d5db9eb3-1121-4526-a1a5-ec9388bf46ca",
+      "id": "7f69bfae-31b2-4d85-8d7e-78efdb060764",
       "name": "llego_al_cliente",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -387,7 +387,7 @@
           "reply_to_message_id": "={{ $json.mi_mensaje }}"
         }
       },
-      "id": "e298c6f6-2db2-4bca-88df-b615aa5bda4e",
+      "id": "aea67ca0-b410-4f55-8b1b-4de840e86711",
       "name": "aviso_de_fallo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -397,8 +397,8 @@
       ],
       "credentials": {
         "telegramApi": {
-          "id": "GDSbyhs4W4QvYa4P",
-          "name": "salones_bot"
+          "id": "AY1IgMOTyaZAKGvU",
+          "name": "salones_avisos_bot"
         }
       },
       "onError": "continueRegularOutput"
@@ -411,7 +411,7 @@
           "queryReplacement": "={{ [$('registrar_turno').first().json.id] }}"
         }
       },
-      "id": "9e6aa41e-c8aa-4487-9124-304a9474764f",
+      "id": "3e482d73-b212-4845-b85f-d5b63d9fa7d6",
       "name": "marcar_enviada",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -443,7 +443,7 @@
           }
         }
       },
-      "id": "a059d747-f90c-45db-8554-1f7db46855a4",
+      "id": "1f24a636-8c3d-4dc4-a381-ee5f91971f79",
       "name": "cerrar_aviso",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -466,7 +466,7 @@
           "queryReplacement": "={{ [ $('leer_lo_redactado').first().json.lead_id + '-ventas-v9', JSON.stringify({ type: 'ai', data: { content: $('leer_lo_redactado').first().json.al_cliente, additional_kwargs: {}, response_metadata: {} } }) ] }}"
         }
       },
-      "id": "b79321b7-0471-4f7a-882a-48b0b1f6c81d",
+      "id": "0a634a44-e929-424a-9f86-b1b25b2a6268",
       "name": "anotar_en_su_memoria",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -492,7 +492,7 @@
           "reply_to_message_id": "={{ $('leer_lo_redactado').first().json.mi_mensaje }}"
         }
       },
-      "id": "5343b117-f461-4010-8a25-70e23cae0e28",
+      "id": "c4a94553-ddae-457b-96f2-545299456850",
       "name": "acuse_en_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -502,8 +502,8 @@
       ],
       "credentials": {
         "telegramApi": {
-          "id": "GDSbyhs4W4QvYa4P",
-          "name": "salones_bot"
+          "id": "AY1IgMOTyaZAKGvU",
+          "name": "salones_avisos_bot"
         }
       },
       "onError": "continueRegularOutput"
@@ -518,7 +518,7 @@
           "reply_to_message_id": "={{ $json.mi_mensaje }}"
         }
       },
-      "id": "75f87a61-4071-48de-ac61-ced32664b265",
+      "id": "89adca48-d1a9-4328-9858-73e7e8f5fcc3",
       "name": "contestar_en_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -528,8 +528,8 @@
       ],
       "credentials": {
         "telegramApi": {
-          "id": "GDSbyhs4W4QvYa4P",
-          "name": "salones_bot"
+          "id": "AY1IgMOTyaZAKGvU",
+          "name": "salones_avisos_bot"
         }
       },
       "onError": "continueRegularOutput"

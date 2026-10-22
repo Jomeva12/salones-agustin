@@ -47,11 +47,16 @@ def une(a, b, tipo="main", salida=0):
     con[a][tipo][salida].append({"node": b, "type": tipo, "index": 0})
 
 
-# Cada 5 minutos y no cada 30: el PRIMER aviso sale a cualquier hora y no debe
-# esperar media hora. Los recordatorios se espacian solos, mirando cuando se
-# aviso por ultima vez.
-add("cada_5_min", "n8n-nodes-base.scheduleTrigger", 1.2,
-    {"rule": {"interval": [{"field": "cronExpression", "expression": "*/5 * * * *"}]}},
+# Cada minuto. Antes eran cinco, y el PRIMER aviso llegaba a esperarlos: el
+# 22-oct-2026 un cliente pidio una visita a las 8:31 y la encargada no lo vio
+# hasta las 8:35. No es un fallo, es el tick — pero son cuatro minutos de un
+# cliente esperando, y la consulta que hace esto es un GET al panel. Sale mas
+# barato preguntar cinco veces de mas que llegar cuatro minutos tarde.
+#
+# Los recordatorios NO se aceleran por esto: se espacian solos mirando cuando
+# se aviso por ultima vez, asi que siguen en 30 min, 2 h y un dia.
+add("cada_minuto", "n8n-nodes-base.scheduleTrigger", 1.2,
+    {"rule": {"interval": [{"field": "cronExpression", "expression": "* * * * *"}]}},
     [-400, 0])
 
 add("traer_pendientes", "n8n-nodes-base.httpRequest", 4.2,
@@ -213,7 +218,7 @@ add("marcar_avisado", "n8n-nodes-base.httpRequest", 4.2,
      "options": {"response": {"response": {"responseFormat": "json"}}}},
     [460, 0], cred=CRED_PANEL)
 
-une("cada_5_min", "traer_pendientes")
+une("cada_minuto", "traer_pendientes")
 une("traer_pendientes", "a_quien_toca")
 une("a_quien_toca", "mandar_al_grupo")
 une("mandar_al_grupo", "se_entrego")

@@ -161,7 +161,13 @@ function enPalabras(hhmm) {
 
 const lineas = [`Lo que le preguntaste al salón: ${a.texto}`];
 lineas.push(`Motivo: ${a.motivo}`);
-if (a.salon_nombre) lineas.push(`Salón: ${a.salon_nombre}`);
+if (a.salon_nombre) {
+  // Decia «Salón: Norma Eventos» y el modelo saludo al cliente con
+  // «Hola Norma». Un nombre propio en una etiqueta corta se lee como el
+  // nombre de la persona si nadie dice lo contrario.
+  lineas.push(`El evento sería en ${a.salon_nombre}. Ese es el nombre del `
+    + `SALÓN, no del cliente: no sabes cómo se llama el cliente.`);
+}
 if (a.cita_fecha) {
   lineas.push(`La visita de la que se habla: ${enLetras(a.cita_fecha)}`
     + (a.cita_hora ? ` a las ${enPalabras(a.cita_hora)}` : ' (sin hora)')
@@ -183,6 +189,7 @@ return [{
     mi_mensaje: r.mi_mensaje,
     quien: r.quien,
     respuesta: r.texto,
+    salon_nombre: a.salon_nombre ?? '',
     contexto: lineas.join('\n'),
   },
 }];'''
@@ -197,6 +204,8 @@ LO QUE NO PUEDES HACER, y es lo unico que importa de verdad:
 **No confirmes lo que no te confirmaron.** «Lo estamos viendo» no es «esta listo». Si la respuesta es ambigua, o no contesta a lo que preguntaste, dilo tal cual: que te estan revisando el dato y en cuanto lo tengas se lo pasas.
 
 Si puedes —y debes— escribirlo como hablas tu: calida, de aqui, sin formalismos. La encargada escribe en taquigrafia («si jueves 4 ok») y el cliente no tiene por que leer eso.
+
+**No saludes y no uses ningun nombre.** Esto es un relevo dentro de una conversacion que ya va por la mitad: el cliente lleva rato hablando contigo, asi que un «Hola» ahi sobra. Y no sabes como se llama — lo unico parecido a un nombre que tienes delante es el del SALON, que no es el suyo.
 
 Cuando des una fecha, **di el dia de la semana**: «el jueves 23 de octubre». Si en el contexto te viene ya calculada, usala como viene; no la recalcules tu.
 
@@ -232,7 +241,63 @@ add("modelo_redactor", "@n8n/n8n-nodes-langchain.lmChatOpenAi", 1.3,
 # turno del cliente dejaria a Maya creyendo que el cliente dijo eso. Lo que si
 # se hace, mas abajo, es anotar en esa memoria lo que Maya acabo diciendo.
 
-LEER_JSON = r'''// El modelo devuelve JSON, pero no siempre limpio: a veces lo envuelve en
+LEER_JSON = r'''// Fuera el saludo, y sobre todo fuera el nombre del salon como si fuera el
+// del cliente.
+//
+// El 22-oct-2026, en la primera prueba con dos clientes, el contexto decia
+// «Salón: Norma Eventos» y al cliente le llego «Hola Norma, el jueves 29...».
+// Se llama de otra forma. Un nombre propio en una etiqueta corta se lee como
+// el nombre de la persona.
+//
+// No es solo cuestion de redaccion: un relevo entra en una conversacion que ya
+// va por la mitad, asi que el saludo sobra SIEMPRE, acierte el nombre o no. Y
+// el nombre del salon lo conocemos, de modo que esto se comprueba en vez de
+// pedirse — es un dato contra otro, no perseguir una forma de escribir.
+const SALUDOS = ['buenos dias', 'buenos días', 'buenas tardes', 'buenas noches',
+                 'que tal', 'qué tal', 'buenas', 'hola'];
+const SIGNOS = [' ', ',', '.', ':', ';', '!', '¡', '¿', '?', '\n', '\t'];
+
+function recortarSignos(s) {
+  let i = 0;
+  while (i < s.length && SIGNOS.includes(s[i])) i++;
+  return s.slice(i);
+}
+
+function sinSaludo(texto, salon) {
+  const original = String(texto ?? '').trim();
+  let t = original;
+
+  // ¿Empieza saludando? Se compara en minusculas y exigiendo que lo que siga
+  // sea un espacio o un signo: asi «Holanda queda lejos» no cuenta como
+  // «hola».
+  const bajo = t.toLowerCase();
+  const saludo = SALUDOS.find((s) =>
+    bajo.startsWith(s) && (t.length === s.length || SIGNOS.includes(t[s.length])));
+  if (!saludo) return original;
+
+  t = recortarSignos(t.slice(saludo.length));
+
+  // Si justo detras venia el nombre del salon, tambien se va. Se prueba
+  // primero el nombre completo y luego sin «Eventos», porque «Santa Cruz
+  // Eventos» tiene que ganarle a «Santa Cruz».
+  const nombres = [String(salon ?? '').trim()];
+  const corto = nombres[0].replace(/\s*Eventos\s*$/i, '').trim();
+  if (corto && corto !== nombres[0]) nombres.push(corto);
+  for (const n of nombres) {
+    if (n && t.toLowerCase().startsWith(n.toLowerCase())) {
+      t = recortarSignos(t.slice(n.length));
+      break;
+    }
+  }
+
+  t = t.trim();
+  if (!t) return original;          // antes dejarlo mudo, que salga el saludo
+  // La frase se queda empezando en minuscula al quitarle el «Hola,» de
+  // delante.
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+// El modelo devuelve JSON, pero no siempre limpio: a veces lo envuelve en
 // cercos de codigo y a veces le cuelga una frase delante. Esto no es
 // desconfianza gratuita: pasa.
 const bruto = String($json.output ?? '').trim();
@@ -275,7 +340,7 @@ if (o.tipo === 'respuesta' && !String(ctx.lead_id ?? '').trim()) {
 }
 
 return [{ json: { ...ctx, tipo: o.tipo,
-                  al_cliente: alCliente,
+                  al_cliente: sinSaludo(alCliente, ctx.salon_nombre),
                   al_grupo: String(o.al_grupo ?? '').trim() } }];'''
 add("leer_lo_redactado", "n8n-nodes-base.code", 2, {"jsCode": LEER_JSON}, [640, -100])
 

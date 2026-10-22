@@ -8,7 +8,7 @@
         ],
         "additionalFields": {}
       },
-      "id": "371a74af-0c3a-4f0a-bdd1-db9e53bfb993",
+      "id": "29746018-c979-485e-9c2a-3bdd4b31fcd8",
       "name": "escuchar_grupo",
       "type": "n8n-nodes-base.telegramTrigger",
       "typeVersion": 1.2,
@@ -27,7 +27,7 @@
       "parameters": {
         "jsCode": "// Lo unico que interesa de lo que llega: a que mensaje contestaron.\n//\n// El bot solo recibe respuestas a sus propios mensajes (por la privacidad de\n// Telegram), pero tambien le llegan comandos y mensajes de servicio —alguien\n// entra al grupo, se cambia el titulo—. Nada de eso trae reply_to_message, y\n// aqui se descarta sin ruido.\nconst m = $json.message ?? $json;\nconst re = m.reply_to_message;\n\n// Quien contesta. Telegram no siempre manda apellido, y el usuario puede no\n// tener @, asi que se arma con lo que haya antes de caer en «alguien».\nconst q = m.from ?? {};\nconst quien = [q.first_name, q.last_name].filter(Boolean).join(' ')\n  || (q.username ? '@' + q.username : '')\n  || 'alguien del grupo';\n\nreturn [{\n  json: {\n    es_respuesta: Boolean(re && (m.text ?? '').trim()),\n    chat_id: String(m.chat?.id ?? ''),\n    // A QUE mensaje contesto: esta es la llave que identifica el aviso.\n    mensaje_respondido: re?.message_id ?? null,\n    // El id de SU mensaje, para colgarle el acuse debajo.\n    mi_mensaje: m.message_id ?? null,\n    texto: (m.text ?? '').trim(),\n    quien,\n    // El propio bot responde en el grupo (el acuse). Sin esto se contestaria\n    // a si mismo en bucle.\n    del_bot: Boolean(q.is_bot),\n  },\n}];"
       },
-      "id": "0a829579-582d-4fd6-b87b-828a3103a21a",
+      "id": "23815fa7-9540-4e9a-bb5d-c57935e0cc51",
       "name": "leer_respuesta",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -70,7 +70,7 @@
         },
         "options": {}
       },
-      "id": "5f8e424c-9c98-4bd0-af23-fd38e4155300",
+      "id": "213f3aca-ddae-41b0-bce9-8868933b844d",
       "name": "es_respuesta",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -92,7 +92,7 @@
           }
         }
       },
-      "id": "45f038eb-1e9c-4f91-bb82-a2c9b18387ab",
+      "id": "9dbfadff-44ab-4bde-806a-4b977b270280",
       "name": "buscar_aviso",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -131,7 +131,7 @@
         },
         "options": {}
       },
-      "id": "7737544c-9131-4ccc-b0b6-08c14b84a749",
+      "id": "acedf209-9598-48fb-946b-6771e4ef4da1",
       "name": "era_un_aviso",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -142,9 +142,9 @@
     },
     {
       "parameters": {
-        "jsCode": "// Lo que el redactor necesita saber, en texto plano.\nconst a = $json.aviso;\nconst r = $('leer_respuesta').first().json;\n\nconst DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];\nconst MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',\n               'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n\n// El dia de la semana se calcula, no se le pregunta al modelo: el Lic. pidio\n// que toda fecha venga con su dia, y un modelo haciendo calendario se\n// equivoca. Se parte la cadena a mano porque new Date('2027-03-03') se\n// interpreta en UTC y en Monterrey cae el dia anterior.\nfunction enLetras(iso) {\n  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(iso ?? '')) return iso ?? '';\n  const [y, m, d] = iso.split('-').map(Number);\n  const f = new Date(Date.UTC(y, m - 1, d));\n  return `${DIAS[f.getUTCDay()]} ${d} de ${MESES[m - 1]} de ${y}`;\n}\n\n// La hora en 12 h y con franja: es como habla la gente aqui, y como habla\n// Maya.\nfunction enPalabras(hhmm) {\n  const p = /^(\\d{1,2}):(\\d{2})/.exec(hhmm ?? '');\n  if (!p) return hhmm ?? '';\n  const h = Number(p[1]), min = p[2];\n  const doce = h % 12 === 0 ? 12 : h % 12;\n  const franja = h < 12 ? 'de la mañana' : (h < 19 ? 'de la tarde' : 'de la noche');\n  return `${doce}${min === '00' ? '' : ':' + min} ${franja}`;\n}\n\nconst lineas = [`Lo que le preguntaste al salón: ${a.texto}`];\nlineas.push(`Motivo: ${a.motivo}`);\nif (a.salon_nombre) lineas.push(`Salón: ${a.salon_nombre}`);\nif (a.cita_fecha) {\n  lineas.push(`La visita de la que se habla: ${enLetras(a.cita_fecha)}`\n    + (a.cita_hora ? ` a las ${enPalabras(a.cita_hora)}` : ' (sin hora)')\n    + ` — estado: ${a.cita_estado ?? 'solicitada'}`);\n}\n// Un aviso ya atendido no se oculta: quien contesta tarde merece que su\n// respuesta llegue igual, pero Maya tiene que saber que puede estar\n// repitiendole algo al cliente.\nif ($json.ya_atendido) {\n  lineas.push('OJO: este aviso ya estaba marcado como atendido. Puede que al '\n    + 'cliente ya se le haya dicho algo parecido.');\n}\n\nreturn [{\n  json: {\n    aviso_id: a.id,\n    lead_id: a.lead_id,\n    chat_id: r.chat_id,\n    mi_mensaje: r.mi_mensaje,\n    quien: r.quien,\n    respuesta: r.texto,\n    contexto: lineas.join('\\n'),\n  },\n}];"
+        "jsCode": "// Lo que el redactor necesita saber, en texto plano.\nconst a = $json.aviso;\nconst r = $('leer_respuesta').first().json;\n\nconst DIAS = ['domingo', 'lunes', 'martes', 'miércoles', 'jueves', 'viernes', 'sábado'];\nconst MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio',\n               'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre'];\n\n// El dia de la semana se calcula, no se le pregunta al modelo: el Lic. pidio\n// que toda fecha venga con su dia, y un modelo haciendo calendario se\n// equivoca. Se parte la cadena a mano porque new Date('2027-03-03') se\n// interpreta en UTC y en Monterrey cae el dia anterior.\nfunction enLetras(iso) {\n  if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(iso ?? '')) return iso ?? '';\n  const [y, m, d] = iso.split('-').map(Number);\n  const f = new Date(Date.UTC(y, m - 1, d));\n  return `${DIAS[f.getUTCDay()]} ${d} de ${MESES[m - 1]} de ${y}`;\n}\n\n// La hora en 12 h y con franja: es como habla la gente aqui, y como habla\n// Maya.\nfunction enPalabras(hhmm) {\n  const p = /^(\\d{1,2}):(\\d{2})/.exec(hhmm ?? '');\n  if (!p) return hhmm ?? '';\n  const h = Number(p[1]), min = p[2];\n  const doce = h % 12 === 0 ? 12 : h % 12;\n  const franja = h < 12 ? 'de la mañana' : (h < 19 ? 'de la tarde' : 'de la noche');\n  return `${doce}${min === '00' ? '' : ':' + min} ${franja}`;\n}\n\nconst lineas = [`Lo que le preguntaste al salón: ${a.texto}`];\nlineas.push(`Motivo: ${a.motivo}`);\nif (a.salon_nombre) {\n  // Decia «Salón: Norma Eventos» y el modelo saludo al cliente con\n  // «Hola Norma». Un nombre propio en una etiqueta corta se lee como el\n  // nombre de la persona si nadie dice lo contrario.\n  lineas.push(`El evento sería en ${a.salon_nombre}. Ese es el nombre del `\n    + `SALÓN, no del cliente: no sabes cómo se llama el cliente.`);\n}\nif (a.cita_fecha) {\n  lineas.push(`La visita de la que se habla: ${enLetras(a.cita_fecha)}`\n    + (a.cita_hora ? ` a las ${enPalabras(a.cita_hora)}` : ' (sin hora)')\n    + ` — estado: ${a.cita_estado ?? 'solicitada'}`);\n}\n// Un aviso ya atendido no se oculta: quien contesta tarde merece que su\n// respuesta llegue igual, pero Maya tiene que saber que puede estar\n// repitiendole algo al cliente.\nif ($json.ya_atendido) {\n  lineas.push('OJO: este aviso ya estaba marcado como atendido. Puede que al '\n    + 'cliente ya se le haya dicho algo parecido.');\n}\n\nreturn [{\n  json: {\n    aviso_id: a.id,\n    lead_id: a.lead_id,\n    chat_id: r.chat_id,\n    mi_mensaje: r.mi_mensaje,\n    quien: r.quien,\n    respuesta: r.texto,\n    salon_nombre: a.salon_nombre ?? '',\n    contexto: lineas.join('\\n'),\n  },\n}];"
       },
-      "id": "85ce9300-a472-4e8d-886d-71581cdd9d4f",
+      "id": "d3ec8f05-1160-4414-bf99-873006a2956c",
       "name": "armar_contexto",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -158,10 +158,10 @@
         "promptType": "define",
         "text": "=Contexto:\n{{ $json.contexto }}\n\nLo que acaba de escribir {{ $json.quien }} en el grupo:\n{{ $json.respuesta }}",
         "options": {
-          "systemMessage": "Eres Maya, la asistente de los Salones Agustin Barron. Le pediste un dato al salon por el grupo interno y acaban de contestarte. Tu trabajo ahora es pasarle eso al cliente por WhatsApp.\n\nLO QUE NO PUEDES HACER, y es lo unico que importa de verdad:\n\n**No anadas ni un dato que no te hayan dado.** Ni una hora, ni un precio, ni una condicion, ni un «ademas». Si la respuesta es escueta, tu mensaje es escueto. Inventar aqui es peor que en cualquier otro sitio: el cliente lo va a leer como una confirmacion del salon, y si no coincide con lo que la encargada tiene apuntado, alguien se presenta un dia que no es.\n\n**No confirmes lo que no te confirmaron.** «Lo estamos viendo» no es «esta listo». Si la respuesta es ambigua, o no contesta a lo que preguntaste, dilo tal cual: que te estan revisando el dato y en cuanto lo tengas se lo pasas.\n\nSi puedes —y debes— escribirlo como hablas tu: calida, de aqui, sin formalismos. La encargada escribe en taquigrafia («si jueves 4 ok») y el cliente no tiene por que leer eso.\n\nCuando des una fecha, **di el dia de la semana**: «el jueves 23 de octubre». Si en el contexto te viene ya calculada, usala como viene; no la recalcules tu.\n\nA veces lo que llega del grupo NO es una respuesta: es una pregunta de vuelta («¿para cuantos era?», «¿que salon?»). Entonces no le escribes al cliente: contestas tu en el grupo con lo que sabes, y el pendiente sigue abierto.\n\nResponde SIEMPRE con este JSON y nada mas, sin cercos de codigo:\n\n{\"tipo\": \"respuesta\", \"al_cliente\": \"el mensaje para el cliente\"}\n\no bien\n\n{\"tipo\": \"pregunta\", \"al_grupo\": \"lo que le contestas al salon\"}\n\no bien, si no sabes que hacer con lo que llego:\n\n{\"tipo\": \"ninguno\", \"al_grupo\": \"por que no lo pasaste\"}"
+          "systemMessage": "Eres Maya, la asistente de los Salones Agustin Barron. Le pediste un dato al salon por el grupo interno y acaban de contestarte. Tu trabajo ahora es pasarle eso al cliente por WhatsApp.\n\nLO QUE NO PUEDES HACER, y es lo unico que importa de verdad:\n\n**No anadas ni un dato que no te hayan dado.** Ni una hora, ni un precio, ni una condicion, ni un «ademas». Si la respuesta es escueta, tu mensaje es escueto. Inventar aqui es peor que en cualquier otro sitio: el cliente lo va a leer como una confirmacion del salon, y si no coincide con lo que la encargada tiene apuntado, alguien se presenta un dia que no es.\n\n**No confirmes lo que no te confirmaron.** «Lo estamos viendo» no es «esta listo». Si la respuesta es ambigua, o no contesta a lo que preguntaste, dilo tal cual: que te estan revisando el dato y en cuanto lo tengas se lo pasas.\n\nSi puedes —y debes— escribirlo como hablas tu: calida, de aqui, sin formalismos. La encargada escribe en taquigrafia («si jueves 4 ok») y el cliente no tiene por que leer eso.\n\n**No saludes y no uses ningun nombre.** Esto es un relevo dentro de una conversacion que ya va por la mitad: el cliente lleva rato hablando contigo, asi que un «Hola» ahi sobra. Y no sabes como se llama — lo unico parecido a un nombre que tienes delante es el del SALON, que no es el suyo.\n\nCuando des una fecha, **di el dia de la semana**: «el jueves 23 de octubre». Si en el contexto te viene ya calculada, usala como viene; no la recalcules tu.\n\nA veces lo que llega del grupo NO es una respuesta: es una pregunta de vuelta («¿para cuantos era?», «¿que salon?»). Entonces no le escribes al cliente: contestas tu en el grupo con lo que sabes, y el pendiente sigue abierto.\n\nResponde SIEMPRE con este JSON y nada mas, sin cercos de codigo:\n\n{\"tipo\": \"respuesta\", \"al_cliente\": \"el mensaje para el cliente\"}\n\no bien\n\n{\"tipo\": \"pregunta\", \"al_grupo\": \"lo que le contestas al salon\"}\n\no bien, si no sabes que hacer con lo que llego:\n\n{\"tipo\": \"ninguno\", \"al_grupo\": \"por que no lo pasaste\"}"
         }
       },
-      "id": "099f2915-249f-4731-9495-099db6f970a6",
+      "id": "6397d407-b91e-4a4c-8319-a54da7883edb",
       "name": "redactar",
       "type": "@n8n/n8n-nodes-langchain.agent",
       "typeVersion": 3.1,
@@ -180,7 +180,7 @@
         },
         "options": {}
       },
-      "id": "dee001c9-84d6-426e-ba54-53c97c3f824a",
+      "id": "6478926a-4aaf-457f-ac8c-9614d901f560",
       "name": "modelo_redactor",
       "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
       "typeVersion": 1.3,
@@ -197,9 +197,9 @@
     },
     {
       "parameters": {
-        "jsCode": "// El modelo devuelve JSON, pero no siempre limpio: a veces lo envuelve en\n// cercos de codigo y a veces le cuelga una frase delante. Esto no es\n// desconfianza gratuita: pasa.\nconst bruto = String($json.output ?? '').trim();\n\nfunction leer(t) {\n  const sinCercos = t.replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\n  try { return JSON.parse(sinCercos); } catch (e) { /* se intenta recortar */ }\n  const a = sinCercos.indexOf('{'), b = sinCercos.lastIndexOf('}');\n  if (a >= 0 && b > a) {\n    try { return JSON.parse(sinCercos.slice(a, b + 1)); } catch (e) { /* nada */ }\n  }\n  return null;\n}\n\nconst o = leer(bruto);\nconst ctx = $('armar_contexto').first().json;\n\n// Si no se pudo leer el JSON, NO se le escribe al cliente a ciegas. Se avisa\n// en el grupo y el pendiente se queda abierto: es lo unico honesto, porque\n// aqui no sabemos si lo que el modelo queria decir era una confirmacion.\nif (!o || !o.tipo) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No supe interpretar esa respuesta. ¿Me la puedes escribir de otra forma? '\n              + 'El pendiente sigue abierto.' } }];\n}\n\nconst alCliente = String(o.al_cliente ?? '').trim();\nif (o.tipo === 'respuesta' && !alCliente) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No me quedó claro qué decirle al cliente. El pendiente sigue abierto.' } }];\n}\n// Sin lead no hay a quien escribirle. Deberia venir siempre —el aviso lo trae—\n// pero un aviso creado a mano desde el panel puede no tenerlo, y mandar al\n// subflujo de envio un lead vacio no da error: no manda nada y termina en\n// verde.\nif (o.tipo === 'respuesta' && !String(ctx.lead_id ?? '').trim()) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'Ese aviso no tiene un cliente asociado, así que no tengo a quién '\n              + 'escribirle. Lo dejo abierto.' } }];\n}\n\nreturn [{ json: { ...ctx, tipo: o.tipo,\n                  al_cliente: alCliente,\n                  al_grupo: String(o.al_grupo ?? '').trim() } }];"
+        "jsCode": "// Fuera el saludo, y sobre todo fuera el nombre del salon como si fuera el\n// del cliente.\n//\n// El 22-oct-2026, en la primera prueba con dos clientes, el contexto decia\n// «Salón: Norma Eventos» y al cliente le llego «Hola Norma, el jueves 29...».\n// Se llama de otra forma. Un nombre propio en una etiqueta corta se lee como\n// el nombre de la persona.\n//\n// No es solo cuestion de redaccion: un relevo entra en una conversacion que ya\n// va por la mitad, asi que el saludo sobra SIEMPRE, acierte el nombre o no. Y\n// el nombre del salon lo conocemos, de modo que esto se comprueba en vez de\n// pedirse — es un dato contra otro, no perseguir una forma de escribir.\nconst SALUDOS = ['buenos dias', 'buenos días', 'buenas tardes', 'buenas noches',\n                 'que tal', 'qué tal', 'buenas', 'hola'];\nconst SIGNOS = [' ', ',', '.', ':', ';', '!', '¡', '¿', '?', '\\n', '\\t'];\n\nfunction recortarSignos(s) {\n  let i = 0;\n  while (i < s.length && SIGNOS.includes(s[i])) i++;\n  return s.slice(i);\n}\n\nfunction sinSaludo(texto, salon) {\n  const original = String(texto ?? '').trim();\n  let t = original;\n\n  // ¿Empieza saludando? Se compara en minusculas y exigiendo que lo que siga\n  // sea un espacio o un signo: asi «Holanda queda lejos» no cuenta como\n  // «hola».\n  const bajo = t.toLowerCase();\n  const saludo = SALUDOS.find((s) =>\n    bajo.startsWith(s) && (t.length === s.length || SIGNOS.includes(t[s.length])));\n  if (!saludo) return original;\n\n  t = recortarSignos(t.slice(saludo.length));\n\n  // Si justo detras venia el nombre del salon, tambien se va. Se prueba\n  // primero el nombre completo y luego sin «Eventos», porque «Santa Cruz\n  // Eventos» tiene que ganarle a «Santa Cruz».\n  const nombres = [String(salon ?? '').trim()];\n  const corto = nombres[0].replace(/\\s*Eventos\\s*$/i, '').trim();\n  if (corto && corto !== nombres[0]) nombres.push(corto);\n  for (const n of nombres) {\n    if (n && t.toLowerCase().startsWith(n.toLowerCase())) {\n      t = recortarSignos(t.slice(n.length));\n      break;\n    }\n  }\n\n  t = t.trim();\n  if (!t) return original;          // antes dejarlo mudo, que salga el saludo\n  // La frase se queda empezando en minuscula al quitarle el «Hola,» de\n  // delante.\n  return t.charAt(0).toUpperCase() + t.slice(1);\n}\n\n// El modelo devuelve JSON, pero no siempre limpio: a veces lo envuelve en\n// cercos de codigo y a veces le cuelga una frase delante. Esto no es\n// desconfianza gratuita: pasa.\nconst bruto = String($json.output ?? '').trim();\n\nfunction leer(t) {\n  const sinCercos = t.replace(/^```[a-z]*\\s*/i, '').replace(/```\\s*$/, '').trim();\n  try { return JSON.parse(sinCercos); } catch (e) { /* se intenta recortar */ }\n  const a = sinCercos.indexOf('{'), b = sinCercos.lastIndexOf('}');\n  if (a >= 0 && b > a) {\n    try { return JSON.parse(sinCercos.slice(a, b + 1)); } catch (e) { /* nada */ }\n  }\n  return null;\n}\n\nconst o = leer(bruto);\nconst ctx = $('armar_contexto').first().json;\n\n// Si no se pudo leer el JSON, NO se le escribe al cliente a ciegas. Se avisa\n// en el grupo y el pendiente se queda abierto: es lo unico honesto, porque\n// aqui no sabemos si lo que el modelo queria decir era una confirmacion.\nif (!o || !o.tipo) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No supe interpretar esa respuesta. ¿Me la puedes escribir de otra forma? '\n              + 'El pendiente sigue abierto.' } }];\n}\n\nconst alCliente = String(o.al_cliente ?? '').trim();\nif (o.tipo === 'respuesta' && !alCliente) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'No me quedó claro qué decirle al cliente. El pendiente sigue abierto.' } }];\n}\n// Sin lead no hay a quien escribirle. Deberia venir siempre —el aviso lo trae—\n// pero un aviso creado a mano desde el panel puede no tenerlo, y mandar al\n// subflujo de envio un lead vacio no da error: no manda nada y termina en\n// verde.\nif (o.tipo === 'respuesta' && !String(ctx.lead_id ?? '').trim()) {\n  return [{ json: { ...ctx, tipo: 'ninguno',\n    al_grupo: 'Ese aviso no tiene un cliente asociado, así que no tengo a quién '\n              + 'escribirle. Lo dejo abierto.' } }];\n}\n\nreturn [{ json: { ...ctx, tipo: o.tipo,\n                  al_cliente: sinSaludo(alCliente, ctx.salon_nombre),\n                  al_grupo: String(o.al_grupo ?? '').trim() } }];"
       },
-      "id": "b8cb7cd3-8853-4bd6-8884-fefb43d566bc",
+      "id": "f5b7c253-7857-44c9-b4f9-70a7fe42a02b",
       "name": "leer_lo_redactado",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -260,7 +260,7 @@
         },
         "options": {}
       },
-      "id": "e3dd8d7c-4d82-486c-b31b-e381eaa436fd",
+      "id": "f49c9168-265e-425d-8f5c-20a6aac52c6d",
       "name": "que_hacer",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.2,
@@ -277,7 +277,7 @@
           "queryReplacement": "={{ [ $('leer_lo_redactado').first().json.lead_id, null, 'grupo', $('leer_lo_redactado').first().json.quien, null, 0, 'respuesta_grupo', $('leer_lo_redactado').first().json.al_cliente, null, '{}', JSON.stringify([$('leer_lo_redactado').first().json.al_cliente]) ] }}"
         }
       },
-      "id": "554aefd3-1afa-4d3d-8989-65f7a64c1c51",
+      "id": "e20332d0-7cc4-4b75-baad-abe9e51f9b7e",
       "name": "registrar_turno",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -321,7 +321,7 @@
           "waitForSubWorkflow": true
         }
       },
-      "id": "736e727c-75bd-4fde-adbb-bc4dc551a05f",
+      "id": "c9922a36-e4ad-4361-9294-406d42b7ff5b",
       "name": "enviar_al_cliente",
       "type": "n8n-nodes-base.executeWorkflow",
       "typeVersion": 1.2,
@@ -335,7 +335,7 @@
       "parameters": {
         "jsCode": "const llego = $input.all().filter(\n  (i) => i.json && Object.keys(i.json).length > 0);\nconst ctx = $('leer_lo_redactado').first().json;\nreturn [{ json: { ...ctx, se_envio: llego.length > 0 } }];"
       },
-      "id": "26297404-14bb-4a66-a1da-b534db39a6d9",
+      "id": "6b065d90-39b9-41cd-a599-aa9c54c637e5",
       "name": "comprobar_envio",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -368,7 +368,7 @@
         },
         "options": {}
       },
-      "id": "7f69bfae-31b2-4d85-8d7e-78efdb060764",
+      "id": "6daa9714-6861-42d4-bf0c-66c53f9ef382",
       "name": "llego_al_cliente",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -387,7 +387,7 @@
           "reply_to_message_id": "={{ $json.mi_mensaje }}"
         }
       },
-      "id": "aea67ca0-b410-4f55-8b1b-4de840e86711",
+      "id": "5bf9c4f0-e3e2-4948-a349-0be1ebd35ed1",
       "name": "aviso_de_fallo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -411,7 +411,7 @@
           "queryReplacement": "={{ [$('registrar_turno').first().json.id] }}"
         }
       },
-      "id": "3e482d73-b212-4845-b85f-d5b63d9fa7d6",
+      "id": "26957b99-04ea-4cb9-996b-d8a72d021a42",
       "name": "marcar_enviada",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -443,7 +443,7 @@
           }
         }
       },
-      "id": "1f24a636-8c3d-4dc4-a381-ee5f91971f79",
+      "id": "324f32e8-cda6-43d8-a33a-75c93f5f44c0",
       "name": "cerrar_aviso",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -466,7 +466,7 @@
           "queryReplacement": "={{ [ $('leer_lo_redactado').first().json.lead_id + '-ventas-v9', JSON.stringify({ type: 'ai', data: { content: $('leer_lo_redactado').first().json.al_cliente, additional_kwargs: {}, response_metadata: {} } }) ] }}"
         }
       },
-      "id": "0a634a44-e929-424a-9f86-b1b25b2a6268",
+      "id": "af7302e7-cdd5-409e-b09f-344b465b99da",
       "name": "anotar_en_su_memoria",
       "type": "n8n-nodes-base.postgres",
       "typeVersion": 2.6,
@@ -492,7 +492,7 @@
           "reply_to_message_id": "={{ $('leer_lo_redactado').first().json.mi_mensaje }}"
         }
       },
-      "id": "c4a94553-ddae-457b-96f2-545299456850",
+      "id": "5d898234-eebd-4ef4-8393-5bab1cabc861",
       "name": "acuse_en_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -518,7 +518,7 @@
           "reply_to_message_id": "={{ $json.mi_mensaje }}"
         }
       },
-      "id": "89adca48-d1a9-4328-9858-73e7e8f5fcc3",
+      "id": "ad937859-4f51-4eb1-893d-e8df229cad61",
       "name": "contestar_en_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,

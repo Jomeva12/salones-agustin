@@ -635,7 +635,17 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
        -- 3. Sin ninguna de las dos: solo si ese paquete no tiene escalera ese
        --    año. Si la tiene, una fila sin clasificar aplicaria a CUALQUIER
        --    anticipacion y ganaria por barata, subcotizando el evento.
-       AND (CASE WHEN t.evento_desde IS NOT NULL
+       --
+       -- Una fila puede llevar las DOS: el Quetzal de 2028 dice «solo para
+       -- eventos de Enero a Junio del 2028 Y siempre que falten 6 meses o
+       -- menos». Antes la ventana tapaba al escalon y se habria ofrecido ese
+       -- precio a dos anios vista.
+       AND (CASE WHEN t.evento_desde IS NOT NULL AND t.escalon_id IS NOT NULL
+                 THEN (? BETWEEN t.evento_desde AND t.evento_hasta
+                       AND (t.cotiza_desde IS NULL OR ? >= t.cotiza_desde)
+                       AND (t.cotiza_hasta IS NULL OR ? <= t.cotiza_hasta)
+                       AND ? >= e.meses_min AND (e.meses_max IS NULL OR ? <= e.meses_max))
+                 WHEN t.evento_desde IS NOT NULL
                  THEN (? BETWEEN t.evento_desde AND t.evento_hasta
                        AND (t.cotiza_desde IS NULL OR ? >= t.cotiza_desde)
                        AND (t.cotiza_hasta IS NULL OR ? <= t.cotiza_hasta))
@@ -657,7 +667,12 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
   const resultados = salones.map((s) => {
     const disp = disponibilidadSalon(db, s.id, fecha_evento, turno);
     let filas = st.all(s.id, tipoRow.id, anio, personas,
-      fecha_evento, HOY, HOY, meses, meses);
+      // la rama de ventana + escalon
+      fecha_evento, HOY, HOY, meses, meses,
+      // la de solo ventana
+      fecha_evento, HOY, HOY,
+      // la de solo escalon
+      meses, meses);
 
     // Una tarifa de ventana GANA sobre la del escalon del mismo paquete: es
     // una regla mas especifica, escrita para esos eventos concretos. Sin

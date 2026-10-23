@@ -258,7 +258,6 @@ export const LARGO_PLAZO_MESES = 6;
 // escalera, asi que los tres compiten en cualquier consulta. En los otros tres
 // salones el Plata solo existe a 6 meses o mas.
 export const ORDEN_LARGO_PLAZO = ['Plata', 'Onix', 'Bronce', 'Oro'];
-export const RECARGO_BRONCE_LARGO_PLAZO = 10000;
 
 /** Lo que dura el evento más corto que vale la pena agendar. */
 const MINIMO_HUECO_MIN = 180;
@@ -592,6 +591,11 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
     return { resultado: 'tipo_desconocido', tipo_evento };
   }
 
+  // Cumpleaños y aniversarios se ordenan al reves que las bodas: ver
+  // ordenarParaVender.
+  const CUMPLEANOS = db.prepare(
+    "SELECT id FROM tipo_evento WHERE clave = 'cumpleanos'").get()?.id ?? -1;
+
   const salones = salon
     ? db.prepare('SELECT id, clave, nombre FROM salon WHERE clave = ? AND activo = 1').all(salon)
     : db.prepare('SELECT id, clave, nombre FROM salon WHERE activo = 1 ORDER BY id').all();
@@ -735,17 +739,27 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
     // Desde el 22-oct-2026 si la tienen —el Lic. puso el Bronce a 0-5 meses y
     // el Onix y el Plata a 6 o mas— pero la regla se queda: el orden de venta
     // no depende de que haya escalera.)
-    ordenarParaVender(opciones);
+    // En cumpleaños y aniversarios se empieza por el mas barato; en bodas y XV
+    // manda el orden de venta.
+    ordenarParaVender(opciones, { deAbajoHaciaArriba: tipoRow.id === CUMPLEANOS });
 
-    // El Bronce con recargo, en cambio, SOLO existe a 6 meses o mas: es el
-    // relleno de un hueco del catalogo, no una regla de orden.
-    if (meses >= LARGO_PLAZO_MESES) bronceConRecargo(db, opciones, {
-      salonId: s.id, tipoEventoId: tipoRow.id, anio, personas, col,
-    });
+    // Aqui vivia el «Bronce con recargo»: cuando el Bronce no tenia tarifa a 6
+    // meses o mas, se tomaba la de «3 a 5 meses» y se le sumaban $10,000.
+    // Era el unico precio del sistema que no salia del Excel.
+    //
+    // Se fue el 23-oct-2026, cuando el Lic. explico que ese hueco no es un
+    // olvido sino la regla: «en el 28 el bronce lo estoy limitando hasta el
+    // sexto mes; a partir del septimo se venden bodas y 15 años, pero vamos a
+    // ofrecer ónix y plata». Inventar un Bronce ahi era cotizar algo que el
+    // no quiere vender.
+    //
+    // Para 2027 tampoco hace falta: mando los importes de verdad y estan
+    // cargados — y coincidieron con el recargo en los 20 numeros, asi que la
+    // regla era correcta mientras fue necesaria.
 
     // La lámina de cada paquete en este salón, para que el agente la mande
     // junto con el precio. Se adjunta DESPUÉS de armar las opciones para que
-    // también la lleven las que agrega bronceConRecargo.
+    // también la lleven las que se agreguen después.
     //
     // Va como lista y no como una sola URL porque un paquete puede tener
     // varias: «Baby Shower, Despedidas de Soltera y Bautizos» es uno solo en
@@ -856,70 +870,36 @@ function primeroDelMesQueEntra(iso) {
 }
 
 /**
- * Reordena para el tramo de 6 meses o mas y agrega el Bronce con recargo.
+ * El orden en que se le presentan los paquetes al cliente.
  *
- * El Bronce no tiene tarifa a esa distancia, asi que se toma la del escalon
- * "3 a 5 meses" y se le suman $10,000. Es el unico precio del sistema que no
- * viene del Excel; va marcado con `recargo` para que quede rastro.
+ * Para BODAS y XV manda el orden de venta del Lic.: Plata primero aunque no
+ * sea el mas barato, luego Onix, luego Bronce, y el Oro al final (es mas caro
+ * que el Plata, no cabe en una escalera descendente). A igualdad, el mas
+ * barato.
+ *
+ * Para ANIVERSARIOS y CUMPLEAÑOS manda el precio, de menor a mayor. Es
+ * literal del Lic. el 23-oct-2026: «si el cliente lo pide, le podemos cotizar
+ * el ónix y el plata sin ningún problema, pero SIEMPRE HAY QUE EMPEZAR DE
+ * ABAJO HACIA ARRIBA». Y la razon, con sus palabras: «no es lo mismo pagar
+ * 25,000 pesos a 70,000 pesos, y un paquete de 70,000 te incluye muchas cosas
+ * que puedes utilizar en una boda, pero en un aniversario no».
+ *
+ * Encabezar un cumpleaños con el Plata es la forma segura de perder al
+ * cliente en el primer mensaje.
  */
 const rango = (p) => {
   const i = ORDEN_LARGO_PLAZO.findIndex((n) => p.includes(n));
   return i === -1 ? ORDEN_LARGO_PLAZO.length : i;
 };
 
-/** El orden de venta: Plata, Onix, Bronce, Oro. A igualdad, el mas barato. */
-export function ordenarParaVender(opciones) {
+export function ordenarParaVender(opciones, { deAbajoHaciaArriba = false } = {}) {
+  if (deAbajoHaciaArriba) {
+    opciones.sort((a, b) => a.total - b.total);
+    return;
+  }
   opciones.sort((a, b) => rango(a.paquete) - rango(b.paquete) || a.total - b.total);
 }
 
-function bronceConRecargo(db, opciones, { salonId, tipoEventoId, anio, personas, col }) {
-  const yaHayBronce = opciones.some((o) => o.paquete.includes('Bronce'));
-  if (yaHayBronce) return;
-
-  const base = db.prepare(
-    `SELECT t.id, p.nombre AS paquete, p.unidad_precio, t.contenido_id,
-            pc.cortesias, pc.horas_salon, pc.minutos_estancia, ${col} AS precio
-       FROM tarifa t
-       JOIN paquete p              ON p.id = t.paquete_id
-       LEFT JOIN paquete_contenido pc ON pc.id = t.contenido_id
-       JOIN paquete_tipo_evento pt ON pt.paquete_id = p.id
-       JOIN escalon e              ON e.id = t.escalon_id
-      WHERE t.salon_id = ? AND pt.tipo_evento_id = ? AND t.anio = ?
-        AND ? BETWEEN t.personas_desde AND t.personas_hasta
-        AND p.nombre LIKE '%Bronce%'
-        AND e.meses_min = 3 AND e.meses_max = 5
-        AND t.vigente_hasta IS NULL AND t.requiere_revision = 0
-        AND ${col} IS NOT NULL
-      ORDER BY ${col} ASC LIMIT 1`).get(salonId, tipoEventoId, anio, personas);
-  if (!base) return;
-
-  const unitario = base.unidad_precio === 'por_persona';
-  const totalBase = unitario ? Math.round(base.precio * personas) : base.precio;
-  opciones.push({
-    paquete: base.paquete,
-    unidad: base.unidad_precio,
-    precio: base.precio,
-    total: totalBase + RECARGO_BRONCE_LARGO_PLAZO,
-    tramo_personas: null,
-    escalon: 'Faltan 6 meses o mas',
-    cortesias: base.cortesias ?? null,
-    contenido_id: base.contenido_id,
-    horas_salon: base.horas_salon ?? 5,
-    minutos_estancia: base.minutos_estancia ?? 0,
-    // El recargo NO se le explica al cliente: se le cotiza el total. Viaja
-    // aparte para que quien vende lo sepa y la pantalla no lo desglose.
-    recargo: RECARGO_BRONCE_LARGO_PLAZO,
-    _rango: ORDEN_LARGO_PLAZO.findIndex((n) => base.paquete.includes(n)),
-    recargo_interno: true,
-    motivo_recargo: 'El Bronce no tiene tarifa a 6 meses o mas. Se toma la de ' +
-                    '"3 a 5 meses" con $10,000 de recargo, por instruccion del Lic. Barron. ' +
-                    'No se le explica al cliente: se le da el total.',
-  });
-  // El Bronce se agrego al final: hay que volver a ordenar para que quede en
-  // su sitio de la escalera, delante del Oro.
-  ordenarParaVender(opciones);
-  for (const o of opciones) delete o._rango;
-}
 
 /**
  * Un paquete de fecha fija solo aplica ese dia del año.

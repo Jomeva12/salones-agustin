@@ -47,33 +47,18 @@ if (!existsSync(DB)) { console.error('No existe la base en ' + DB); process.exit
 const db = new DatabaseSync(DB);
 const uno = (sql, ...a) => db.prepare(sql).get(...a);
 
-// ── 1. Para cumpleaños, solo el Bronce ──────────────────────────────────────
-const cumple = uno("SELECT id FROM tipo_evento WHERE clave = 'cumpleanos'");
-if (!cumple) {
-  console.log('  !! no encontré el tipo de evento de cumpleaños');
-} else {
-  const SOBRAN = ['Paquete Onix', 'Paquete Plata', 'Paquete Oro',
-                  'Paquete Onix Boda y XV', 'Paquete Plata Boda y XV'];
-  let quitados = 0;
-  for (const nombre of SOBRAN) {
-    const p = uno('SELECT id FROM paquete WHERE nombre = ?', nombre);
-    if (!p) continue;
-    const r = db.prepare(
-      'DELETE FROM paquete_tipo_evento WHERE paquete_id = ? AND tipo_evento_id = ?')
-      .run(p.id, cumple.id);
-    if (r.changes) { console.log(`  cerrado     ${nombre} para cumpleaños`); quitados++; }
-  }
-  if (!quitados) console.log('  ya estaba   para cumpleaños solo queda el Bronce');
-
-  // El Bronce SI se queda: es el que se ofrece de abajo hacia arriba.
-  const bronce = uno("SELECT id FROM paquete WHERE nombre = 'Paquete Bronce'");
-  if (bronce && !uno('SELECT 1 x FROM paquete_tipo_evento WHERE paquete_id=? AND tipo_evento_id=?',
-                     bronce.id, cumple.id)) {
-    db.prepare('INSERT INTO paquete_tipo_evento (paquete_id, tipo_evento_id) VALUES (?,?)')
-      .run(bronce.id, cumple.id);
-    console.log('  abierto     Paquete Bronce para cumpleaños');
-  }
-}
+// ── 1. (ANULADO el mismo día) ───────────────────────────────────────────────
+//
+// Aqui se cerraban el Onix, el Plata y el Oro para cumpleaños. Duro unas
+// horas: en la reunion del 23-oct el Lic. aclaro que a mas de seis meses en
+// Quetzal SI se cotizan —«no sería que no tenemos paquete, sería: el
+// cumpleaños que tú quieres celebrar te saldría en 55 porque es un paquete
+// más caro»— y que lo suyo era el ORDEN, no la disponibilidad: «siempre hay
+// que empezar de abajo hacia arriba».
+//
+// Lo reabre `migracion_cumple_de_abajo_hacia_arriba.mjs`, y el orden lo
+// resuelve `ordenarParaVender`. Este paso se queda vacio a proposito: si se
+// reejecutara con el cierre dentro, desharia aquello en silencio.
 
 // ── 2. Los de Quetzal pierden el «Boda y XV» ────────────────────────────────
 const RENOMBRES = [

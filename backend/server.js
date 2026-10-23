@@ -32,6 +32,42 @@ const TOKEN = process.env.API_TOKEN ?? '';
 const KOMMO_TOKEN = process.env.KOMMO_TOKEN ?? '';
 const KOMMO_BASE = process.env.KOMMO_BASE ?? 'https://administracioneventos6.kommo.com';
 
+// El aviso recien nacido se publica YA, sin esperar al reloj.
+//
+// Hasta el 22-oct-2026 el unico camino era el cron: un cliente pidio una
+// visita a las 8:31 y la encargada no lo vio hasta las 8:35. No era un fallo,
+// era el tick — pero son cuatro minutos de alguien esperando.
+//
+// Lo dispara el panel y no el agente a proposito. Si Maya tuviera que
+// acordarse de mandar una bandera, algun dia no la manda, y eso no deja ni
+// error ni rastro. El panel no puede olvidarse: es quien inserta la fila.
+//
+// Si falta la variable, esto no hace nada y el cron sigue cubriendolo todo
+// como siempre. Asi el panel arranca igual en un portatil sin n8n al lado.
+const AVISOS_WEBHOOK = process.env.AVISOS_WEBHOOK_URL ?? '';
+
+/**
+ * Le dice a n8n que hay un aviso nuevo. Lanzar y olvidar.
+ *
+ * NO se espera la respuesta ni se propaga el fallo: el aviso YA esta guardado,
+ * que es lo que importa, y un problema al publicarlo no puede impedir que
+ * exista. Si esta llamada se pierde, el cron lo recoge en la siguiente vuelta.
+ */
+function dispararAviso(id) {
+  if (!AVISOS_WEBHOOK) return;
+  const control = new AbortController();
+  // Sin tope, una peticion colgada dejaria el proceso con un pendiente vivo
+  // para siempre.
+  const corte = setTimeout(() => control.abort(), 4000);
+  fetch(AVISOS_WEBHOOK, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ aviso_id: id, origen: 'panel' }),
+    signal: control.signal,
+  }).catch(() => { /* lo recoge el cron */ })
+    .finally(() => clearTimeout(corte));
+}
+
 /**
  * Sube una imagen al Drive de Kommo y devuelve su URL y su uuid.
  *
@@ -1522,8 +1558,10 @@ const rutas = {
     const r = db.prepare(
       `INSERT INTO aviso (salon_id, lead_id, motivo, texto) VALUES (?,?,?,?)`)
       .run(s?.id ?? null, lead, motivo, texto);
-    anotar('aviso', Number(r.lastInsertRowid), 'alta', c._autor ?? 'agente', motivo);
-    return { ok: true, id: Number(r.lastInsertRowid), repetido: false };
+    const avisoId = Number(r.lastInsertRowid);
+    anotar('aviso', avisoId, 'alta', c._autor ?? 'agente', motivo);
+    dispararAviso(avisoId);
+    return { ok: true, id: avisoId, repetido: false };
   },
 
   'PUT /api/avisos': (_u, c) => {
@@ -1700,6 +1738,7 @@ const rutas = {
         `INSERT INTO aviso (salon_id, lead_id, motivo, texto, cita_id) VALUES (?,?,?,?,?)`)
         .run(s.id, c.lead_id ?? null, 'cita', texto, citaId);
       avisoId = Number(ra.lastInsertRowid);
+      dispararAviso(avisoId);
     }
 
     // `fecha_larga` y `dia_semana` van de vuelta para que el agente nombre el

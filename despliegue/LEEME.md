@@ -47,6 +47,7 @@ y los datos se quedan.
 
 ```
 API_TOKEN=<pegar el generado abajo>
+AVISOS_WEBHOOK_URL=http://automatizaciones_n8n:5678/webhook/salones-aviso-nuevo
 ```
 
 ```bash
@@ -55,6 +56,11 @@ node -e "console.log(require('node:crypto').randomBytes(32).toString('base64url'
 
 `HOST`, `PORT` y `DB_PATH` ya vienen en el Dockerfile. Sin `API_TOKEN` el API
 queda **abierta** y el panel lo grita al arrancar.
+
+`AVISOS_WEBHOOK_URL` es lo que hace que un aviso salga al grupo en un segundo
+en vez de esperar al cron. Va por la red interna de Easypanel, sin salir a
+internet. **Si falta, no se rompe nada**: el aviso se queda pendiente y el cron
+lo recoge en la siguiente vuelta, como se hacía antes — solo llega más tarde.
 
 ## 4. Dominio
 

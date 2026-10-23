@@ -7,19 +7,36 @@
           "interval": [
             {
               "field": "cronExpression",
-              "expression": "* * * * *"
+              "expression": "*/5 * * * *"
             }
           ]
         }
       },
-      "id": "f54eaeff-7b6f-44d0-8869-e3f27aaf0b84",
-      "name": "cada_minuto",
+      "id": "f314a36b-8dee-4310-aab5-f6f0202eb6b6",
+      "name": "cada_5_min",
       "type": "n8n-nodes-base.scheduleTrigger",
       "typeVersion": 1.2,
       "position": [
         -400,
-        0
+        -120
       ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "salones-aviso-nuevo",
+        "responseMode": "onReceived",
+        "options": {}
+      },
+      "id": "cd430a5c-3409-470d-870d-fd5f19b1f9e0",
+      "name": "aviso_recien_creado",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -400,
+        100
+      ],
+      "webhookId": "a7f1c0e4-5b62-4d38-9e71-2c5a9f8b3d10"
     },
     {
       "parameters": {
@@ -34,7 +51,7 @@
           }
         }
       },
-      "id": "456b5e74-dfba-4e48-90e9-f4938111932d",
+      "id": "8736f44e-98e6-44e8-90f9-e9fa21d76f52",
       "name": "traer_pendientes",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -53,7 +70,7 @@
       "parameters": {
         "jsCode": "// Cuales toca avisar ahora, y con que texto.\n//\n// El primer aviso sale a CUALQUIER hora: el Lic. dijo que si entra algo a las\n// 2 de la madrugada quiere verlo. Los recordatorios, en cambio, solo en\n// horario laboral — a nadie se le pica costillas mientras duerme.\n//\n// Miercoles a lunes de 12 a 20. El martes cierran, asi que ese dia no se\n// insiste ni una vez.\n//\n// Y la espera CRECE. Al principio no habia techo: un aviso que nadie atendio\n// llego a 71 recordatorios en cuatro dias, el mismo texto cada media hora. Eso\n// ya no es insistir, es ruido — y lo que se gasta es la atencion al resto: un\n// grupo que repite lo mismo 71 veces se deja de mirar, y el aviso bueno se\n// pierde entre los malos.\n//\n// Las primeras dos horas cada media, que es cuando de verdad se puede\n// reaccionar. El resto del dia cada dos. De ahi en adelante, una vez al dia,\n// para que no desaparezca: sigue habiendo alguien esperando.\nfunction esperaMin(veces) {\n  if (veces < 4) return 30;\n  if (veces < 10) return 120;\n  return 1440;\n}\n\nconst ahora = $now;                 // ya viene en la zona del flujo (Monterrey)\nconst laboral = ahora.weekday !== 2 && ahora.hour >= 12 && ahora.hour < 20;\n\nconst MOTIVO = {\n  sin_dato: 'Falta un dato',\n  cita: 'Quiere agendar una visita',\n  disponibilidad: 'Pregunta por disponibilidad',\n  apartado: 'Quiere apartar la fecha',\n  descuento: 'Pide descuento',\n  contratar: 'Quiere contratar',\n  queja: 'Se queja o reclama',\n  humano: 'Pide hablar con una persona',\n  // Nace con Semana Santa: el cliente duda por la fecha y el asesor\n  // tiene margen para mejorarle la oferta. No es un problema, es una\n  // venta que todavia se puede cerrar.\n  oportunidad: 'Se puede mejorar la oferta',\n};\n\nconst minutosDesde = (iso) => {\n  if (!iso) return null;\n  const t = Date.parse(iso.replace(' ', 'T') + 'Z');\n  return Number.isFinite(t) ? Math.round((Date.now() - t) / 60000) : null;\n};\n\nconst enPalabras = (min) => {\n  if (min === null) return '';\n  if (min < 60) return `${min} min`;\n  const h = Math.floor(min / 60);\n  return h < 24 ? `${h} h ${min % 60} min` : `${Math.floor(h / 24)} d`;\n};\n\n// El grupo de los avisos que no son de ningun salon.\nconst GENERAL = '-5410906335';\n\nconst salida = [];\nfor (const a of ($input.first().json.avisos ?? [])) {\n  const primero = !a.ultimo_aviso_en;\n  const desdeUltimo = minutosDesde(a.ultimo_aviso_en);\n\n  if (!primero) {\n    if (!laboral) continue;\n    if (desdeUltimo === null || desdeUltimo < esperaMin(Number(a.recordatorios ?? 0))) continue;\n  }\n\n  const espera = enPalabras(minutosDesde(a.creado_en));\n  const encabezado = primero\n    ? `🔔 *${MOTIVO[a.motivo] ?? a.motivo}*`\n    : `⏰ *Sigue pendiente* — ${MOTIVO[a.motivo] ?? a.motivo}`;\n\n  const lineas = [\n    encabezado,\n    a.salon_nombre ? `_${a.salon_nombre}_${a.encargada ? ' · ' + a.encargada : ''}` : null,\n    '',\n    a.texto,\n    '',\n    primero ? null : `La clienta lleva ${espera} esperando.`,\n    // Pasado un dia sin que nadie lo toque, lo probable es que ya no aplique\n    // —la conversacion siguio, o se atendio por fuera— y nadie se acuerda de\n    // cerrarlo. Decir COMO se cierra es lo unico que rompe el bucle.\n    Number(a.recordatorios ?? 0) >= 10\n      ? 'Van ' + a.recordatorios + ' recordatorios. Si ya se atendio o ya no aplica, '\n        + 'cierralo en el panel con «Ya lo atendi» y deja de aparecer.'\n      : null,\n    a.lead_id\n      ? `https://administracioneventos6.kommo.com/leads/detail/${a.lead_id}`\n      : null,\n  ].filter((x) => x !== null);\n\n  // Cada aviso sale por el grupo de SU salon. El general queda de red: un\n  // aviso puede no tener salon —el cliente escribio algo que hay que escalar\n  // antes de decir a cual va— y sin destino no lo veria nadie. Un aviso que no\n  // aparece en ninguna pantalla es un cliente esperando en el vacio.\n  salida.push({ json: {\n    id: a.id,\n    primero,\n    grupo: a.grupo || GENERAL,\n    sin_grupo_propio: !a.grupo,\n    texto: lineas.join('\\n'),\n  } });\n}\n\nreturn salida;"
       },
-      "id": "742223ba-e2f7-4bf2-b07a-9ad718e4be12",
+      "id": "7da7073f-acd0-4f0a-b655-a4609d0bdb35",
       "name": "a_quien_toca",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
@@ -71,7 +88,7 @@
           "appendAttribution": false
         }
       },
-      "id": "d5747f33-0826-4250-8be9-9fd9f154c13e",
+      "id": "4883b425-6985-41b8-9af8-a3eb3a927b19",
       "name": "mandar_al_grupo",
       "type": "n8n-nodes-base.telegram",
       "typeVersion": 1.2,
@@ -111,7 +128,7 @@
         },
         "options": {}
       },
-      "id": "2a39cb6b-22c7-426f-ba6a-f93e1137283a",
+      "id": "b9418173-a8b8-4606-b2a9-3a9d1d46deb8",
       "name": "se_entrego",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
@@ -137,7 +154,7 @@
           }
         }
       },
-      "id": "33d0d7d8-1223-4b07-8808-d251ce6fc6b4",
+      "id": "4f5d7344-1383-4203-a6c7-cbe29f572306",
       "name": "marcar_avisado",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
@@ -154,7 +171,18 @@
     }
   ],
   "connections": {
-    "cada_minuto": {
+    "cada_5_min": {
+      "main": [
+        [
+          {
+            "node": "traer_pendientes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "aviso_recien_creado": {
       "main": [
         [
           {

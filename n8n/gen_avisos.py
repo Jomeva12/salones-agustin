@@ -47,17 +47,33 @@ def une(a, b, tipo="main", salida=0):
     con[a][tipo][salida].append({"node": b, "type": tipo, "index": 0})
 
 
-# Cada minuto. Antes eran cinco, y el PRIMER aviso llegaba a esperarlos: el
-# 22-oct-2026 un cliente pidio una visita a las 8:31 y la encargada no lo vio
-# hasta las 8:35. No es un fallo, es el tick — pero son cuatro minutos de un
-# cliente esperando, y la consulta que hace esto es un GET al panel. Sale mas
-# barato preguntar cinco veces de mas que llegar cuatro minutos tarde.
+# Dos entradas, y cada una hace una cosa distinta.
 #
-# Los recordatorios NO se aceleran por esto: se espacian solos mirando cuando
-# se aviso por ultima vez, asi que siguen en 30 min, 2 h y un dia.
-add("cada_minuto", "n8n-nodes-base.scheduleTrigger", 1.2,
-    {"rule": {"interval": [{"field": "cronExpression", "expression": "* * * * *"}]}},
-    [-400, 0])
+# EL WEBHOOK es el camino normal del PRIMER aviso. Lo dispara el panel en
+# cuanto inserta la fila, asi que el aviso sale al grupo en un segundo en vez
+# de esperar al reloj. El 22-oct-2026 un cliente pidio una visita a las 8:31 y
+# la encargada no lo vio hasta las 8:35: no era un fallo, era el tick.
+#
+# Lo dispara el PANEL y no el agente a proposito. Si Maya tuviera que acordarse
+# de mandar una bandera, algun dia no la manda — y no habria error, ni
+# ejecucion, ni rastro: el aviso se quedaria esperando al cron. El panel, en
+# cambio, no puede olvidarse: es quien lo inserta.
+#
+# EL CRON se queda de dos cosas: los recordatorios —que van en escalones de 30
+# min, 2 h y un dia, asi que cada 5 minutos sobra— y de red de seguridad. Si
+# el webhook falla (n8n reiniciando, un corte), el aviso sigue pendiente y la
+# siguiente vuelta lo recoge. En el peor caso llega tarde, como antes; no se
+# pierde.
+add("cada_5_min", "n8n-nodes-base.scheduleTrigger", 1.2,
+    {"rule": {"interval": [{"field": "cronExpression", "expression": "*/5 * * * *"}]}},
+    [-400, -120])
+
+# Responde al recibir: el panel no espera, y menos aun debe esperar a que el
+# mensaje llegue a Telegram para darle por bueno un aviso que ya esta guardado.
+add("aviso_recien_creado", "n8n-nodes-base.webhook", 2,
+    {"httpMethod": "POST", "path": "salones-aviso-nuevo",
+     "responseMode": "onReceived", "options": {}},
+    [-400, 100], extra={"webhookId": "a7f1c0e4-5b62-4d38-9e71-2c5a9f8b3d10"})
 
 add("traer_pendientes", "n8n-nodes-base.httpRequest", 4.2,
     {"url": PANEL + "/api/avisos?estado=pendiente",
@@ -218,7 +234,8 @@ add("marcar_avisado", "n8n-nodes-base.httpRequest", 4.2,
      "options": {"response": {"response": {"responseFormat": "json"}}}},
     [460, 0], cred=CRED_PANEL)
 
-une("cada_minuto", "traer_pendientes")
+une("cada_5_min", "traer_pendientes")
+une("aviso_recien_creado", "traer_pendientes")
 une("traer_pendientes", "a_quien_toca")
 une("a_quien_toca", "mandar_al_grupo")
 une("mandar_al_grupo", "se_entrego")

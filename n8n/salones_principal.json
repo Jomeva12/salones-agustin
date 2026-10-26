@@ -1403,6 +1403,85 @@
           "name": "panel_salones"
         }
       }
+    },
+    {
+      "parameters": {
+        "jsCode": "// MODO PRUEBAS: Maya solo le contesta a estos leads.\n//\n// Mientras se vinculan los WhatsApp hay que poder escribirle desde un numero\n// propio sin que les conteste a los clientes de verdad. No sirve apagar el\n// webhook: si se apaga, tampoco contesta a quien esta probando.\n//\n// ───────────────────────────────────────────────────────────────────────────\n//  EL DIA DEL LANZAMIENTO: vaciar la lista.  const SOLO_ESTOS = [];\n// ───────────────────────────────────────────────────────────────────────────\n//\n// Van ids de lead de Kommo. Cuando se vincule un WhatsApp nuevo no se sabe de\n// antemano que lead va a crear: se escribe una vez, el aviso que sale al grupo\n// trae el id y el enlace al lead, y se añade aqui.\nconst SOLO_ESTOS = [\n  '1313384',   // Jorge, por Telegram\n  '2261502',   // Lic. Barrón, por Telegram\n];\n\nconst d = $json;\nconst permitido = !SOLO_ESTOS.length\n  || SOLO_ESTOS.map(String).includes(String(d.lead_id));\n\n// Quien NO pasa no desaparece: se abre un aviso para que alguien lo atienda a\n// mano. Un cliente que escribe y no recibe respuesta —ni humana ni de Maya— es\n// un cliente perdido sin que nadie se entere, y eso es peor que no haber\n// puesto el filtro. Lo mismo hace Revolution, que anota en `ia_control_saltados`\n// a quien se salto la IA.\n//\n// El aviso lo crea el panel, que ya se encarga de publicarlo en el grupo y de\n// no repetirlo con cada mensaje del mismo cliente.\nreturn [{\n  json: {\n    ...d,\n    permitido,\n    aviso_texto: permitido ? null\n      : `MAYA ESTÁ EN PRUEBAS y no le contestó al lead ${d.lead_id}.`\n        + ` Escribió ${d.autor || 'alguien'} por ${d.origen || 'el canal'}:`\n        + ` «${String(d.texto || '').slice(0, 160)}». Atiéndelo a mano desde Kommo.`,\n  },\n}];\n"
+      },
+      "id": "a6049372-b312-4b0b-b491-0d009a4704bc",
+      "name": "solo_pruebas",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -20,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "version": 2,
+            "caseSensitive": true,
+            "typeValidation": "loose"
+          },
+          "combinator": "and",
+          "conditions": [
+            {
+              "id": "ok",
+              "operator": {
+                "type": "boolean",
+                "operation": "true",
+                "singleValue": true
+              },
+              "leftValue": "={{ $json.permitido }}",
+              "rightValue": ""
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f5a7de53-a6d2-4059-a7d7-27bbec9086d0",
+      "name": "le_contesto",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        160,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://automatizaciones_salones-panel:4300/api/avisos",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ JSON.stringify({ motivo: 'en_pruebas', lead_id: $json.lead_id, texto: $json.aviso_texto, _autor: 'filtro de pruebas' }) }}",
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "77a01bf9-2e32-4c2d-b643-9f016ae66f07",
+      "name": "avisar_que_no_conteste",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        340,
+        160
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "NmEwnWxyfdqJcNvw",
+          "name": "panel_salones"
+        }
+      },
+      "onError": "continueRegularOutput"
     }
   ],
   "connections": {
@@ -1814,7 +1893,7 @@
       "main": [
         [
           {
-            "node": "guardar_en_buffer",
+            "node": "solo_pruebas",
             "type": "main",
             "index": 0
           }
@@ -2022,6 +2101,35 @@
           {
             "node": "cliente",
             "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "solo_pruebas": {
+      "main": [
+        [
+          {
+            "node": "le_contesto",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "le_contesto": {
+      "main": [
+        [
+          {
+            "node": "guardar_en_buffer",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "avisar_que_no_conteste",
+            "type": "main",
             "index": 0
           }
         ]

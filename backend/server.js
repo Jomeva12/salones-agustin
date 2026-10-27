@@ -1596,7 +1596,28 @@ const rutas = {
     // Nota: no devuelve aqui. El flujo de avisos manda `telegram_message_id` y
     // `recordado` en la MISMA llamada, asi que cortar aqui dejaria el
     // recordatorio sin contar.
+    // Ponerle salón a un aviso que nació sin él.
+    //
+    // Pasa cuando el cliente escribe algo que hay que escalar antes de decir a
+    // qué salón va — y desde que hay canales de Facebook, también cuando se
+    // sabe por la fuente del lead y no por la conversación.
+    //
+    // Cambiar de salón es cambiar de grupo de Telegram, así que se limpia
+    // `ultimo_aviso_en`: el aviso vuelve a salir YA, porque quien lo tiene que
+    // ver es otra gente que todavía no lo ha visto. Sin esto esperaría al
+    // siguiente recordatorio y la encargada que ahora sí le toca se enteraría
+    // media hora tarde.
     let guardado = false;
+    if (c?.salon !== undefined) {
+      const s = db.prepare('SELECT id, nombre FROM salon WHERE clave = ? OR nombre = ?')
+        .get(c.salon, c.salon);
+      if (!s) return { error: 'salón desconocido', detalle: String(c.salon) };
+      db.prepare(
+        `UPDATE aviso SET salon_id = ?, ultimo_aviso_en = NULL WHERE id = ?`).run(s.id, id);
+      anotar('aviso', id, 'cambio', c._autor ?? null, `salón -> ${s.nombre}`);
+      guardado = true;
+    }
+
     if (c?.telegram_message_id) {
       const chat = String(c.telegram_chat_id ?? '');
       const mensaje = entero(c.telegram_message_id);

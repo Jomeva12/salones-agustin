@@ -260,7 +260,31 @@ if (Number.isFinite(invitados) && invitados >= MINIMO_INVITADOS) {
 //
 // Aqui el JSON ya esta parseado: se saca el campo y se compara por igualdad.
 const AGENTES = ['ventas', 'cliente', 'seguimiento'];
-const agente = AGENTES.includes(salida.agente) ? salida.agente : 'ventas';
+let agente = AGENTES.includes(salida.agente) ? salida.agente : 'ventas';
+
+// ── Quien ya es cliente no vuelve a ventas ──────────────────────────────────
+//
+// El 6-nov-2026 una clienta CON CONTRATO estuvo cuatro turnos discutiendo el
+// 75%, el pastel que no le incluyeron y si cancelaba o no. Los cuatro fueron
+// a `cliente`, bien. Una hora despues escribio «Y de lo demas???» —tres
+// palabras, sin contexto— y el Director la mando a ventas, que le contesto
+// «¿a que tipo de evento te refieres y para cuantas personas?». A una persona
+// que estaba decidiendo si cancelaba.
+//
+// Al prompt del Director ya se le pide que no cambie de agente a media
+// conversacion. No basta: un mensaje corto y vago no le da de donde
+// agarrarse, y vuelve al caso comun, que es vender. Asi que aqui se garantiza.
+//
+// Es una puerta de un solo sentido a proposito. Si se equivoca y deja a un
+// prospecto en `cliente`, ese agente escala a la encargada y una persona lo
+// ve. Al reves —ponerse a vender a quien ya firmo— es lo que acabamos de
+// ver, y eso no lo arregla nadie despues.
+//
+// `seguimiento` no se toca: lo dispara el sistema, no el contenido.
+let ultimo = null;
+try { ultimo = $('ultimo_agente').first().json.ultimo_agente ?? null; } catch (e) { ultimo = null; }
+const volvioAVender = ultimo === 'cliente' && agente === 'ventas';
+if (volvioAVender) agente = 'cliente';
 
 return [{
   json: {
@@ -268,6 +292,10 @@ return [{
     lead_id: $('formatLead').first().json.lead_id,
     // Ante la duda, ventas: es lo que dice su propio prompt.
     agente,
+    // Para poder verlo en la ejecucion sin tener que deducirlo.
+    agente_del_director: salida.agente ?? null,
+    ultimo_agente: ultimo,
+    volvio_a_vender: volvioAVender,
     anotado,
     // Lo acumulado de la conversacion, para que el turno sepa que NO hay que
     // volver a preguntar. `anotado` solo trae lo de este mensaje.

@@ -1455,6 +1455,12 @@ const rutas = {
   'GET /api/avisos': (u) => {
     const estado = u.searchParams.get('estado');
     const clave = u.searchParams.get('salon');
+    // Los de UN lead. Lo usa el flujo en cada turno para saber si esa persona
+    // tiene algo esperando respuesta de la encargada: sin eso, Maya le
+    // contesta «¿que tipo de evento quieres?» a quien lleva una hora
+    // esperando que le aclaren su contrato. Sin este filtro vendrian los 167
+    // pendientes de todos los salones en cada mensaje.
+    const lead = u.searchParams.get('lead');
     // Al filtrar por salon se incluyen tambien los avisos SIN salon. Desde
     // que el agente puede dejarlo vacio —cuando la conversacion todavia no
     // habla de un salon en concreto— esos avisos no son de nadie, y si se
@@ -1469,8 +1475,10 @@ const rutas = {
          LEFT JOIN cita  c ON c.id = a.cita_id
         WHERE (? IS NULL OR a.estado = ?)
           AND (? IS NULL OR s.clave = ? OR a.salon_id IS NULL)
+          AND (? IS NULL OR a.lead_id = ?)
         ORDER BY a.estado = 'pendiente' DESC, a.creado_en DESC
-        LIMIT 300`).all(estado || null, estado || null, clave || null, clave || null);
+        LIMIT 300`).all(estado || null, estado || null, clave || null, clave || null,
+                        lead || null, lead || null);
     // El contador sigue el MISMO filtro de salon que la lista. Si contara
     // todos, el globo del menu diria 3 y la pantalla ensenaria uno — y el
     // numero que no cuadra con lo que se ve deja de mirarse.

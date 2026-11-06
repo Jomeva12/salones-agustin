@@ -28,6 +28,18 @@ try {
   salones = $('traer_salones').all().map((x) => x.json).filter((x) => x && x.clave);
 } catch (e) { salones = []; }
 
+// Lo que este lead tiene esperando respuesta de la encargada.
+//
+// El endpoint devuelve los pendientes de todos los salones; el filtro por
+// lead se hace aqui para no depender de que el panel ya tenga ese parametro.
+let avisosDelLead = [];
+try {
+  const crudo = $('traer_avisos').all().map((x) => x.json);
+  const lista = crudo.length === 1 && Array.isArray(crudo[0].avisos) ? crudo[0].avisos : crudo;
+  avisosDelLead = lista.filter((a) => a && String(a.lead_id) === String(p.lead_id)
+    && a.estado === 'pendiente');
+} catch (e) { avisosDelLead = []; }
+
 const partes = [];
 
 // ── De qué salón es esta conversación ───────────────────────────────────────
@@ -98,6 +110,34 @@ if (!cuantos) faltan.push('cuántos invitados son');
 if (sabido.length) {
   partes.push(`Esto ya lo dijo el cliente y NO se lo vuelvas a preguntar: ${sabido.join(', ')}.`
     + (faltan.length ? ` Y esto NO lo ha dicho todavía, así que no te lo inventes: ${faltan.join(' ni ')}.` : ''));
+}
+
+// ── Lo que está esperando de la encargada ───────────────────────────────────
+//
+// El 6-nov-2026 una clienta con contrato pregunto por el 75%, por el pastel
+// que no le incluyeron y si cancelaba. Maya escalo las tres cosas —bien— y le
+// dijo «en cuanto me responda, te aviso». Una hora despues la clienta escribio
+// «Y de lo demas???» y Maya le contesto «¿a que tipo de evento te refieres?».
+//
+// Maya no tenia forma de saber que seguia habiendo algo abierto. Para ella
+// cada turno empieza de cero salvo lo que recuerde del chat, y «lo demas» no
+// se entiende sin saber que hay tres preguntas en la cola de la encargada.
+//
+// Va justo despues de quien es ella y antes que todo lo demas: si hay algo
+// esperando, eso manda sobre cualquier otra cosa que pudiera decir.
+if (avisosDelLead.length) {
+  const cuales = avisosDelLead
+    .map((a) => `«${String(a.motivo || a.texto || 'una consulta').slice(0, 90)}»`)
+    .join(' y ');
+  partes.push(`YA ESCALASTE ESTO Y SIGUE SIN RESPUESTA: ${cuales}. `
+    + 'El cliente está esperando eso, no otra cosa. '
+    + 'Si pregunta «¿y lo demás?», «¿ya te contestaron?» o algo que no entiendas, '
+    + 'se refiere a esto: dile que sigues esperando a la encargada y que en '
+    + 'cuanto te conteste le avisas. '
+    + 'NO le preguntes qué tipo de evento es, ni cuántos invitados, ni le '
+    + 'ofrezcas cotizar: ya es cliente o ya está en medio de algo, y empezar '
+    + 'de cero le dice que no lo estás siguiendo. '
+    + 'Y no vuelvas a escalar lo mismo: ya está pedido.');
 }
 
 // ── Dónde está cada salón ───────────────────────────────────────────────────

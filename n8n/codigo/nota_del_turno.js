@@ -22,6 +22,35 @@ try {
 
 const partes = [];
 
+// ── De qué salón es esta conversación ───────────────────────────────────────
+//
+// Cada salon tiene su propio numero de WhatsApp. Quien escribe al de Esmeralda
+// espera que le contesten de Esmeralda, no «de Salones Agustin Barron» — eso
+// es el grupo entero y a el no le dice nada.
+//
+// Manda la FUENTE, no el campo «Salón». El campo dice que salon QUIERE el
+// cliente y se corrige a mitad de conversacion; la linea por la que escribio
+// no cambia nunca, y es la que define con quien cree estar hablando.
+//
+// Va lo primero de la nota a proposito. El prompt trae su propia frase de
+// presentacion, y entre dos instrucciones el modelo sigue a la mas enfatica y
+// a la que tiene mas cerca.
+const NOMBRE_SALON = {
+  norma: 'Norma Eventos', esmeralda: 'Esmeralda Eventos',
+  santacruz: 'Santa Cruz Eventos', quetzal: 'Quetzal Eventos',
+};
+let laLinea = null;
+try {
+  laLinea = NOMBRE_SALON[$('salon_del_numero').first().json.salon_fuente] ?? null;
+} catch (e) { laLinea = null; }
+if (laLinea) {
+  partes.push(`Esta conversación entró por el canal de ${laLinea}: el cliente `
+    + `escribió a ESE salón. Si te presentas, di «Soy Maya, de ${laLinea}» `
+    + '— nunca «de Salones Agustín Barrón», que es el grupo entero. '
+    + 'Si el cliente acaba pidiendo otro salón, atiéndelo igual: lo que no '
+    + 'cambia es con quién cree que está hablando.');
+}
+
 // Lo que el Director ya entendio, dicho con todas sus letras.
 //
 // Sin esto el agente solo ve el texto crudo y vuelve a interpretarlo por su

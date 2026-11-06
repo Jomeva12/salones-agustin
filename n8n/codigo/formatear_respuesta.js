@@ -91,6 +91,47 @@ function cortarRellenoTrasEscalar(t) {
 }
 texto = cortarRellenoTrasEscalar(texto);
 
+// ── Se presenta como el salón al que escribieron ────────────────────────────
+//
+// Cada salon tiene su propio WhatsApp. Quien escribe al de Esmeralda espera
+// que le contesten de Esmeralda; «Soy Maya, de Salones Agustin Barron» es el
+// grupo entero y a el no le dice nada — el 6-nov-2026 paso en vivo.
+//
+// Esto ya se lo pide el prompt y se lo repite la cabecera del `[Sistema]`.
+// Aqui esta la garantia, porque una frase de ejemplo metida en 26.000
+// caracteres de prompt pesa mas de lo que parece y el modelo la copia tal
+// cual. El prompt pide; el codigo garantiza.
+//
+// El candado NO persigue redaccion: busca la frase donde Maya se presenta
+// —la que dice su nombre Y la marca— y dentro de ESA cambia la marca por el
+// salon. Una frase que nombre la marca sin presentarse («somos parte de
+// Salones Agustin Barron») no se toca, que es justo lo que se quiere.
+const MARCA = /Salones\s+Agust[ií]n\s+Barr[óo]n/i;
+const NOMBRE_SALON = {
+  norma: 'Norma Eventos', esmeralda: 'Esmeralda Eventos',
+  santacruz: 'Santa Cruz Eventos', quetzal: 'Quetzal Eventos',
+};
+
+function presentarseComoElSalon(t, salon) {
+  if (!salon || !MARCA.test(t)) return t;
+  const frases = t.match(/[^.!?\n]+[.!?\n]*/g);
+  if (!frases) return t;
+  let hecho = false;
+  return frases.map((f) => {
+    if (hecho || !/\bMaya\b/.test(f) || !MARCA.test(f)) return f;
+    hecho = true;
+    return f.replace(MARCA, salon);
+  }).join('');
+}
+
+// La FUENTE, no el campo «Salón»: el campo dice qué salón quiere el cliente y
+// cambia a mitad de conversación; la línea por la que escribió, no.
+let salonDeLaLinea = null;
+try {
+  salonDeLaLinea = NOMBRE_SALON[$('salon_del_numero').first().json.salon_fuente] ?? null;
+} catch (e) { salonDeLaLinea = null; }
+texto = presentarseComoElSalon(texto, salonDeLaLinea);
+
 const MAX_PARTES = 2;   // por ahora dos; el subflujo admite hasta cuatro
 
 // Se corta por ritmo de WhatsApp, no por longitud: la informacion en un

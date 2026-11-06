@@ -250,10 +250,24 @@ if (Number.isFinite(invitados) && invitados >= MINIMO_INVITADOS) {
 // sin marcar, la IA corre. Marcarlo seria justo lo contrario de lo que se
 // quiere en un lead nuevo.
 
+// A quien enruta el Director, ya sacado del JSON.
+//
+// `enrutar` miraba el texto ENTERO de su salida con «contains», asi que
+// bastaba con que la palabra «ventas» apareciera en la razon para que un
+// `{"agente":"cliente","razon":"...no procede ventas..."}` acabara en ventas.
+// La regla de ventas va primero, asi que gana ella. Todavia no ha pegado,
+// pero es cuestion de que el modelo escriba la razon de otra manera.
+//
+// Aqui el JSON ya esta parseado: se saca el campo y se compara por igualdad.
+const AGENTES = ['ventas', 'cliente', 'seguimiento'];
+const agente = AGENTES.includes(salida.agente) ? salida.agente : 'ventas';
+
 return [{
   json: {
     hay_datos: valores.length > 0,
     lead_id: $('formatLead').first().json.lead_id,
+    // Ante la duda, ventas: es lo que dice su propio prompt.
+    agente,
     anotado,
     // Lo acumulado de la conversacion, para que el turno sepa que NO hay que
     // volver a preguntar. `anotado` solo trae lo de este mensaje.

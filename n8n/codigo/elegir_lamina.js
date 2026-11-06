@@ -328,6 +328,27 @@ function fotosDe(salon) {
   }));
 }
 
+// ¿Ya le mandamos las fotos del salon a este lead?
+//
+// El 6-nov-2026 una clienta cotizo tres veces en veinte minutos —cumpleanos,
+// 100 personas, 25 de marzo— y recibio las MISMAS doce fotos las tres veces:
+// 36 fotos de 12 imagenes distintas, 46 mensajes nuestros contra 19 suyos.
+// En medio escribio «Yaaaa» y «Que fea foto», que es lo que escribe alguien
+// a quien estas enterrando.
+//
+// Las fotos detras de la cotizacion las pidio Agustin y estan bien: ensenar
+// el lugar sin que lo pidan es lo que hace que quieran venir. Lo que no
+// estaba previsto es que una SEGUNDA cotizacion del mismo salon las repita.
+// Ensenar el salon es algo que se hace una vez.
+//
+// Se mira el numero de partes de los turnos anteriores, que es estructura y
+// no redaccion: una respuesta normal son una o dos; una con fotos pasa de
+// diez. No hace falta guardar nada nuevo.
+let yaVioLasFotos = false;
+try {
+  yaVioLasFotos = Number($('ultimo_agente').first().json.turnos_con_fotos) > 0;
+} catch (e) { yaVioLasFotos = false; }
+
 let fotos = [];
 try {
   // La cotizacion manda sobre todo lo demas: si hay lamina, va la lamina, y
@@ -336,8 +357,14 @@ try {
   // no las ve nadie.
   fotos = laminas();
   const cotizados = [...new Set(fotos.map((f) => f.salon))];
-  if (cotizados.length === 1) fotos = [...fotos, ...fotosDe(cotizados[0])];
+  if (cotizados.length === 1 && !yaVioLasFotos) {
+    fotos = [...fotos, ...fotosDe(cotizados[0])];
+  }
   if (!fotos.length) fotos = cortesia();
+  // Esta rama es distinta: aqui el cliente LAS PIDIO —«me mandas fotos del
+  // salon?»— o el agente acaba de anunciarlas. A eso se le contesta siempre,
+  // las haya visto antes o no. Lo que se manda una sola vez es lo que va de
+  // propina detras de una cotizacion.
   if (!fotos.length) fotos = fotosDelSalon();
 } catch (e) { fotos = []; }
 

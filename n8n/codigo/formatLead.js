@@ -42,10 +42,30 @@ const ETAPA = {
   143: 'Venta perdida',
 };
 
+// ── Un sticker no es una pregunta ───────────────────────────────────────────
+//
+// El 6-nov-2026 una clienta, harta, mando el emoji de la cara enojada. Llega
+// como `sticker` con el texto VACIO, asi que al agente le llego un turno sin
+// nada que responder — y un agente con la regla de «termina con una pregunta»
+// y nada que decir solo puede rellenar: «¿quieres que te pase algo mas de
+// informacion?». Lo mando dos veces, cada una con su emoji de vuelta, y ella
+// mando otro. Ahi acabo la conversacion.
+//
+// Un sticker se contesta como lo contestaria una persona: no se contesta.
+// Esto NO tapa las fotos ni los archivos: si manda la foto de su contrato hay
+// que atenderla, y para eso esta la nota de abajo.
+const loQueDijo = String(rafaga.chats ?? msg.texto ?? '').trim();
+const soloSticker = !loQueDijo && msg.adjunto_tipo === 'sticker';
+
 return [{ json: {
   lead_id: String(l.id ?? msg.lead_id),
   etapa_id: l.status_id ?? null,
   etapa: ETAPA[Number(l.status_id)] ?? null,
+  // Lo mira `ia_encendida`: sin esto, el agente contesta al vacio.
+  hay_que_responder: !soloSticker,
+  // Mando algo sin una palabra, y no es un sticker: una foto, un audio, un
+  // archivo. Hay que atenderlo, pero sin inventarse lo que dice.
+  adjunto_mudo: !loQueDijo && !soloSticker && Boolean(msg.adjunto_tipo),
   responsable_id: l.responsible_user_id ?? null,
   presupuesto: l.price ?? 0,
   campos,

@@ -112,6 +112,22 @@ if (sabido.length) {
     + (faltan.length ? ` Y esto NO lo ha dicho todavía, así que no te lo inventes: ${faltan.join(' ni ')}.` : ''));
 }
 
+// ── Mandó algo y no escribió nada ───────────────────────────────────────────
+//
+// Una foto, un audio, un archivo. No sabemos que es, y el agente tampoco:
+// inventarselo es lo que hace que le conteste a una foto del contrato con una
+// cotizacion. Los stickers ni siquiera llegan hasta aqui — a esos no se les
+// contesta, igual que haria una persona.
+let adjuntoMudo = false;
+try { adjuntoMudo = Boolean($('formatLead').first().json.adjunto_mudo); } catch (e) { adjuntoMudo = false; }
+if (adjuntoMudo) {
+  partes.push('El cliente mandó un archivo o una foto SIN escribir nada. '
+    + 'No sabes qué es y no puedes verlo: no te lo inventes ni sigas con lo '
+    + 'tuyo como si nada. Pregúntale qué te mandó, con naturalidad, o si '
+    + 'parece algo que tiene que ver una persona —un comprobante, un '
+    + 'contrato, una captura— pásalo a la encargada.');
+}
+
 // ── Lo que está esperando de la encargada ───────────────────────────────────
 //
 // El 6-nov-2026 una clienta con contrato pregunto por el 75%, por el pastel

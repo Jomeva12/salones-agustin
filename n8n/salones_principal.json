@@ -1514,7 +1514,7 @@
   },
   {
    "parameters": {
-    "jsCode": "// De que salon es este cliente, segun por donde escribio.\n//\n// Desde el 5-nov-2026 cada salon tiene su propio numero de WhatsApp. El numero\n// NO viaja en el webhook —Kommo solo manda `origin: waba`—, pero si queda\n// grabado en el lead como `source_id`, y eso es lo que se mira aqui.\n//\n// Con eso se hacen tres cosas en el mismo PATCH:\n//\n//   1. Se llena el campo «Salón» del lead. Ademas de dejarlo visible en la\n//      ficha, es lo que lee `nota_del_turno`: a partir de ahi Maya ya sabe de\n//      que salon le hablan sin tener que preguntarlo.\n//   2. Se le pone de responsable el usuario de ese salon. Antes todos los\n//      leads caian en «Asesora Ana», que es el usuario de la integracion: con\n//      todo del mismo dueño, ninguna encargada distinguia los suyos.\n//   3. Se le pone la ETIQUETA del salon, para filtrar por sede en cualquier\n//      vista de Kommo.\n//\n// Esto corre ANTES del filtro de pruebas, a proposito. Que Maya no le conteste\n// a un cliente no quita que su lead tenga que caer donde toca; si el enrutado\n// viviera despues del filtro, hoy los leads reales seguirian todos sin dueño.\n\nconst FUENTES = {\n  // WhatsApp, un numero por salon.\n  22494: 'norma',      // +52 1 81 8692 6400\n  22564: 'esmeralda',  // +52 1 81 8691 7220\n  22496: 'santacruz',  // +52 1 81 2004 1207\n  22498: 'quetzal',    // +52 1 81 1010 7131\n  // Facebook. Cada pagina crea DOS canales, el privado y los comentarios.\n  // Esmeralda no tiene pagina conectada: tres paginas para cuatro salones.\n  21772: 'norma',     21774: 'norma',\n  21764: 'santacruz', 21766: 'santacruz',\n  21768: 'quetzal',   21770: 'quetzal',\n};\n\nconst ENUM_SALON = {\n  norma: 281622, esmeralda: 281624, santacruz: 281626, quetzal: 281628,\n};\nconst USUARIO = {\n  norma: 16027263, esmeralda: 16027259, santacruz: 16027243, quetzal: 16027255,\n};\n// Mismo texto que el campo «Salón», para que la ficha no diga dos cosas\n// parecidas con dos palabras distintas.\nconst ETIQUETA = {\n  norma: 'Norma Eventos', esmeralda: 'Esmeralda Eventos',\n  santacruz: 'Santa Cruz Eventos', quetzal: 'Quetzal Eventos',\n};\nconst CAMPO_SALON = 352870;\n\n// El usuario con el que entra la integracion. Un lead que lo tiene de\n// responsable es un lead que nadie ha tocado todavia: ese si se reasigna.\n// Si ya lo tiene una encargada —o el propio Lic.—, aqui no se toca.\nconst INTEGRACION = 13666384;\n\nconst msg = $('formatear').first().json;\nconst lead = $input.first().json ?? {};\n\nconst salon = FUENTES[Number(lead.source_id)] ?? null;\n\n// Lo que ya tiene el lead. Si Kommo no contesto, `lead.id` no existe y de\n// aqui no sale ningun PATCH: se sigue sin enrutar, que es lo correcto —\n// escribir a ciegas seria peor.\nconst campos = lead.custom_fields_values ?? [];\nconst yaTieneSalon = campos.some(\n  (c) => Number(c.field_id) === CAMPO_SALON && (c.values ?? []).length > 0);\nconst dueno = Number(lead.responsible_user_id) || null;\nconst etiquetas = (lead._embedded ?? {}).tags ?? [];\n\nconst valores = [];\nconst cuerpo = {};\nconst hecho = [];\n\nif (lead.id && salon) {\n  // El campo solo se rellena si esta vacio. Si ya hay algo, lo puso el\n  // Director con lo que dijo el cliente —o una encargada a mano—, y eso manda\n  // sobre el numero por el que entro: se puede escribir al WhatsApp de Norma\n  // preguntando por Santa Cruz.\n  if (!yaTieneSalon) {\n    valores.push({ field_id: CAMPO_SALON, values: [{ enum_id: ENUM_SALON[salon] }] });\n    hecho.push('salón');\n  }\n  if (!dueno || dueno === INTEGRACION) {\n    cuerpo.responsible_user_id = USUARIO[salon];\n    hecho.push('responsable');\n  }\n\n  // La etiqueta, al reves que el campo, SI va siempre — mientras no este ya\n  // puesta. El campo dice que salon quiere el cliente y se puede corregir; la\n  // etiqueta dice por donde entro, y eso no cambia: es de quien fue el\n  // anuncio y de quien es la linea. Por eso tampoco se le quita ninguna.\n  //\n  // OJO: un PATCH con `_embedded.tags` REEMPLAZA la lista entera. Mandar solo\n  // la nueva borraria en silencio las que ya tuviera, asi que se reenvian\n  // todas. Las que ya existen van por `id` y la nueva por `name`: con el\n  // nombre, Kommo reusa la etiqueta si ya la creo antes y no la duplica.\n  const nombre = ETIQUETA[salon];\n  if (!etiquetas.some((t) => String(t.name).toLowerCase() === nombre.toLowerCase())) {\n    cuerpo._embedded = {\n      tags: [...etiquetas.map((t) => ({ id: t.id })), { name: nombre }],\n    };\n    hecho.push('etiqueta');\n  }\n}\n\nif (valores.length) cuerpo.custom_fields_values = valores;\n\nreturn [{\n  json: {\n    ...msg,\n    lead_id: String(lead.id ?? msg.lead_id),\n    source_id: lead.source_id ?? null,\n    salon_fuente: salon,\n    // Lo que se va a escribir, dicho en claro por si hay que mirarlo en la\n    // ejecucion: «salón, responsable», «responsable», o nada.\n    enrutado: hecho.join(', ') || null,\n    hace_falta_enrutar: Object.keys(cuerpo).length > 0,\n    cuerpo,\n  },\n}];\n"
+    "jsCode": "// De que salon es este cliente, segun por donde escribio.\n//\n// Desde el 5-nov-2026 cada salon tiene su propio numero de WhatsApp. El numero\n// NO viaja en el webhook —Kommo solo manda `origin: waba`—, pero si queda\n// grabado en el lead como `source_id`, y eso es lo que se mira aqui.\n//\n// Con eso se hacen tres cosas en el mismo PATCH:\n//\n//   1. Se llena el campo «Salón» del lead. Ademas de dejarlo visible en la\n//      ficha, es lo que lee `nota_del_turno`: a partir de ahi Maya ya sabe de\n//      que salon le hablan sin tener que preguntarlo.\n//   2. Se le pone de responsable el usuario de ese salon. Antes todos los\n//      leads caian en «Asesora Ana», que es el usuario de la integracion: con\n//      todo del mismo dueño, ninguna encargada distinguia los suyos.\n//   3. Se le pone la ETIQUETA del salon, para filtrar por sede en cualquier\n//      vista de Kommo.\n//\n// Esto corre ANTES del filtro de pruebas, a proposito. Que Maya no le conteste\n// a un cliente no quita que su lead tenga que caer donde toca; si el enrutado\n// viviera despues del filtro, hoy los leads reales seguirian todos sin dueño.\n\nconst FUENTES = {\n  // WhatsApp, un numero por salon.\n  22494: 'norma',      // +52 1 81 8692 6400\n  22564: 'esmeralda',  // +52 1 81 8691 7220\n  22496: 'santacruz',  // +52 1 81 2004 1207\n  22498: 'quetzal',    // +52 1 81 1010 7131\n  // Facebook. Cada pagina crea DOS canales, el privado y los comentarios.\n  // Esmeralda no tiene pagina conectada: tres paginas para cuatro salones.\n  21772: 'norma',     21774: 'norma',\n  21764: 'santacruz', 21766: 'santacruz',\n  21768: 'quetzal',   21770: 'quetzal',\n};\n\nconst ENUM_SALON = {\n  norma: 281622, esmeralda: 281624, santacruz: 281626, quetzal: 281628,\n};\nconst USUARIO = {\n  norma: 16027263, esmeralda: 16027259, santacruz: 16027243, quetzal: 16027255,\n};\n// Mismo texto que el campo «Salón», para que la ficha no diga dos cosas\n// parecidas con dos palabras distintas.\nconst ETIQUETA = {\n  norma: 'Norma Eventos', esmeralda: 'Esmeralda Eventos',\n  santacruz: 'Santa Cruz Eventos', quetzal: 'Quetzal Eventos',\n};\nconst CAMPO_SALON = 352870;\n\n// El usuario con el que entra la integracion. Un lead que lo tiene de\n// responsable es un lead que nadie ha tocado todavia: ese si se reasigna.\n// Si ya lo tiene una encargada —o el propio Lic.—, aqui no se toca.\nconst INTEGRACION = 13666384;\n\nconst msg = $('formatear').first().json;\nconst lead = $('traer_lead_fuente').first().json ?? {};\n\n// El contacto es la PERSONA; el lead es su solicitud. En Kommo tienen dueño y\n// etiquetas por separado, y hasta el 6-nov-2026 esto solo tocaba el lead: los\n// 2.867 contactos seguian todos en «Asesora Ana». Una encargada que filtraba\n// por sus contactos no veia ninguno.\nlet contacto = {};\ntry { contacto = $('traer_contacto').first().json ?? {}; } catch (e) { contacto = {}; }\n\nconst salon = FUENTES[Number(lead.source_id)] ?? null;\n\n// Lo que ya tiene el lead. Si Kommo no contesto, `lead.id` no existe y de\n// aqui no sale ningun PATCH: se sigue sin enrutar, que es lo correcto —\n// escribir a ciegas seria peor.\nconst campos = lead.custom_fields_values ?? [];\nconst yaTieneSalon = campos.some(\n  (c) => Number(c.field_id) === CAMPO_SALON && (c.values ?? []).length > 0);\nconst dueno = Number(lead.responsible_user_id) || null;\nconst etiquetas = (lead._embedded ?? {}).tags ?? [];\n\nconst valores = [];\nconst cuerpo = {};\nconst hecho = [];\n\nif (lead.id && salon) {\n  // El campo solo se rellena si esta vacio. Si ya hay algo, lo puso el\n  // Director con lo que dijo el cliente —o una encargada a mano—, y eso manda\n  // sobre el numero por el que entro: se puede escribir al WhatsApp de Norma\n  // preguntando por Santa Cruz.\n  if (!yaTieneSalon) {\n    valores.push({ field_id: CAMPO_SALON, values: [{ enum_id: ENUM_SALON[salon] }] });\n    hecho.push('salón');\n  }\n  if (!dueno || dueno === INTEGRACION) {\n    cuerpo.responsible_user_id = USUARIO[salon];\n    hecho.push('responsable');\n  }\n\n  // La etiqueta, al reves que el campo, SI va siempre — mientras no este ya\n  // puesta. El campo dice que salon quiere el cliente y se puede corregir; la\n  // etiqueta dice por donde entro, y eso no cambia: es de quien fue el\n  // anuncio y de quien es la linea. Por eso tampoco se le quita ninguna.\n  //\n  // OJO: un PATCH con `_embedded.tags` REEMPLAZA la lista entera. Mandar solo\n  // la nueva borraria en silencio las que ya tuviera, asi que se reenvian\n  // todas. Las que ya existen van por `id` y la nueva por `name`: con el\n  // nombre, Kommo reusa la etiqueta si ya la creo antes y no la duplica.\n  const nombre = ETIQUETA[salon];\n  if (!etiquetas.some((t) => String(t.name).toLowerCase() === nombre.toLowerCase())) {\n    cuerpo._embedded = {\n      tags: [...etiquetas.map((t) => ({ id: t.id })), { name: nombre }],\n    };\n    hecho.push('etiqueta');\n  }\n}\n\nif (valores.length) cuerpo.custom_fields_values = valores;\n\n// ── Y lo mismo para la persona ──────────────────────────────────────────────\n//\n// Mismas dos reglas que en el lead: el dueño solo si nadie lo ha tocado, y la\n// etiqueta siempre que no este ya. Un contacto puede tener leads de dos\n// salones distintos —alguien que pregunto por Norma y despues por Quetzal—;\n// se queda con el primero que lo reclamo, igual que el lead.\nconst etiquetasContacto = (contacto._embedded ?? {}).tags ?? [];\nconst duenoContacto = Number(contacto.responsible_user_id) || null;\nconst cuerpoContacto = {};\nconst hechoContacto = [];\n\nif (contacto.id && salon) {\n  if (!duenoContacto || duenoContacto === INTEGRACION) {\n    cuerpoContacto.responsible_user_id = USUARIO[salon];\n    hechoContacto.push('responsable');\n  }\n  const nom = ETIQUETA[salon];\n  if (!etiquetasContacto.some((t) => String(t.name).toLowerCase() === nom.toLowerCase())) {\n    cuerpoContacto._embedded = {\n      tags: [...etiquetasContacto.map((t) => ({ id: t.id })), { name: nom }],\n    };\n    hechoContacto.push('etiqueta');\n  }\n}\n\nreturn [{\n  json: {\n    ...msg,\n    lead_id: String(lead.id ?? msg.lead_id),\n    source_id: lead.source_id ?? null,\n    salon_fuente: salon,\n    contacto_id: contacto.id ?? null,\n    enrutado_contacto: hechoContacto.join(', ') || null,\n    hace_falta_contacto: Object.keys(cuerpoContacto).length > 0,\n    cuerpo_contacto: cuerpoContacto,\n    // Lo que se va a escribir, dicho en claro por si hay que mirarlo en la\n    // ejecucion: «salón, responsable», «responsable», o nada.\n    enrutado: hecho.join(', ') || null,\n    hace_falta_enrutar: Object.keys(cuerpo).length > 0,\n    cuerpo,\n  },\n}];\n"
    },
    "id": "a1f0c3e2-7b44-4c21-9d10-5e6f70811002",
    "name": "salon_del_numero",
@@ -1617,6 +1617,102 @@
     "httpHeaderAuth": {
      "id": "NmEwnWxyfdqJcNvw",
      "name": "panel_salones"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "url": "=https://administracioneventos6.kommo.com/api/v4/contacts/{{ $('formatear').first().json.contacto_id }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "json"
+      }
+     }
+    }
+   },
+   "id": "c3d2e5f4-9d66-4e43-bf32-7a8192a33001",
+   "name": "traer_contacto",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    -60,
+    200
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "YrRdSRPkquUkNRAB",
+     "name": "kommo_salones"
+    }
+   },
+   "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": false,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 3
+     },
+     "conditions": [
+      {
+       "id": "c3d2e5f4-9d66-4e43-bf32-7a8192a33002",
+       "leftValue": "={{ $('salon_del_numero').first().json.hace_falta_contacto }}",
+       "rightValue": "true",
+       "operator": {
+        "type": "boolean",
+        "operation": "equals"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "looseTypeValidation": true,
+    "options": {}
+   },
+   "id": "c3d2e5f4-9d66-4e43-bf32-7a8192a33003",
+   "name": "hace_falta_contacto",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    680,
+    120
+   ]
+  },
+  {
+   "parameters": {
+    "method": "PATCH",
+    "url": "=https://administracioneventos6.kommo.com/api/v4/contacts/{{ $('salon_del_numero').first().json.contacto_id }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify($('salon_del_numero').first().json.cuerpo_contacto) }}",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "json"
+      }
+     }
+    }
+   },
+   "id": "c3d2e5f4-9d66-4e43-bf32-7a8192a33004",
+   "name": "poner_dueno_contacto",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    880,
+    20
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "YrRdSRPkquUkNRAB",
+     "name": "kommo_salones"
     }
    },
    "onError": "continueRegularOutput"
@@ -2277,7 +2373,7 @@
    "main": [
     [
      {
-      "node": "salon_del_numero",
+      "node": "traer_contacto",
       "type": "main",
       "index": 0
      }
@@ -2306,7 +2402,7 @@
     ],
     [
      {
-      "node": "solo_pruebas",
+      "node": "hace_falta_contacto",
       "type": "main",
       "index": 0
      }
@@ -2317,7 +2413,7 @@
    "main": [
     [
      {
-      "node": "solo_pruebas",
+      "node": "hace_falta_contacto",
       "type": "main",
       "index": 0
      }
@@ -2329,6 +2425,46 @@
     [
      {
       "node": "nota_del_turno",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "traer_contacto": {
+   "main": [
+    [
+     {
+      "node": "salon_del_numero",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "hace_falta_contacto": {
+   "main": [
+    [
+     {
+      "node": "poner_dueno_contacto",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    [
+     {
+      "node": "solo_pruebas",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "poner_dueno_contacto": {
+   "main": [
+    [
+     {
+      "node": "solo_pruebas",
       "type": "main",
       "index": 0
      }

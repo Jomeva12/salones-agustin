@@ -52,7 +52,14 @@ const CAMPO_SALON = 352870;
 const INTEGRACION = 13666384;
 
 const msg = $('formatear').first().json;
-const lead = $input.first().json ?? {};
+const lead = $('traer_lead_fuente').first().json ?? {};
+
+// El contacto es la PERSONA; el lead es su solicitud. En Kommo tienen dueño y
+// etiquetas por separado, y hasta el 6-nov-2026 esto solo tocaba el lead: los
+// 2.867 contactos seguian todos en «Asesora Ana». Una encargada que filtraba
+// por sus contactos no veia ninguno.
+let contacto = {};
+try { contacto = $('traer_contacto').first().json ?? {}; } catch (e) { contacto = {}; }
 
 const salon = FUENTES[Number(lead.source_id)] ?? null;
 
@@ -103,12 +110,41 @@ if (lead.id && salon) {
 
 if (valores.length) cuerpo.custom_fields_values = valores;
 
+// ── Y lo mismo para la persona ──────────────────────────────────────────────
+//
+// Mismas dos reglas que en el lead: el dueño solo si nadie lo ha tocado, y la
+// etiqueta siempre que no este ya. Un contacto puede tener leads de dos
+// salones distintos —alguien que pregunto por Norma y despues por Quetzal—;
+// se queda con el primero que lo reclamo, igual que el lead.
+const etiquetasContacto = (contacto._embedded ?? {}).tags ?? [];
+const duenoContacto = Number(contacto.responsible_user_id) || null;
+const cuerpoContacto = {};
+const hechoContacto = [];
+
+if (contacto.id && salon) {
+  if (!duenoContacto || duenoContacto === INTEGRACION) {
+    cuerpoContacto.responsible_user_id = USUARIO[salon];
+    hechoContacto.push('responsable');
+  }
+  const nom = ETIQUETA[salon];
+  if (!etiquetasContacto.some((t) => String(t.name).toLowerCase() === nom.toLowerCase())) {
+    cuerpoContacto._embedded = {
+      tags: [...etiquetasContacto.map((t) => ({ id: t.id })), { name: nom }],
+    };
+    hechoContacto.push('etiqueta');
+  }
+}
+
 return [{
   json: {
     ...msg,
     lead_id: String(lead.id ?? msg.lead_id),
     source_id: lead.source_id ?? null,
     salon_fuente: salon,
+    contacto_id: contacto.id ?? null,
+    enrutado_contacto: hechoContacto.join(', ') || null,
+    hace_falta_contacto: Object.keys(cuerpoContacto).length > 0,
+    cuerpo_contacto: cuerpoContacto,
     // Lo que se va a escribir, dicho en claro por si hay que mirarlo en la
     // ejecucion: «salón, responsable», «responsable», o nada.
     enrutado: hecho.join(', ') || null,

@@ -16,9 +16,17 @@ const p = $('armar_patch').first().json;
 // sigue. Quedarse mudo seria peor que no avisar.
 let especial = null;
 try {
-  const r = $input.first().json ?? {};
+  const r = $('traer_especial').first().json ?? {};
   especial = r.fecha_especial ?? null;
 } catch (e) { especial = null; }
+
+// Los cuatro salones, tal como estan HOY en el panel. No se copian aqui a
+// mano: si Agustin corrige una direccion en el panel, el mensaje siguiente ya
+// sale con la buena.
+let salones = [];
+try {
+  salones = $('traer_salones').all().map((x) => x.json).filter((x) => x && x.clave);
+} catch (e) { salones = []; }
 
 const partes = [];
 
@@ -90,6 +98,50 @@ if (!cuantos) faltan.push('cuántos invitados son');
 if (sabido.length) {
   partes.push(`Esto ya lo dijo el cliente y NO se lo vuelvas a preguntar: ${sabido.join(', ')}.`
     + (faltan.length ? ` Y esto NO lo ha dicho todavía, así que no te lo inventes: ${faltan.join(' ni ')}.` : ''));
+}
+
+// ── Dónde está cada salón ───────────────────────────────────────────────────
+//
+// El 6-nov-2026 un cliente escribio «Ubicacion», «La ubicacion», «Señorita»,
+// y Maya le contesto CUATRO veces «¿quieres que te pase la direccion exacta?»
+// sin dársela nunca. Hubo que apagarle la IA a mano.
+//
+// No era terquedad del modelo: no tenia de donde sacarla. La direccion y el
+// enlace de Maps viven en el panel desde el principio, pero ninguna de sus
+// herramientas los devolvia y el prompt no los nombraba. Un agente al que le
+// preguntan algo que no puede contestar y que ademas tiene la regla de
+// «termina con una pregunta» solo puede hacer una cosa: ofrecerlo otra vez.
+//
+// Asi que no se le da una herramienta mas que puede o no llamar: se le ponen
+// las cuatro direcciones delante, en cada turno. Lo que esta en el contexto
+// no se inventa y no hace falta pedirlo.
+const comoSeLlama = (x) => String(x ?? '').toLowerCase().replace(/\s+/g, '');
+function buscarSalon(quien) {
+  if (!quien) return null;
+  const q = comoSeLlama(quien);
+  return salones.find((s) => comoSeLlama(s.clave) === q || comoSeLlama(s.nombre) === q)
+    ?? salones.find((s) => comoSeLlama(s.nombre).startsWith(q)) ?? null;
+}
+// El de la conversacion: el que se esta hablando, y si no, el de la linea.
+const elDeAhora = buscarSalon(salon) ?? buscarSalon(laLinea);
+const comoSeDice = (s, marca) => `${s.nombre}${marca ? ' (el de esta conversación)' : ''}: `
+  + `${s.direccion || 'sin dirección cargada'}`
+  + (s.maps_url ? ` · mapa: ${s.maps_url}` : '');
+
+if (salones.length) {
+  const orden = elDeAhora
+    ? [elDeAhora, ...salones.filter((s) => s.clave !== elDeAhora.clave)]
+    : salones;
+  partes.push('Direcciones y mapas — '
+    + orden.map((s, i) => comoSeDice(s, i === 0 && Boolean(elDeAhora))).join(' | ')
+    + '. Esto es material de consulta: lo tienes por si lo piden, NO para '
+    + 'sacarlo por tu cuenta. Si el cliente NO ha preguntado por la '
+    + 'ubicación, no la menciones — nada de «por cierto, estamos en». '
+    + 'Si SÍ pregunta dónde está, por la ubicación, la dirección o cómo '
+    + 'llegar —aunque escriba solo «ubicación»—, dale la dirección Y el '
+    + 'enlace del mapa EN ESE MISMO MENSAJE, y no le preguntes si quiere '
+    + 'que se los pases: eso es justo lo que acaba de pedirte. '
+    + 'Da solo la del salón del que estén hablando, no las cuatro.');
 }
 
 // Dijo el dia y el mes, pero no el anio. No se elige por el: «10 de

@@ -296,11 +296,21 @@ for (let i = 1; i <= 7; i++) {
   semana.push(largo(f));
 }
 
-partes.push(`Hoy es ${largo(hoy)}. Si el cliente nombra un dia de la semana `
-  + 'sin darte la fecha, es uno de estos y no lo calcules tu: '
-  + semana.join('; ') + '. '
+partes.push(`Hoy es ${largo(hoy)}. Para CITAS Y VISITAS, que son de esta `
+  + 'semana: si nombra un dia sin darte la fecha, es uno de estos y no lo '
+  + 'calcules tu: ' + semana.join('; ') + '. '
   + 'Y si dice «el proximo» o nombra un dia que ya paso esta semana, '
-  + 'preguntale la fecha en vez de suponerla.');
+  + 'preguntale la fecha en vez de suponerla. '
+  // El 6-nov-2026 una clienta pregunto «el precio del jueves y sabado» —los
+  // precios cambian segun el dia de la semana, y eso es lo que preguntaba— y
+  // el agente le contesto con el jueves 12 y el sabado 7 de noviembre,
+  // sacados de esta misma lista. Un evento se contrata con meses de
+  // antelacion: ningun dia de esta semana es la fecha de su boda.
+  + 'Pero esta lista NO vale para su EVENTO. Si habla de precios por dia '
+  + '—«¿cuanto sale el jueves?», «¿y el sabado?»— esta preguntando por el '
+  + 'dia de la SEMANA, no por una fecha: contestale por dia de la semana. '
+  + 'Y si habla de su evento nombrando un dia suelto, preguntale de que '
+  + 'fecha: un evento se contrata con meses de antelacion.');
 
 return [{
   json: {

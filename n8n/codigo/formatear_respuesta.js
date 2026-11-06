@@ -91,6 +91,42 @@ function cortarRellenoTrasEscalar(t) {
 }
 texto = cortarRellenoTrasEscalar(texto);
 
+// ── Maya NUNCA da datos bancarios ───────────────────────────────────────────
+//
+// El 6-nov-2026 una clienta pregunto «¿aceptan transferencia?», dijo que si
+// queria los datos, y Maya le escribio:
+//
+//     Banco: Bancomer
+//     Numero de cuenta: 1234567890
+//     CLABE: 012345678901234567
+//
+// Los tres inventados. Los de verdad son de BANREGIO y viven en el panel
+// marcados como RESTRINGIDOS, asi que la herramienta `politicas` no se los
+// devuelve nunca. Se quedo sin el dato y lo rellenó — «1234567890» es el
+// relleno de manual. La clienta mando un comprobante de $1,500.
+//
+// Esto no se arregla pidiendoselo al prompt. Un modelo al que le falta un
+// dato y tiene que contestar, lo inventa, y aqui lo que se inventa es dinero
+// de un cliente yendose a una cuenta que no existe. Asi que el mensaje se
+// corta antes de salir.
+//
+// El candado mira PALABRAS DE BANCO, no numeros: los numeros largos tambien
+// son telefonos y precios, y perseguir digitos dejaria pasar «te paso la
+// cuenta de Banregio» y frenaria «son $34,400 para 150 invitados».
+const DATO_BANCARIO = new RegExp(
+  '\\b(clabe|interbancari[ao]|cuenta bancaria|n[uú]mero de cuenta|no\\.? de cuenta'
+  + '|banregio|bancomer|bbva|banorte|santander|banamex|citibanamex|hsbc'
+  + '|scotiabank|banco azteca|inbursa|afirme)\\b', 'i');
+// Y por si nombra el banco de otra forma: dieciseis digitos o mas seguidos,
+// con o sin espacios, no son un telefono ni un precio. Una CLABE son 18.
+const TIRA_DE_DIGITOS = /(?:\d[ .-]?){16,}/;
+
+const MENSAJE_SEGURO = 'Para los datos de la transferencia te paso con la '
+  + 'encargada, que es quien los maneja. En un momento te contacta. 🙌';
+
+const dioDatosBancarios = DATO_BANCARIO.test(texto) || TIRA_DE_DIGITOS.test(texto);
+if (dioDatosBancarios) texto = MENSAJE_SEGURO;
+
 // ── Se presenta como el salón al que escribieron ────────────────────────────
 //
 // Cada salon tiene su propio WhatsApp. Quien escribe al de Esmeralda espera
@@ -174,5 +210,8 @@ return [{
     // $prevNode.name ya seria 'formatear_respuesta'.
     agente: $prevNode.name,
     texto_completo: texto,
+    // Intento dar datos bancarios y se le corto. Lo lee la rama que abre el
+    // aviso: si se le cortó, alguien tiene que mandarlos de verdad.
+    dio_datos_bancarios: dioDatosBancarios,
   },
 }];

@@ -465,6 +465,16 @@ export function horariosPosibles(db, salonId, fecha, tipoEvento, horas, minutosE
 
   return {
     horarios,
+    // La regla del paquete, dicha con las palabras del Excel: «en viernes,
+    // sábado y domingo el evento solo se puede realizar de 7:00 am a 5:00 pm.
+    // De lunes a jueves, a cualquier hora.»
+    //
+    // Se calculaba aquí dentro y no salía: el agente veía las horas libres
+    // pero no la razón, así que nunca se la contaba al cliente. Y es
+    // justamente lo que hay que decirle al presentar el paquete — se entera
+    // antes de ilusionarse con un sábado por la noche.
+    regla_horario: regla ? { texto: regla.texto, de: regla.de, a: regla.a,
+                             libre_ese_dia: Boolean(regla.libre) } : null,
     // Solo los extremos: una lista de doce horas no la lee nadie.
     alternativos: alternativos.length
       ? { desde: alternativos[0].de, hasta: alternativos[alternativos.length - 1].de,

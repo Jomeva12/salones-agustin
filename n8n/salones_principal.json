@@ -5,7 +5,7 @@
    "parameters": {
     "httpMethod": "POST",
     "path": "salones_principal",
-    "responseMode": "lastNode",
+    "responseMode": "onReceived",
     "options": {}
    },
    "id": "ce312901-ff76-451c-a97c-620b28505f3f",
@@ -142,6 +142,15 @@
        "operator": {
         "type": "number",
         "operation": "equals"
+       }
+      },
+      {
+       "id": "b8c7dae9-e2bb-4d98-0487-2fd6e7f88001",
+       "leftValue": "={{ Number($json.cuantos) }}",
+       "rightValue": 0,
+       "operator": {
+        "type": "number",
+        "operation": "gt"
        }
       }
      ],

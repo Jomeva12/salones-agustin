@@ -1927,6 +1927,86 @@
     }
    },
    "onError": "continueRegularOutput"
+  },
+  {
+   "parameters": {
+    "jsCode": "// A qué etapa del embudo le toca estar a este lead.\n//\n// Hasta el 6-nov-2026 NADIE movia las etapas: 2.196 de 2.198 leads estaban en\n// «Nuevo», incluidos los que ya tenian fecha, invitados, cotizacion y hasta\n// extras elegidos. El subflujo de envio declaraba un `status_id` y lo mandaba\n// siempre en cero, con un comentario que decia «para no mover ninguna etapa\n// por accidente». Se dejo para despues y nunca se retomo.\n//\n// El resultado es que el tablero no sirve para nada: una conversacion muy\n// avanzada se ve igual que la que llego hace un minuto, y con ciento y pico\n// al dia el equipo las pierde de vista.\n//\n// Aqui NO decide el modelo. Decide lo que paso:\n//\n//   · se sabe el tipo de evento o cuantos invitados  -> Calificando\n//   · salio la cotizacion con su hoja de informes    -> Cotizado\n//   · hay una cita pedida a la encargada             -> Cita agendada\n//\n// Lo que NO pone Maya, porque no le toca:\n//   · «Fecha apartada ($500)» y «Contratado - pagando» los pone quien cobra.\n//   · «Con la encargada» lo decidio Jorge: Maya escala muchas veces al dia y\n//     esa columna se llenaria de dudas sueltas, ademas de empujar leads por\n//     delante de «Cita agendada».\n//   · De «Visitó el salón» en adelante manda la persona, no el sistema.\n\nconst ETAPA = {\n  entrantes:   { id: 112259467, orden: 10 },\n  nuevo:       { id: 112259471, orden: 10 },\n  calificando: { id: 112259475, orden: 20 },\n  ocupada:     { id: 112259479, orden: 30 },\n  cotizado:    { id: 112259483, orden: 40 },\n  cita:        { id: 112261039, orden: 50 },\n};\n// El orden de cada etapa que existe, para no retroceder nunca.\nconst ORDEN = {\n  112259467: 10, 112259471: 10, 112259475: 20, 112259479: 30, 112259483: 40,\n  112261039: 50, 112261043: 60, 113813683: 70, 113813431: 80, 112261047: 90,\n  112261051: 100, 112261055: 110, 142: 10000, 143: 11000,\n};\n// A partir de aqui manda una persona: ni se avanza ni se toca.\nconst DE_AQUI_NO_PASA = 60;\n\nconst fl = $('formatLead').first().json;\nconst p = $('armar_patch').first().json;\nconst lamina = $('elegir_lamina').first().json;\n\n// ── Qué sabemos ya ──────────────────────────────────────────────────────────\nconst a = p.anotado ?? {};\nconst campos = p.campos ?? {};\nconst hayTipo = Boolean(a.tipo_evento || campos['Tipo de evento']);\nconst hayInvitados = Boolean(a.invitados || Number(campos['Invitados']));\n\n// Cotizo de verdad: salio al menos una hoja de informes o una foto con el\n// mensaje. Es la señal mas dura que hay —la pega el codigo, no el modelo— y\n// no depende de como lo haya redactado.\nlet cotizo = false;\ntry {\n  cotizo = JSON.parse(lamina.imagenes || '[]').filter(Boolean).length > 0;\n} catch (e) { cotizo = false; }\n\n// Una cita pedida deja un aviso con `cita_id` en el panel.\nlet hayCita = Boolean(campos['Fecha y hora de la cita']);\ntry {\n  const crudo = $('traer_avisos').all().map((x) => x.json);\n  const lista = crudo.length === 1 && Array.isArray(crudo[0].avisos) ? crudo[0].avisos : crudo;\n  if (lista.some((x) => x && String(x.lead_id) === String(fl.lead_id) && x.cita_id)) hayCita = true;\n} catch (e) { /* sin avisos, se queda como estaba */ }\n\n// ── A dónde le toca ─────────────────────────────────────────────────────────\nlet destino = null;\nif (hayTipo || hayInvitados) destino = ETAPA.calificando;\nif (cotizo) destino = ETAPA.cotizado;\nif (hayCita) destino = ETAPA.cita;\n\nconst actual = Number(fl.etapa_id) || null;\nconst ordenActual = ORDEN[actual] ?? 0;\n\n// Solo se avanza. Si vuelve a pedir precio estando en «Cita agendada», no se\n// le baja a «Cotizado»: perder un avance real por un mensaje suelto deja el\n// tablero peor que no moverlo.\nconst mover = Boolean(destino)\n  && ordenActual < DE_AQUI_NO_PASA\n  && destino.orden > ordenActual;\n\nreturn [{\n  json: {\n    lead_id: fl.lead_id,\n    etapa_actual: actual,\n    etapa_destino: destino ? destino.id : null,\n    mover,\n    // Para poder leer la ejecucion sin deducir nada.\n    porque: !destino ? 'todavia no hay nada que diga otra etapa'\n      : !mover ? (ordenActual >= DE_AQUI_NO_PASA\n          ? 'de aqui en adelante manda una persona'\n          : 'ya esta igual o mas adelante')\n      : hayCita ? 'hay una cita pedida'\n      : cotizo ? 'salio la cotizacion'\n      : 'ya se sabe tipo de evento o invitados',\n    cuerpo: destino ? { status_id: destino.id } : {},\n  },\n}];\n"
+   },
+   "id": "c9d8ebfa-e3cc-4daa-1598-3fa6f7a99001",
+   "name": "decidir_etapa",
+   "type": "n8n-nodes-base.code",
+   "typeVersion": 2,
+   "position": [
+    2900,
+    320
+   ]
+  },
+  {
+   "parameters": {
+    "conditions": {
+     "options": {
+      "caseSensitive": false,
+      "leftValue": "",
+      "typeValidation": "loose",
+      "version": 3
+     },
+     "conditions": [
+      {
+       "id": "c9d8ebfa-e3cc-4daa-1598-3fa6f7a99002",
+       "leftValue": "={{ $json.mover }}",
+       "rightValue": "true",
+       "operator": {
+        "type": "boolean",
+        "operation": "equals"
+       }
+      }
+     ],
+     "combinator": "and"
+    },
+    "looseTypeValidation": true,
+    "options": {}
+   },
+   "id": "c9d8ebfa-e3cc-4daa-1598-3fa6f7a99003",
+   "name": "hay_que_mover_etapa",
+   "type": "n8n-nodes-base.if",
+   "typeVersion": 2.2,
+   "position": [
+    3100,
+    320
+   ]
+  },
+  {
+   "parameters": {
+    "method": "PATCH",
+    "url": "=https://administracioneventos6.kommo.com/api/v4/leads/{{ $('decidir_etapa').first().json.lead_id }}",
+    "authentication": "genericCredentialType",
+    "genericAuthType": "httpHeaderAuth",
+    "sendBody": true,
+    "specifyBody": "json",
+    "jsonBody": "={{ JSON.stringify($('decidir_etapa').first().json.cuerpo) }}",
+    "options": {
+     "response": {
+      "response": {
+       "responseFormat": "json"
+      }
+     }
+    }
+   },
+   "id": "c9d8ebfa-e3cc-4daa-1598-3fa6f7a99004",
+   "name": "mover_etapa",
+   "type": "n8n-nodes-base.httpRequest",
+   "typeVersion": 4.2,
+   "position": [
+    3300,
+    320
+   ],
+   "credentials": {
+    "httpHeaderAuth": {
+     "id": "YrRdSRPkquUkNRAB",
+     "name": "kommo_salones"
+    }
+   },
+   "onError": "continueRegularOutput"
   }
  ],
  "connections": {
@@ -2159,6 +2239,11 @@
     [
      {
       "node": "registrar_turno",
+      "type": "main",
+      "index": 0
+     },
+     {
+      "node": "decidir_etapa",
       "type": "main",
       "index": 0
      }
@@ -2743,6 +2828,29 @@
     [
      {
       "node": "avisar_datos_bancarios",
+      "type": "main",
+      "index": 0
+     }
+    ],
+    []
+   ]
+  },
+  "decidir_etapa": {
+   "main": [
+    [
+     {
+      "node": "hay_que_mover_etapa",
+      "type": "main",
+      "index": 0
+     }
+    ]
+   ]
+  },
+  "hay_que_mover_etapa": {
+   "main": [
+    [
+     {
+      "node": "mover_etapa",
       "type": "main",
       "index": 0
      }

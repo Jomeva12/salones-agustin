@@ -58,13 +58,21 @@ try {
   cotizo = JSON.parse(lamina.imagenes || '[]').filter(Boolean).length > 0;
 } catch (e) { cotizo = false; }
 
-// Una cita pedida deja un aviso con `cita_id` en el panel.
+// ¿Tiene visita pedida?
+//
+// La primera version miraba si algun aviso traia `cita_id`. No sirve: de 171
+// avisos, CERO lo traen. `pedir_cita` y `avisar_encargada` son dos llamadas
+// distintas del agente, asi que el aviso nunca sabe de la cita y esta etapa
+// no se habria movido jamas. Se mira la tabla de citas, que es donde estan.
+//
+// Una cita cancelada no cuenta: el cliente dijo que no viene.
 let hayCita = Boolean(campos['Fecha y hora de la cita']);
 try {
-  const crudo = $('traer_avisos').all().map((x) => x.json);
-  const lista = crudo.length === 1 && Array.isArray(crudo[0].avisos) ? crudo[0].avisos : crudo;
-  if (lista.some((x) => x && String(x.lead_id) === String(fl.lead_id) && x.cita_id)) hayCita = true;
-} catch (e) { /* sin avisos, se queda como estaba */ }
+  const crudo = $('traer_citas').all().map((x) => x.json);
+  const lista = crudo.length === 1 && Array.isArray(crudo[0].citas) ? crudo[0].citas : crudo;
+  if (lista.some((c) => c && String(c.lead_id) === String(fl.lead_id)
+      && c.estado !== 'cancelada')) hayCita = true;
+} catch (e) { /* sin citas, se queda como estaba */ }
 
 // ── A dónde le toca ─────────────────────────────────────────────────────────
 let destino = null;

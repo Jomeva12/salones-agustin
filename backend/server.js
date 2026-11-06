@@ -1691,13 +1691,21 @@ const rutas = {
     const desde = u.searchParams.get('desde'), hasta = u.searchParams.get('hasta');
     if (!L.esFechaValida(desde) || !L.esFechaValida(hasta)) return { error: 'desde/hasta inválidos' };
     const clave = u.searchParams.get('salon');
+    // Las de UN lead. Lo usa el flujo para saber si esa persona ya tiene
+    // visita pedida y moverla a «Cita agendada». El aviso NO sirve para
+    // esto: `pedir_cita` y `avisar_encargada` son dos llamadas distintas del
+    // agente, asi que el aviso nunca trae `cita_id` —son 0 de 171— y la
+    // etapa no se habria movido jamas.
+    const lead = u.searchParams.get('lead');
     const filas = db.prepare(
       `SELECT c.*, s.clave AS salon, s.nombre AS salon_nombre
          FROM cita c JOIN salon s ON s.id = c.salon_id
         WHERE c.fecha BETWEEN ? AND ?
           AND (? IS NULL OR s.clave = ?)
-        ORDER BY c.fecha, c.hora`).all(desde, hasta, clave || null, clave || null);
-    return { desde, hasta, salon: clave || null, citas: filas };
+          AND (? IS NULL OR c.lead_id = ?)
+        ORDER BY c.fecha, c.hora`).all(desde, hasta, clave || null, clave || null,
+                                       lead || null, lead || null);
+    return { desde, hasta, salon: clave || null, lead: lead || null, citas: filas };
   },
 
   'POST /api/citas': (_u, c, ctx) => {

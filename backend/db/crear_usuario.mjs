@@ -19,8 +19,17 @@ import { fileURLToPath } from 'node:url';
 import { derivar, claveTemporal, cerrarTodas } from '../api/acceso.mjs';
 
 const AQUI = dirname(fileURLToPath(import.meta.url));
-const DB = join(AQUI, 'salones.db');
-if (!existsSync(DB)) { console.error('No existe salones.db'); process.exit(1); }
+// Igual que las migraciones y que el servidor: en produccion la base vive en
+// el volumen (/datos/salones.db) y aqui dentro de la imagen NO hay ninguna.
+// Sin esto, correrlo en el contenedor decia «No existe salones.db» — o peor,
+// si alguna vez hubiera una copia suelta, creaba el usuario en un archivo que
+// no lee nadie y que el siguiente despliegue borra.
+const DB = process.env.DB_PATH ?? join(AQUI, 'salones.db');
+if (!existsSync(DB)) {
+  console.error('No existe la base en ' + DB);
+  console.error('En el contenedor es /datos/salones.db:  DB_PATH=/datos/salones.db node ...');
+  process.exit(1);
+}
 
 const arg = (n) => {
   const i = process.argv.indexOf(`--${n}`);

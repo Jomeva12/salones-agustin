@@ -150,14 +150,20 @@ const NOMBRE_SALON = {
 
 function presentarseComoElSalon(t, salon) {
   if (!salon || !MARCA.test(t)) return t;
-  const frases = t.match(/[^.!?\n]+[.!?\n]*/g);
-  if (!frases) return t;
-  let hecho = false;
-  return frases.map((f) => {
-    if (hecho || !/\bMaya\b/.test(f) || !MARCA.test(f)) return f;
-    hecho = true;
-    return f.replace(MARCA, salon);
-  }).join('');
+  // TODAS las veces, no solo la de la presentacion.
+  //
+  // La primera version solo tocaba la frase donde Maya decia su nombre, para
+  // no estropear un «el salon Quetzal es parte de Salones Agustin Barron».
+  // Pero el Lic. no quiere que esas palabras le lleguen al cliente en ningun
+  // sitio —ni al presentarse, ni al despedirse, ni en un «nosotros»— y el
+  // prompt ya se lo prohibe. Dejar un hueco en el candado era dejarlo abierto:
+  // basta que lo escriba de otra forma y se cuela.
+  //
+  // El precio es que una frase como la de «es parte de» queda rara. Es una
+  // frase que el prompt ya no le pide y que nadie ha visto en produccion;
+  // cambiar el nombre del grupo por el del salon se lee peor que bien, pero
+  // nunca filtra lo que no debe salir.
+  return t.replace(new RegExp(MARCA.source, 'gi'), salon);
 }
 
 // La FUENTE, no el campo «Salón»: el campo dice qué salón quiere el cliente y

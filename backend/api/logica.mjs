@@ -680,26 +680,64 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
 
   const resultados = salones.map((s) => {
     const disp = disponibilidadSalon(db, s.id, fecha_evento, turno);
-    let filas = st.all(s.id, tipoRow.id, anio, personas,
-      // la rama de ventana + escalon
-      fecha_evento, HOY, HOY, meses, meses,
-      // la de solo ventana
-      fecha_evento, HOY, HOY,
-      // la de solo escalon
-      meses, meses);
+    const traer = (cuantas) => {
+      let f = st.all(s.id, tipoRow.id, anio, cuantas,
+        // la rama de ventana + escalon
+        fecha_evento, HOY, HOY, meses, meses,
+        // la de solo ventana
+        fecha_evento, HOY, HOY,
+        // la de solo escalon
+        meses, meses);
 
-    // Una tarifa de ventana GANA sobre la del escalon del mismo paquete: es
-    // una regla mas especifica, escrita para esos eventos concretos. Sin
-    // esto el agente veria dos «Paquete Bronce» con precios distintos en la
-    // misma cotizacion y elegiria uno de los dos a su criterio.
-    const conVentana = new Set(filas.filter((f) => f.evento_desde).map((f) => f.paquete));
-    if (conVentana.size) {
-      filas = filas.filter((f) => f.evento_desde || !conVentana.has(f.paquete));
+      // Una tarifa de ventana GANA sobre la del escalon del mismo paquete: es
+      // una regla mas especifica, escrita para esos eventos concretos. Sin
+      // esto el agente veria dos «Paquete Bronce» con precios distintos en la
+      // misma cotizacion y elegiria uno de los dos a su criterio.
+      const conVentana = new Set(f.filter((x) => x.evento_desde).map((x) => x.paquete));
+      if (conVentana.size) f = f.filter((x) => x.evento_desde || !conVentana.has(x.paquete));
+      // Fuera los paquetes de fecha fija que no son de ESTE dia. Va ANTES de
+      // la comprobacion de abajo: si el filtro deja la lista vacia, la
+      // respuesta correcta es «no hay paquete», no reventar buscando el
+      // primero.
+      return f.filter((x) => aplicaEnLaFecha(x.fecha_fija, fecha_evento));
+    };
+
+    let filas = traer(personas);
+
+    // ── Por debajo del tramo mas chico se cotiza el tramo mas chico ─────────
+    //
+    // Las tarifas van por tramos de personas, y el mas bajo de casi todos los
+    // salones es 100. Con 70 invitados el BETWEEN no encontraba nada y el
+    // agente contestaba «lamentablemente no tengo una tarifa disponible para
+    // esa fecha y numero de invitados», y lo pasaba a la encargada.
+    //
+    // Pero en el salon caben: el paquete de 100 es el que se le vende a quien
+    // lleva 70, pagando el de 100. Es distinto de pasarse POR ARRIBA —ahi de
+    // verdad no entran— asi que esto solo mira hacia abajo.
+    //
+    // Se vuelve a consultar con el minimo en vez de estirar el BETWEEN en el
+    // SQL: asi las reglas de escalon, ventana y fecha fija se aplican igual
+    // que siempre, y no hay una segunda version de la consulta que mantener.
+    let personasCobradas = personas;
+    let minimoAplicado = null;
+    if (!filas.length) {
+      const mn = db.prepare(
+        `SELECT MIN(t.personas_desde) AS m
+           FROM tarifa t
+           JOIN paquete p ON p.id = t.paquete_id
+           JOIN paquete_tipo_evento pt ON pt.paquete_id = p.id
+          WHERE t.salon_id = ? AND pt.tipo_evento_id = ? AND t.anio = ?
+            AND t.vigente_hasta IS NULL AND p.activo = 1 AND p.borrador = 0`)
+        .get(s.id, tipoRow.id, anio)?.m;
+      if (mn && personas < mn) {
+        const conMinimo = traer(mn);
+        if (conMinimo.length) {
+          filas = conMinimo;
+          personasCobradas = mn;
+          minimoAplicado = { pedidas: personas, minimo: mn };
+        }
+      }
     }
-    // Fuera los paquetes de fecha fija que no son de ESTE dia. Va ANTES de la
-    // comprobacion de abajo: si el filtro deja la lista vacia, la respuesta
-    // correcta es «no hay paquete», no reventar buscando el primero.
-    filas = filas.filter((f) => aplicaEnLaFecha(f.fecha_fija, fecha_evento));
 
     if (!filas.length) {
       return {
@@ -724,7 +762,11 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
       paquete: f.paquete,
       unidad: f.unidad_precio,
       precio: f.precio,
-      total: f.unidad_precio === 'por_persona' ? Math.round(f.precio * personas) : f.precio,
+      // Con el minimo aplicado se cobra el MINIMO, no las que vienen: esa es
+      // justamente la regla —«el de 100 caben esas 70»— y cobrar por 70 en un
+      // paquete por persona seria regalar treinta cubiertos.
+      total: f.unidad_precio === 'por_persona'
+        ? Math.round(f.precio * personasCobradas) : f.precio,
       tramo_personas: `${f.personas_desde}-${f.personas_hasta}`,
       // Una fila de ventana no tiene escalon, y «aplica todo el año» seria
       // mentira: aplica justo a los meses que dice. Quien lea la cotizacion
@@ -790,11 +832,14 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
     // ninguna tarifa y avisar de un cambio que no va a pasar es mentir.
     let cambio = null;
     if (mesesProx !== null) {
-      const luegoTodos = st.all(s.id, tipoRow.id, anio, personas, mesesProx, mesesProx)
+      // Con las mismas personas que se cobran hoy, o la comparacion no es
+      // entre los dos meses sino entre dos tramos distintos.
+      const luegoTodos = st.all(s.id, tipoRow.id, anio, personasCobradas, mesesProx, mesesProx)
         .filter((f) => !f.requiere_revision)
         .map((f) => ({
           paquete: f.paquete,
-          total: f.unidad_precio === 'por_persona' ? Math.round(f.precio * personas) : f.precio,
+          total: f.unidad_precio === 'por_persona'
+            ? Math.round(f.precio * personasCobradas) : f.precio,
           escalon: f.escalon,
         }));
       // Hay que comparar EL MISMO paquete, no el mas barato de cada mes.
@@ -832,6 +877,11 @@ export function cotizar(db, { salon, tipo_evento, fecha_evento, personas, turno 
       disponibilidad: disp.estado,
       disponibilidad_detalle: disp,
       cotizacion: 'ok',
+      // Pidio menos gente que el tramo mas chico y se le cotiza ese tramo.
+      // El agente TIENE que decirlo: el precio es el de `minimo` personas,
+      // aunque vayan `pedidas`. Si se lo calla, el cliente cree que paga por
+      // los suyos y la diferencia la descubre al firmar.
+      minimo_aplicado: minimoAplicado,
       // Por omision, el mas economico primero, como pide la hoja de reglas.
       // PERO a 6 meses o mas manda la instruccion del Lic. Barron: ahi va
       // primero el Plata aunque no sea el mas barato. Ver aplicarLargoPlazo.

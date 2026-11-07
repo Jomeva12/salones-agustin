@@ -112,6 +112,32 @@ if (sabido.length) {
     + (faltan.length ? ` Y esto NO lo ha dicho todavía, así que no te lo inventes: ${faltan.join(' ni ')}.` : ''));
 }
 
+// ── Cotizar sin saber cuántos invitados son ─────────────────────────────────
+//
+// El 7-nov-2026 un cliente dijo «aún no tengo el total de invitados pero
+// pregunto para cuántas personas es ese paquete, y yo me ajusto». La nota ya
+// decia «no te lo inventes: cuantos invitados son» — y Maya cotizo igual:
+// «el Paquete Plata cuesta $71,400 para entre 91 y 100 personas».
+//
+// Cotizar ahi no estaba mal: es lo que le preguntaron. Lo que faltaba es que
+// se notara que es un precio de referencia. Decirle solo «no lo inventes» la
+// deja sin salida: entre callarse y cotizar, cotiza. Asi que se le dice que
+// puede cotizar, y COMO.
+//
+// El precio cambia por tramos de personas, asi que uno de otro tramo no es
+// una aproximacion: es otro precio. Si el cliente lo toma por suyo y luego
+// sube, la diferencia la descubre tarde y la discute.
+if (!cuantos) {
+  partes.push('Todavía no sabes cuántos invitados son, y el precio cambia por '
+    + 'tramos de personas. Puedes darle una referencia si te la pide, pero '
+    + 'en el MISMO mensaje tienen que ir las dos cosas: para qué tramo es ese '
+    + 'precio —«$71,400 para entre 91 y 100 personas»— y que en cuanto te '
+    + 'diga cuántos son le das el exacto. Sin esa segunda mitad se queda con '
+    + 'una cifra que cree cerrada, y si acaba siendo otro tramo lo descubre '
+    + 'tarde. Lo que no haces es inventarte un número de invitados para poder '
+    + 'cotizar: si no te lo ha dicho, no lo tienes.');
+}
+
 // ── Mandó algo y no escribió nada ───────────────────────────────────────────
 //
 // Una foto, un audio, un archivo. No sabemos que es, y el agente tampoco:
